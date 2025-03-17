@@ -3,17 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Abdelaaziz Belkhair - Portfolio</title>
+  <title>Abdelaaziz Belkhair - Accueil</title>
   
   <!-- Bootstrap, FontAwesome & Google Fonts -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
   <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
-
+  
   <!-- AOS (Animate on Scroll) -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
-
+  
   <style>
+    /* Base & Background animé */
+    html, body {
+      height: 100%;
+    }
     body {
       font-family: 'Raleway', sans-serif;
       background-color: #121212;
@@ -22,28 +26,41 @@
       scroll-behavior: smooth;
       margin: 0;
       padding: 0;
-    }
-
-    /* HERO SECTION (Radial Gradient) */
-    .hero {
+      display: flex;
+      flex-direction: column;
       position: relative;
-      text-align: center;
-      padding: 100px 20px;
-      background: radial-gradient(circle, rgba(0, 0, 0, 0.9), rgba(0, 153, 255, 0.3));
-      z-index: 1;
     }
-    .hero h1 {
-      font-size: 3rem;
-      font-weight: 700;
-      margin-bottom: 1rem;
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(45deg, rgba(0,153,255,0.2), rgba(0,0,0,0.2));
+      z-index: -2;
+      animation: bgAnimation 20s infinite alternate;
     }
-    .hero p {
-      font-size: 1.2rem;
-      font-weight: 300;
+    @keyframes bgAnimation {
+      0% { transform: scale(1) translate(0,0); }
+      100% { transform: scale(1.1) translate(10px,10px); }
+    }
+    main { flex: 1; }
+    
+    /* Navbar */
+    .navbar {
       margin-bottom: 0;
     }
-
-    /* SECTION TITLES */
+    
+    /* HERO SECTION */
+    .hero {
+      text-align: center;
+      padding: 100px 20px;
+      background: radial-gradient(circle, rgba(0,0,0,0.9), rgba(0,153,255,0.3));
+      z-index: 1;
+    }
+    .hero h1 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; font-weight: 300; margin-bottom: 0; }
+    
+    /* Titres de section */
     .section-title {
       text-align: center;
       margin-bottom: 40px;
@@ -51,410 +68,137 @@
       font-size: 1.8rem;
       text-transform: uppercase;
       letter-spacing: 2px;
-      position: relative;
     }
-    .section-title i {
-      color: #00ccff;
-      margin-right: 10px;
-    }
-
-    /* SKILLS CARDS */
+    .section-title i { color: #00ccff; margin-right: 10px; }
+    
+    /* Cartes */
     .card {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255,255,255,0.15);
       border: none;
       border-radius: 8px;
-      color: #ffffff;
+      color: #fff;
       transition: transform 0.3s, box-shadow 0.3s;
       height: 100%;
     }
     .card:hover {
       transform: scale(1.02);
-      box-shadow: 0 0 20px rgba(0, 153, 255, 0.5);
+      box-shadow: 0 0 20px rgba(0,153,255,0.5);
     }
-    .card h5 {
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    /* SPACING FOR SECTIONS */
-    section {
-      padding: 60px 0;
-    }
-    .container {
-      max-width: 1200px;
-    }
-
-    /* TIMELINE FOR PROJECTS */
-    .timeline {
-      position: relative;
-      margin: 0 auto;
-      padding: 0;
-    }
-    /* Vertical line down the middle */
-    .timeline::before {
-      content: "";
-      position: absolute;
-      top: 0;
-      bottom: 0;
-      left: 50%;
-      width: 4px;
-      background: #00ccff;
-      opacity: 0.5;
-      transform: translateX(-50%);
-    }
-    .timeline-item {
-      position: relative;
-      margin: 0;
-      width: 50%;
-      padding: 0;
-    }
-    /* Timeline circles (icons) */
-    .timeline-icon {
-      position: absolute;
-      top: 0;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      background: #00ccff;
-      color: #121212;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      font-size: 1.2rem;
-    }
-    /* Content containers */
-    .timeline-content {
-      background: rgba(255, 255, 255, 0.15);
-      border-radius: 8px;
-      padding: 1.5rem;
-      box-shadow: 0 0 15px rgba(0, 153, 255, 0.2);
-      transition: transform 0.3s;
-    }
-    .timeline-content:hover {
-      transform: scale(1.01);
-    }
-    /* Alternate item alignment */
-    .timeline-item:nth-child(odd) {
-      left: 0;
-      text-align: right;
-    }
-    .timeline-item:nth-child(even) {
-      left: 50%;
-      text-align: left;
-    }
-    .timeline-item:nth-child(odd) .timeline-content {
-      margin-right: 55px; /* space so we don't overlap the center line */
-    }
-    .timeline-item:nth-child(even) .timeline-content {
-      margin-left: 55px;
-    }
-    .timeline-item h5 {
-      font-weight: 600;
-      margin-bottom: 0.75rem;
-    }
-    .timeline-item ul {
-      padding-left: 1.2rem;
-    }
-    /* Proper spacing when items wrap on small screens */
-    @media (max-width: 992px) {
-      .timeline::before {
-        left: 20px;
-      }
-      .timeline-item {
-        width: 100%;
-        padding-left: 60px;
-        padding-right: 20px;
-        margin: 40px 0;
-        text-align: left !important;
-      }
-      .timeline-item:nth-child(odd) .timeline-content,
-      .timeline-item:nth-child(even) .timeline-content {
-        margin: 0 0 0 60px;
-      }
-      .timeline-icon {
-        left: 20px;
-        transform: translateY(-50%);
-      }
-    }
-    @media (min-width: 992px) {
-      #skills .row {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        grid-template-rows: repeat(2, 1fr);
-        gap: 20px;
-      }
-      
-      #skills .col-md-6 {
-        width: 100%;
-        max-width: 100%;
-        flex: 0 0 100%;
-      }
-    }
-
-    /* FOOTER */
+    .card h5 { font-weight: 600; margin-bottom: 0.5rem; }
+    
+    /* Footer */
     footer {
       background-color: #181818;
       padding: 20px 0;
+      text-align: center;
     }
-    footer p {
-      margin-bottom: 0.3rem;
-    }
+    footer p { margin: 0; }
     .social-icons a {
       color: #fff;
       margin: 0 10px;
       font-size: 1.2rem;
       transition: color 0.3s;
     }
-    .social-icons a:hover {
-      color: #00ccff;
-    }
-
-    /* RESPONSIVE TEXT */
-    @media (max-width: 768px) {
-      .hero h1 {
-        font-size: 2rem;
-      }
-      .hero p {
-        font-size: 1rem;
-      }
-    }
+    .social-icons a:hover { color: #00ccff; }
   </style>
 </head>
 <body>
-  <!-- HERO SECTION -->
+  <!-- NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">Abdelaaziz Belkhair</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+              data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link active" href="index.html">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link" href="projects.html">Projets</a></li>
+          <li class="nav-item"><a class="nav-link" href="cv.pdf" download>Télécharger CV</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- HERO -->
   <header class="hero" data-aos="fade-down">
     <h1 class="display-4">Abdelaaziz Belkhair</h1>
-    <p class="lead">Telecommunications Engineer | Cybersecurity | System Programming</p>
+    <p class="lead">Ingénieur Télécommunications | Cybersécurité | Programmation Système</p>
   </header>
-
-  <!-- À PROPOS SECTION -->
-  <section id="about" data-aos="fade-up">
-    <div class="container">
-      <h2 class="section-title"><i class="fa-solid fa-user-secret"></i>À Propos</h2>
-      <p class="lead text-center">
-        Je suis passionné par la cybersécurité, la programmation système et le traitement du signal.
-        Mes compétences couvrent le développement en C (programmation système, réseaux) et en Python 
-        (sécurité, machine learning), ainsi que l’analyse de signaux avec MATLAB. Je m’intéresse 
-        particulièrement à la sécurité des réseaux, au développement d’outils d’analyse de vulnérabilités 
-        et aux applications du traitement du signal. Ma formation et mes projets personnels m’ont permis 
-        de développer de solides capacités en résolution de problèmes complexes.
-      </p>
-    </div>
-  </section>
-
-  <div class="container mt-5">
-    <!-- SKILLS SECTION -->
+  
+  <!-- CONTENU PRINCIPAL -->
+  <main>
+    <!-- À PROPOS -->
+    <section id="about" data-aos="fade-up">
+      <div class="container">
+        <h2 class="section-title"><i class="fa-solid fa-user-secret"></i>À Propos</h2>
+        <p class="lead text-center">
+          Passionné par la cybersécurité, la programmation système et le traitement du signal, j’ai développé de solides compétences en C, Python et MATLAB. Mon intérêt se porte notamment sur la sécurité des réseaux et l’analyse de vulnérabilités.
+        </p>
+      </div>
+    </section>
+    
+    <!-- SKILLS -->
     <section id="skills" data-aos="fade-up">
-      <h2 class="section-title"><i class="fas fa-cogs"></i>Skills</h2>
-      <div class="row g-4">
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h5><i class="fa-solid fa-network-wired"></i> Programming System & Networks</h5>
-            <p>C (sockets, threads, IPC, shared memory, mutex), TCP/IP, SSH</p>
+      <div class="container">
+        <h2 class="section-title"><i class="fas fa-cogs"></i>Skills</h2>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card p-3">
+              <h5><i class="fa-solid fa-network-wired"></i> Programming System &amp; Networks</h5>
+              <p>C (sockets, threads, IPC, shared memory, mutex), TCP/IP, SSH</p>
+            </div>
           </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h5><i class="fa-brands fa-python"></i> Python Development</h5>
-            <p>Data Science (Pandas, Scikit-learn, TensorFlow), Web Scraping (Flask, BeautifulSoup), Image Processing (OpenCV)</p>
+          <div class="col-md-6">
+            <div class="card p-3">
+              <h5><i class="fa-brands fa-python"></i> Python Development</h5>
+              <p>Data Science (Pandas, Scikit-learn, TensorFlow), Web Scraping (Flask, BeautifulSoup), Image Processing (OpenCV)</p>
+            </div>
           </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h5><i class="fa-solid fa-shield-halved"></i> Cybersecurity</h5>
-            <p>Network Traffic Analysis (Scapy), Web Security Testing (XSS, SQLi, CSRF), CVSS Reporting</p>
+          <div class="col-md-6">
+            <div class="card p-3">
+              <h5><i class="fa-solid fa-shield-halved"></i> Cybersecurity</h5>
+              <p>Network Traffic Analysis (Scapy), Web Security Testing (XSS, SQLi, CSRF), CVSS Reporting</p>
+            </div>
           </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h5><i class="fa-solid fa-wave-square"></i> Signal Processing</h5>
-            <p>MATLAB, Digital Communications</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- PROJECTS SECTION (Timeline) -->
-    <section id="projects" data-aos="fade-up">
-      <h2 class="section-title"><i class="fas fa-code"></i>Projects</h2>
-      <div class="timeline">
-        <!-- Project 1 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-diagram-project"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Académique - Système de Mémoire Partagée Distribuée (ENSEIRB-MATMECA)</h5>
-            <ul>
-              <li>Implémentation d'un système de mémoire partagée distribuée en C</li>
-              <li>Développement d'un mécanisme de communication interprocessus sur réseau</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 2 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-comments"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Académique - Projet Client/Serveur de Chat en C (ENSEIRB-MATMECA)</h5>
-            <ul>
-              <li>Implémentation d'un système de messagerie client/serveur multi-utilisateurs</li>
-              <li>Développement de mécanismes de synchronisation (mutex, sémaphores) et gestion de threads</li>
-              <li>Utilisation des sockets TCP/IP, communication interprocessus</li>
-              <li>Mise en place d'un protocole d'échange de fichiers en mode P2P</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 3 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-hat-wizard"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Personnel - Développement d'un Système Honeypot pour l'Analyse des Cyberattaques</h5>
-            <ul>
-              <li>Implémentation de services simulés (SSH, HTTP) avec capture et analyse du trafic en temps réel</li>
-              <li>Système de détection d'anomalies par machine learning pour identifier les comportements malveillants</li>
-              <li>Base de données SQLite pour le stockage des attaques et visualisation des patterns avec Pandas</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 4 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-spider"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Personnel - Scanner Automatisé de Vulnérabilités Web avec Reporting</h5>
-            <ul>
-              <li>Développement d'un crawler pour cartographier automatiquement les pages et endpoints d'une application web</li>
-              <li>Implémentation de modules de détection (XSS, SQLi, CSRF, misconfigurations...)</li>
-              <li>Système de scoring de sévérité basé sur le CVSS et génération de rapports détaillés</li>
-              <li>Interface web pour le lancement des scans et la visualisation des résultats</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 5 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-plane"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Académique - Système ADS-B complet en MATLAB (TS229)</h5>
-            <ul>
-              <li>Implémentation d'un émetteur-récepteur ADS-B avec modulation PPM et codage CRC-24</li>
-              <li>Analyse théorique et pratique de la densité spectrale de puissance (algorithme de Welch)</li>
-              <li>Décodage en temps réel des trames ADS-B (positions, altitudes, identification du vol)</li>
-              <li>Visualisation de la trajectoire de l’avion et suivi en temps réel</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 6 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-waveform"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Académique - Filtrage & Estimation (TS224)</h5>
-            <ul>
-              <li>Mise en œuvre de techniques d’estimation et de filtrage sur des signaux de parole</li>
-              <li>Étude de méthodes de périodogramme (Welch, Daniell, etc.) et analyse spectrale du bruit</li>
-              <li>Implémentation de l’approche DFA (Detrended Fluctuation Analysis) pour évaluer la dépendance à long terme</li>
-              <li>Comparaison de différents signaux (bruit blanc, bruit rose, extraits vocaux) et étude du coefficient de Hurst</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 7 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-barcode"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Académique - Lecture de Code-Barres par Lancers Aléatoires (TS225)</h5>
-            <ul>
-              <li>Extraction et décodage de codes-barres EAN13 depuis des images</li>
-              <li>Implémentation de l’approche par “rayons aléatoires” pour la détection automatique</li>
-              <li>Utilisation de l’algorithme d’Otsu pour la binarisation des segments et l’optimisation du seuil</li>
-              <li>Étude des performances et robustesse en conditions réelles (qualité d’image, éclairage, etc.)</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 8 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-traffic-light"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet S8 - Supervision des Contrôleurs de Feux de Chantier</h5>
-            <ul>
-              <li>Développement d’une solution logicielle pour surveiller et piloter des feux de chantier</li>
-              <li>Interface locale (Tkinter / Streamlit) et module de communication sans fil (ESP8266, Wi-Fi)</li>
-              <li>Supervision en temps réel des cycles (rouge, orange, vert) et contrôle à distance</li>
-              <li>Documentation et rapport détaillant l’architecture et la mise en place</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 9 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-solid fa-chart-line"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet Académique - Régression & Machine Learning (PS204)</h5>
-            <ul>
-              <li>Implémentation de la régression linéaire (OLS, Ridge, LASSO) et de la classification logistique</li>
-              <li>Expérimentations sur des jeux de données synthétiques et sur MNIST (images de chiffres manuscrits)</li>
-              <li>Étude de l’impact de la régularisation et gestion des outliers</li>
-              <li>Utilisation des bibliothèques Python (scikit-learn, numpy, etc.)</li>
-            </ul>
-          </div>
-        </div>
-        <!-- Project 10 -->
-        <div class="timeline-item">
-          <div class="timeline-icon">
-            <i class="fa-brands fa-java"></i>
-          </div>
-          <div class="timeline-content">
-            <h5>Projet en Java - Schotten-Totten (PG220)</h5>
-            <ul>
-              <li>Développement d’un jeu de cartes Schotten-Totten en Java (variante tactique incluse)</li>
-              <li>Conception objet (encapsulation, héritage, polymorphisme) et intégration de design patterns</li>
-              <li>Interface console, IA basique, tests unitaires avec JUnit</li>
-              <li>Extension aisée à d'autres variantes ou stratégies d’intelligence artificielle</li>
-            </ul>
+          <div class="col-md-6">
+            <div class="card p-3">
+              <h5><i class="fa-solid fa-wave-square"></i> Signal Processing</h5>
+              <p>MATLAB, Digital Communications</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
-
-    <!-- PERSONAL INFO SECTION -->
+    
+    <!-- INFORMATIONS PERSONNELLES -->
     <section id="personal-info" data-aos="fade-up">
-      <h2 class="section-title"><i class="fa-solid fa-user"></i>Personal Information</h2>
-      <div class="row g-4">
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h5><i class="fa-solid fa-location-dot"></i> Location</h5>
-            <p>Pessac, France</p>
+      <div class="container">
+        <h2 class="section-title"><i class="fa-solid fa-user"></i>Informations Personnelles</h2>
+        <div class="row g-4">
+          <div class="col-md-6">
+            <div class="card p-3">
+              <h5><i class="fa-solid fa-location-dot"></i> Localisation</h5>
+              <p>Pessac, France</p>
+            </div>
           </div>
-        </div>
-        <div class="col-md-6">
-          <div class="card p-3">
-            <h5><i class="fa-solid fa-language"></i> Languages</h5>
-            <p>French, English, Arabic</p>
+          <div class="col-md-6">
+            <div class="card p-3">
+              <h5><i class="fa-solid fa-language"></i> Langues</h5>
+              <p>Français, Anglais, Arabe</p>
+            </div>
           </div>
         </div>
       </div>
     </section>
-  </div>
+  </main>
   
   <!-- FOOTER -->
-  <footer class="text-center mt-5 text-white" data-aos="fade-up">
+  <footer data-aos="fade-up">
     <div class="container">
       <p>&copy; 2024 Abdelaaziz Belkhair</p>
-      <!-- Optional Social Icons -->
       <div class="social-icons">
         <a href="https://www.linkedin.com/in/abdelaaziz-belkhair-12502024b/" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>
         <a href="https://github.com/abdelaaziz0" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>
@@ -462,7 +206,7 @@
     </div>
   </footer>
   
-  <!-- Bootstrap, AOS & FontAwesome Scripts -->
+  <!-- SCRIPTS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script>
