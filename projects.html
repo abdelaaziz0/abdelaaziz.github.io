@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Abdelaaziz Belkhair - Projets</title>
+  
+  <!-- Bootstrap, FontAwesome & Google Fonts -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
+  <link href="https://fonts.googleapis.com/css2?family=Raleway:wght@300;400;700&display=swap" rel="stylesheet">
+  
+  <!-- AOS (Animate on Scroll) -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.css">
+  
+  <style>
+    /* Base & Background animé */
+    html, body {
+      height: 100%;
+    }
+    body {
+      font-family: 'Raleway', sans-serif;
+      background-color: #121212;
+      color: #ffffff;
+      overflow-x: hidden;
+      scroll-behavior: smooth;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+    body::before {
+      content: "";
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: linear-gradient(45deg, rgba(0,153,255,0.2), rgba(0,0,0,0.2));
+      z-index: -2;
+      animation: bgAnimation 20s infinite alternate;
+    }
+    @keyframes bgAnimation {
+      0% { transform: scale(1) translate(0,0); }
+      100% { transform: scale(1.1) translate(10px,10px); }
+    }
+    main { flex: 1; }
+    
+    /* Navbar */
+    .navbar { margin-bottom: 0; }
+    
+    /* HERO */
+    .hero {
+      text-align: center;
+      padding: 100px 20px;
+      background: radial-gradient(circle, rgba(0,0,0,0.9), rgba(0,153,255,0.3));
+      z-index: 1;
+    }
+    .hero h1 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
+    .hero p { font-size: 1.2rem; font-weight: 300; margin-bottom: 0; }
+    
+    /* Titres de section */
+    .section-title {
+      text-align: center;
+      margin-bottom: 40px;
+      font-weight: 700;
+      font-size: 1.8rem;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    .section-title i { color: #00ccff; margin-right: 10px; }
+    
+    /* Timeline Projets */
+    .timeline {
+      position: relative;
+      margin: 0 auto;
+      padding: 0;
+    }
+    .timeline::before {
+      content: "";
+      position: absolute;
+      top: 0; bottom: 0;
+      left: 50%;
+      width: 4px;
+      background: #00ccff;
+      opacity: 0.5;
+      transform: translateX(-50%);
+    }
+    .timeline-item {
+      position: relative;
+      margin: 0;
+      width: 50%;
+      padding: 0;
+    }
+    .timeline-icon {
+      position: absolute;
+      top: 0;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: #00ccff;
+      color: #121212;
+      border-radius: 50%;
+      width: 40px;
+      height: 40px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 1.2rem;
+    }
+    .timeline-content {
+      background: rgba(255,255,255,0.15);
+      border-radius: 8px;
+      padding: 1.5rem;
+      box-shadow: 0 0 15px rgba(0,153,255,0.2);
+      transition: transform 0.3s;
+    }
+    .timeline-content:hover { transform: scale(1.01); }
+    .timeline-item:nth-child(odd) { left: 0; text-align: right; }
+    .timeline-item:nth-child(even) { left: 50%; text-align: left; }
+    .timeline-item:nth-child(odd) .timeline-content { margin-right: 55px; }
+    .timeline-item:nth-child(even) .timeline-content { margin-left: 55px; }
+    .timeline-item h5 { font-weight: 600; margin-bottom: 0.75rem; }
+    .timeline-item ul { padding-left: 1.2rem; }
+    
+    /* Conteneur pour lien GitHub */
+    .github-container {
+      background: rgba(0,153,255,0.2);
+      padding: 8px 12px;
+      border-radius: 4px;
+      display: inline-block;
+      margin-top: 10px;
+    }
+    .github-container a {
+      color: #ffffff;
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .github-container a:hover { color: #00ccff; }
+    
+    /* Projets masqués par défaut */
+    .hidden-project { display: none; }
+    @media (max-width: 992px) {
+      .timeline::before { left: 20px; }
+      .timeline-item {
+        width: 100%;
+        padding-left: 60px;
+        padding-right: 20px;
+        margin: 40px 0;
+        text-align: left !important;
+      }
+      .timeline-item:nth-child(odd) .timeline-content,
+      .timeline-item:nth-child(even) .timeline-content { margin: 0 0 0 60px; }
+      .timeline-icon { left: 20px; transform: translateY(-50%); }
+    }
+    
+    /* Footer */
+    footer {
+      background-color: #181818;
+      padding: 20px 0;
+      text-align: center;
+    }
+    footer p { margin: 0; }
+    .social-icons a {
+      color: #fff;
+      margin: 0 10px;
+      font-size: 1.2rem;
+      transition: color 0.3s;
+    }
+    .social-icons a:hover { color: #00ccff; }
+  </style>
+</head>
+<body>
+  <!-- NAVIGATION -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <div class="container">
+      <a class="navbar-brand" href="index.html">Abdelaaziz Belkhair</a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
+              data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" 
+              aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarNav">
+        <ul class="navbar-nav ms-auto">
+          <li class="nav-item"><a class="nav-link" href="index.html">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link active" href="projects.html">Projets</a></li>
+          <li class="nav-item"><a class="nav-link" href="cv.pdf" download>Télécharger CV</a></li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- HERO -->
+  <header class="hero" data-aos="fade-down">
+    <h1 class="display-4">Mes Projets</h1>
+    <p class="lead">Découvrez mes réalisations et projets</p>
+  </header>
+  
+  <!-- CONTENU PRINCIPAL -->
+  <main>
+    <section id="projects" data-aos="fade-up">
+      <div class="container">
+        <h2 class="section-title"><i class="fas fa-code"></i>Mes Projets</h2>
+        <div class="timeline">
+          <!-- Projet 1 -->
+          <div class="timeline-item">
+            <div class="timeline-icon"><i class="fa-solid fa-diagram-project"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Académique - Système de Mémoire Partagée Distribuée (ENSEIRB-MATMECA)</h5>
+              <ul>
+                <li>Implémentation en C</li>
+                <li>Communication interprocessus sur réseau</li>
+              </ul>
+              <div class="github-container">
+                <a href="https://github.com/abdelaaziz0/MEMOIRE_DISTRIBUEE" target="_blank">Voir sur GitHub</a>
+              </div>
+            </div>
+          </div>
+          <!-- Projet 2 -->
+          <div class="timeline-item">
+            <div class="timeline-icon"><i class="fa-solid fa-comments"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Académique - Chat Client/Serveur en C (ENSEIRB-MATMECA)</h5>
+              <ul>
+                <li>Système de messagerie multi-utilisateurs</li>
+                <li>Gestion des sockets, threads et synchronisation</li>
+                <li>Protocole d'échange de fichiers en mode P2P</li>
+              </ul>
+              <div class="github-container">
+                <a href="https://github.com/abdelaaziz0/CHAT_CLIENT_SERVEUR" target="_blank">Voir sur GitHub</a>
+              </div>
+            </div>
+          </div>
+          <!-- Projet 3 -->
+          <div class="timeline-item">
+            <div class="timeline-icon"><i class="fa-solid fa-hat-wizard"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Personnel - Honeypot d'Analyse des Cyberattaques</h5>
+              <ul>
+                <li>Simulation de services (SSH, HTTP)</li>
+                <li>Capture et analyse du trafic en temps réel</li>
+                <li>Détection d'anomalies par machine learning</li>
+              </ul>
+              <div class="github-container">
+                <a href="https://github.com/abdelaaziz0/PROJECT_HONEYPOT" target="_blank">Voir sur GitHub</a>
+              </div>
+            </div>
+          </div>
+          <!-- Projets masqués par défaut (sans lien) -->
+          <div class="timeline-item hidden-project">
+            <div class="timeline-icon"><i class="fa-solid fa-spider"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Personnel - Scanner de Vulnérabilités Web</h5>
+              <ul>
+                <li>Crawler pour cartographier pages et endpoints</li>
+                <li>Détection (XSS, SQLi, CSRF, etc.) et scoring CVSS</li>
+                <li>Interface web pour lancer les scans</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-item hidden-project">
+            <div class="timeline-icon"><i class="fa-solid fa-waveform"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Académique - Filtrage &amp; Estimation (TS224)</h5>
+              <ul>
+                <li>Techniques d’estimation sur signaux de parole</li>
+                <li>Analyse spectrale du bruit et méthode DFA</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-item hidden-project">
+            <div class="timeline-icon"><i class="fa-solid fa-barcode"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Académique - Lecture de Code-Barres (TS225)</h5>
+              <ul>
+                <li>Extraction et décodage de codes-barres EAN13</li>
+                <li>Utilisation de l’algorithme d’Otsu</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-item hidden-project">
+            <div class="timeline-icon"><i class="fa-solid fa-traffic-light"></i></div>
+            <div class="timeline-content">
+              <h5>Projet S8 - Supervision des Feux de Chantier</h5>
+              <ul>
+                <li>Solution pour piloter des feux de chantier</li>
+                <li>Interface locale et module sans fil</li>
+              </ul>
+            </div>
+          </div>
+          <div class="timeline-item hidden-project">
+            <div class="timeline-icon"><i class="fa-solid fa-chart-line"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Académique - Régression &amp; Machine Learning (PS204)</h5>
+              <ul>
+                <li>Régression linéaire et classification logistique</li>
+                <li>Expérimentations sur jeux de données synthétiques et MNIST</li>
+              </ul>
+            </div>
+          </div>
+          <!-- Projet 10 -->
+          <div class="timeline-item">
+            <div class="timeline-icon"><i class="fa-brands fa-java"></i></div>
+            <div class="timeline-content">
+              <h5>Projet en Java - Schotten-Totten (PG220)</h5>
+              <ul>
+                <li>Jeu de cartes Schotten-Totten en Java</li>
+                <li>Conception objet et design patterns</li>
+                <li>Interface console, IA basique et tests unitaires</li>
+              </ul>
+              <div class="github-container">
+                <a href="https://github.com/abdelaaziz0/JEU_SHOTTEN_TOTTEN" target="_blank">Voir sur GitHub</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <!-- Bouton pour afficher/masquer les projets masqués -->
+        <div class="text-center mt-4">
+          <button id="toggle-projects" class="btn btn-outline-info">Afficher tous les projets</button>
+        </div>
+      </div>
+    </section>
+  </main>
+  
+  <!-- FOOTER -->
+  <footer data-aos="fade-up">
+    <div class="container">
+      <p>&copy; 2024 Abdelaaziz Belkhair</p>
+      <div class="social-icons">
+        <a href="https://www.linkedin.com/in/abdelaaziz-belkhair-12502024b/" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>
+        <a href="https://github.com/abdelaaziz0" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>
+      </div>
+    </div>
+  </footer>
+  
+  <!-- SCRIPTS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
+  <script>
+    AOS.init();
+    // Toggle affichage des projets masqués
+    document.getElementById('toggle-projects').addEventListener('click', function(){
+      var hiddenProjects = document.querySelectorAll('.hidden-project');
+      hiddenProjects.forEach(function(item){
+        item.style.display = (item.style.display === 'block') ? 'none' : 'block';
+      });
+      this.innerText = (this.innerText === "Afficher tous les projets") ? "Masquer les projets" : "Afficher tous les projets";
+    });
+  </script>
+</body>
+</html>
