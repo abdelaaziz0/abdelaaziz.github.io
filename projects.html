@@ -120,24 +120,6 @@
     .timeline-item:nth-child(even) .timeline-content { margin-left: 55px; }
     .timeline-item h5 { font-weight: 600; margin-bottom: 0.75rem; }
     .timeline-item ul { padding-left: 1.2rem; }
-    
-    /* Conteneur pour lien GitHub */
-    .github-container {
-      background: rgba(0,153,255,0.2);
-      padding: 8px 12px;
-      border-radius: 4px;
-      display: inline-block;
-      margin-top: 10px;
-    }
-    .github-container a {
-      color: #ffffff;
-      text-decoration: none;
-      font-weight: bold;
-    }
-    .github-container a:hover { color: #00ccff; }
-    
-    /* Projets masqués par défaut */
-    .hidden-project { display: none; }
     @media (max-width: 992px) {
       .timeline::before { left: 20px; }
       .timeline-item {
@@ -150,6 +132,24 @@
       .timeline-item:nth-child(odd) .timeline-content,
       .timeline-item:nth-child(even) .timeline-content { margin: 0 0 0 60px; }
       .timeline-icon { left: 20px; transform: translateY(-50%); }
+    }
+    
+    /* GitHub Container - style bouton */
+    .github-container {
+      margin-top: 10px;
+    }
+    .github-container a {
+      display: inline-block;
+      padding: 8px 16px;
+      background-color: #00ccff;
+      color: #121212;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background-color 0.3s;
+    }
+    .github-container a:hover {
+      background-color: #00b8e6;
     }
     
     /* Footer */
@@ -189,14 +189,14 @@
   </nav>
   
   <!-- HERO -->
-  <header class="hero" data-aos="fade-down">
+  <header class="hero">
     <h1 class="display-4">Mes Projets</h1>
     <p class="lead">Découvrez mes réalisations et projets</p>
   </header>
   
   <!-- CONTENU PRINCIPAL -->
   <main>
-    <section id="projects" data-aos="fade-up">
+    <section id="projects">
       <div class="container">
         <h2 class="section-title"><i class="fas fa-code"></i>Mes Projets</h2>
         <div class="timeline">
@@ -244,8 +244,8 @@
               </div>
             </div>
           </div>
-          <!-- Projets masqués par défaut (sans lien) -->
-          <div class="timeline-item hidden-project">
+          <!-- Projet 4 -->
+          <div class="timeline-item">
             <div class="timeline-icon"><i class="fa-solid fa-spider"></i></div>
             <div class="timeline-content">
               <h5>Projet Personnel - Scanner de Vulnérabilités Web</h5>
@@ -256,17 +256,35 @@
               </ul>
             </div>
           </div>
-          <div class="timeline-item hidden-project">
+          <!-- Projet 5 -->
+          <div class="timeline-item">
+            <div class="timeline-icon"><i class="fa-solid fa-plane"></i></div>
+            <div class="timeline-content">
+              <h5>Projet Académique - Système ADS-B complet en MATLAB (TS229)</h5>
+              <ul>
+                <li>Implémentation d'un émetteur-récepteur ADS-B avec modulation PPM et codage CRC-24</li>
+                <li>Analyse de la densité spectrale de puissance (algorithme de Welch)</li>
+                <li>Décodage en temps réel des trames ADS-B et suivi de trajectoire</li>
+              </ul>
+              <div class="github-container">
+                <a href="https://github.com/abdelaaziz0/EMETTEUR_RECEPTEUR_ADSB" target="_blank">Voir sur GitHub</a>
+              </div>
+            </div>
+          </div>
+          <!-- Projet 6 -->
+          <div class="timeline-item">
             <div class="timeline-icon"><i class="fa-solid fa-waveform"></i></div>
             <div class="timeline-content">
               <h5>Projet Académique - Filtrage &amp; Estimation (TS224)</h5>
               <ul>
-                <li>Techniques d’estimation sur signaux de parole</li>
-                <li>Analyse spectrale du bruit et méthode DFA</li>
+                <li>Mise en œuvre de techniques d’estimation sur signaux de parole</li>
+                <li>Analyse spectrale du bruit et utilisation de méthodes de filtrage</li>
+                <li>Implémentation de l’approche DFA pour évaluer la dépendance à long terme</li>
               </ul>
             </div>
           </div>
-          <div class="timeline-item hidden-project">
+          <!-- Projet 7 -->
+          <div class="timeline-item">
             <div class="timeline-icon"><i class="fa-solid fa-barcode"></i></div>
             <div class="timeline-content">
               <h5>Projet Académique - Lecture de Code-Barres (TS225)</h5>
@@ -276,7 +294,8 @@
               </ul>
             </div>
           </div>
-          <div class="timeline-item hidden-project">
+          <!-- Projet 8 -->
+          <div class="timeline-item">
             <div class="timeline-icon"><i class="fa-solid fa-traffic-light"></i></div>
             <div class="timeline-content">
               <h5>Projet S8 - Supervision des Feux de Chantier</h5>
@@ -286,7 +305,8 @@
               </ul>
             </div>
           </div>
-          <div class="timeline-item hidden-project">
+          <!-- Projet 9 -->
+          <div class="timeline-item">
             <div class="timeline-icon"><i class="fa-solid fa-chart-line"></i></div>
             <div class="timeline-content">
               <h5>Projet Académique - Régression &amp; Machine Learning (PS204)</h5>
@@ -312,16 +332,12 @@
             </div>
           </div>
         </div>
-        <!-- Bouton pour afficher/masquer les projets masqués -->
-        <div class="text-center mt-4">
-          <button id="toggle-projects" class="btn btn-outline-info">Afficher tous les projets</button>
-        </div>
       </div>
     </section>
   </main>
   
   <!-- FOOTER -->
-  <footer data-aos="fade-up">
+  <footer>
     <div class="container">
       <p>&copy; 2024 Abdelaaziz Belkhair</p>
       <div class="social-icons">
@@ -336,13 +352,9 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script>
     AOS.init();
-    // Toggle affichage des projets masqués
-    document.getElementById('toggle-projects').addEventListener('click', function(){
-      var hiddenProjects = document.querySelectorAll('.hidden-project');
-      hiddenProjects.forEach(function(item){
-        item.style.display = (item.style.display === 'block') ? 'none' : 'block';
-      });
-      this.innerText = (this.innerText === "Afficher tous les projets") ? "Masquer les projets" : "Afficher tous les projets";
+    // Masquer le loader lorsque la page est complètement chargée
+    window.addEventListener('load', function() {
+      document.querySelector('.loader').classList.add('hidden');
     });
   </script>
 </body>
