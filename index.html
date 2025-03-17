@@ -17,12 +17,13 @@
     /* Base & Background animé */
     html, body {
       height: 100%;
+      width: 100%;
+      overflow-x: hidden;
     }
     body {
       font-family: 'Raleway', sans-serif;
       background-color: #121212;
       color: #ffffff;
-      overflow-x: hidden;
       scroll-behavior: smooth;
       margin: 0;
       padding: 0;
@@ -30,81 +31,418 @@
       flex-direction: column;
       position: relative;
     }
-    body::before {
-      content: "";
+    
+    /* Animation de particules en arrière-plan */
+    .particles-container {
       position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: linear-gradient(45deg, rgba(0,153,255,0.2), rgba(0,0,0,0.2));
-      z-index: -2;
-      animation: bgAnimation 20s infinite alternate;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+      overflow: hidden;
     }
-    @keyframes bgAnimation {
-      0% { transform: scale(1) translate(0,0); }
-      100% { transform: scale(1.1) translate(10px,10px); }
+    .particle {
+      position: absolute;
+      background-color: rgba(0, 204, 255, 0.3);
+      border-radius: 50%;
+      pointer-events: none;
     }
+    
+    /* Glow effect */
+    .glow {
+      position: fixed;
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,204,255,0.4) 0%, rgba(0,0,0,0) 70%);
+      pointer-events: none;
+      z-index: -1;
+      opacity: 0.6;
+      transition: transform 0.3s ease-out;
+      display: none;
+    }
+    
     main { flex: 1; }
     
-    /* Navbar */
+    /* Navbar animée */
     .navbar {
       margin-bottom: 0;
+      background-color: rgba(33, 37, 41, 0.8) !important;
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    .navbar.scrolled {
+      padding-top: 10px;
+      padding-bottom: 10px;
+      box-shadow: 0 0 15px rgba(0, 204, 255, 0.5);
+    }
+    .navbar-brand {
+      font-weight: 700;
+      position: relative;
+    }
+    .navbar-brand::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 0;
+      background-color: #00ccff;
+      transition: width 0.3s;
+    }
+    .navbar-brand:hover::after {
+      width: 100%;
+    }
+    .nav-link {
+      position: relative;
+      transition: color 0.3s;
+    }
+    .nav-link::after {
+      content: '';
+      position: absolute;
+      width: 0;
+      height: 2px;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: #00ccff;
+      transition: width 0.3s;
+    }
+    .nav-link:hover::after, .nav-link.active::after {
+      width: 80%;
     }
     
     /* HERO SECTION */
     .hero {
       text-align: center;
-      padding: 100px 20px;
+      padding: 150px 20px;
       background: radial-gradient(circle, rgba(0,0,0,0.9), rgba(0,153,255,0.3));
       z-index: 1;
+      position: relative;
+      overflow: hidden;
     }
-    .hero h1 { font-size: 3rem; font-weight: 700; margin-bottom: 1rem; }
-    .hero p { font-size: 1.2rem; font-weight: 300; margin-bottom: 0; }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: url("data:image/svg+xml,%3Csvg width='100' height='100' viewBox='0 0 100 100' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M11 18c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm48 25c3.866 0 7-3.134 7-7s-3.134-7-7-7-7 3.134-7 7 3.134 7 7 7zm-43-7c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm63 31c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.657 3 3 3zM34 90c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.343 3 3 3zm56-76c1.657 0 3-1.343 3-3s-1.343-3-3-3-3 1.343-3 3 1.657 3 3 3zM12 86c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm28-65c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm23-11c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-6 60c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm29 22c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zM32 63c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm57-13c2.76 0 5-2.24 5-5s-2.24-5-5-5-5 2.24-5 5 2.24 5 5 5zm-9-21c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM60 91c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM35 41c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2zM12 60c1.105 0 2-.895 2-2s-.895-2-2-2-2 .895-2 2 .895 2 2 2z' fill='%230099ff' fill-opacity='0.1' fill-rule='evenodd'/%3E%3C/svg%3E");
+      z-index: -1;
+      opacity: 0.5;
+    }
+    .hero h1 { 
+      font-size: 4rem; 
+      font-weight: 700; 
+      margin-bottom: 1rem;
+      text-shadow: 0 0 10px rgba(0, 204, 255, 0.7);
+      opacity: 0;
+      animation: fadeUp 1s forwards 0.5s;
+    }
+    .hero p { 
+      font-size: 1.4rem; 
+      font-weight: 300; 
+      margin-bottom: 2rem;
+      opacity: 0;
+      animation: fadeUp 1s forwards 1s;
+    }
+    @keyframes fadeUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
     
     /* Titres de section */
     .section-title {
       text-align: center;
       margin-bottom: 40px;
       font-weight: 700;
-      font-size: 1.8rem;
+      font-size: 2rem;
       text-transform: uppercase;
       letter-spacing: 2px;
+      position: relative;
+      padding-bottom: 15px;
     }
-    .section-title i { color: #00ccff; margin-right: 10px; }
+    .section-title::after {
+      content: '';
+      position: absolute;
+      width: 60px;
+      height: 3px;
+      background-color: #00ccff;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    .section-title i { 
+      color: #00ccff; 
+      margin-right: 10px;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+    
+    /* Sections */
+    section {
+      padding: 80px 0;
+      position: relative;
+    }
+    section:nth-child(odd) {
+      background-color: rgba(18, 18, 18, 0.8);
+    }
+    section:nth-child(even) {
+      background-color: rgba(25, 25, 25, 0.8);
+    }
     
     /* Cartes */
     .card {
-      background: rgba(255,255,255,0.15);
-      border: none;
-      border-radius: 8px;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(0, 204, 255, 0.1);
+      border-radius: 10px;
       color: #fff;
-      transition: transform 0.3s, box-shadow 0.3s;
+      transition: transform 0.4s, box-shadow 0.4s;
       height: 100%;
+      overflow: hidden;
+      position: relative;
+      z-index: 1;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(0,204,255,0.1) 0%, rgba(0,0,0,0) 50%);
+      z-index: -1;
     }
     .card:hover {
-      transform: scale(1.02);
-      box-shadow: 0 0 20px rgba(0,153,255,0.5);
+      transform: translateY(-10px) scale(1.02);
+      box-shadow: 0 0 25px rgba(0,204,255,0.4);
     }
-    .card h5 { font-weight: 600; margin-bottom: 0.5rem; }
+    .card h5 { 
+      font-weight: 600; 
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      color: #00ccff;
+    }
+    .card i {
+      margin-right: 10px;
+      font-size: 1.2rem;
+    }
+    .card p {
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+    
+    /* Animation de compétences */
+    .skill-bar {
+      height: 8px;
+      background-color: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+    .skill-progress {
+      position: absolute;
+      height: 100%;
+      border-radius: 4px;
+      background: linear-gradient(90deg, #00ccff, #0066ff);
+      width: 0;
+      transition: width 1.5s ease;
+    }
     
     /* Footer */
     footer {
       background-color: #181818;
-      padding: 20px 0;
+      padding: 30px 0;
       text-align: center;
+      position: relative;
+      overflow: hidden;
     }
-    footer p { margin: 0; }
+    footer::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,204,255,0.7), transparent);
+    }
+    footer p { 
+      margin: 0; 
+      padding-bottom: 15px;
+    }
+    .social-icons {
+      margin-top: 10px;
+    }
     .social-icons a {
       color: #fff;
-      margin: 0 10px;
-      font-size: 1.2rem;
+      margin: 0 15px;
+      font-size: 1.4rem;
+      transition: all 0.3s;
+      display: inline-block;
+      width: 40px;
+      height: 40px;
+      line-height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+    }
+    .social-icons a:hover { 
+      color: #00ccff; 
+      transform: translateY(-5px);
+      box-shadow: 0 0 15px rgba(0,204,255,0.5);
+    }
+    
+    /* Animations */
+    .rotate {
+      animation: rotate 10s linear infinite;
+    }
+    @keyframes rotate {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Bouton vers le haut */
+    .scroll-to-top {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background-color: rgba(0, 204, 255, 0.7);
+      color: #fff;
+      text-align: center;
+      line-height: 40px;
+      cursor: pointer;
+      z-index: 999;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s;
+      box-shadow: 0 0 10px rgba(0, 204, 255, 0.5);
+    }
+    .scroll-to-top.show {
+      opacity: 1;
+      visibility: visible;
+    }
+    .scroll-to-top:hover {
+      background-color: rgba(0, 204, 255, 1);
+      transform: translateY(-3px);
+    }
+    
+    /* Responsive design */
+    @media (max-width: 767px) {
+      .hero h1 { font-size: 2.5rem; }
+      .hero p { font-size: 1.1rem; }
+      .section-title { font-size: 1.6rem; }
+      .card { margin-bottom: 20px; }
+    }
+    
+    /* Curseur personnalisé */
+    .cursor {
+      width: 20px;
+      height: 20px;
+      border: 2px solid #00ccff;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      transition: transform 0.1s ease;
+      z-index: 9999;
+      display: none;
+    }
+    .cursor-dot {
+      width: 4px;
+      height: 4px;
+      background-color: #00ccff;
+      border-radius: 50%;
+      position: fixed;
+      pointer-events: none;
+      transform: translate(-50%, -50%);
+      z-index: 9999;
+      display: none;
+    }
+    
+    /* Effet de survol sur les liens */
+    a {
+      text-decoration: none;
+      color: #00ccff;
       transition: color 0.3s;
     }
-    .social-icons a:hover { color: #00ccff; }
+    a:hover {
+      color: #ffffff;
+    }
+    
+    /* Animation de chargement */
+    .loader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: #121212;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: opacity 0.5s ease, visibility 0.5s ease;
+    }
+    .loader.hidden {
+      opacity: 0;
+      visibility: hidden;
+    }
+    .loader-content {
+      text-align: center;
+    }
+    .loader-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(0, 204, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #00ccff;
+      animation: spin 1s linear infinite;
+      display: inline-block;
+      margin-bottom: 15px;
+    }
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
   </style>
 </head>
 <body>
+  <!-- Loader -->
+  <div class="loader">
+    <div class="loader-content">
+      <div class="loader-spinner"></div>
+      <h3>Chargement...</h3>
+    </div>
+  </div>
+  
+  <!-- Animation de particules -->
+  <div class="particles-container"></div>
+  
+  <!-- Effet de glow qui suit la souris -->
+  <div class="glow"></div>
+  
+  <!-- Curseur personnalisé -->
+  <div class="cursor"></div>
+  <div class="cursor-dot"></div>
+  
   <!-- NAVIGATION -->
-  <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
     <div class="container">
       <a class="navbar-brand" href="index.html">Abdelaaziz Belkhair</a>
       <button class="navbar-toggler" type="button" data-bs-toggle="collapse" 
@@ -114,18 +452,24 @@
       </button>
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link active" href="index.html">Accueil</a></li>
-          <li class="nav-item"><a class="nav-link" href="projects.html">Projets</a></li>
-          <li class="nav-item"><a class="nav-link" href="cv.pdf" download>Télécharger CV</a></li>
+          <li class="nav-item"><a class="nav-link active" href="#home">Accueil</a></li>
+          <li class="nav-item"><a class="nav-link" href="#about">À Propos</a></li>
+          <li class="nav-item"><a class="nav-link" href="#skills">Compétences</a></li>
+          <li class="nav-item"><a class="nav-link" href="#projects">Projets</a></li>
+          <li class="nav-item"><a class="nav-link" href="#personal-info">Infos</a></li>
+          <li class="nav-item"><a class="nav-link" href="cv.pdf" download>CV <i class="fas fa-download"></i></a></li>
         </ul>
       </div>
     </div>
   </nav>
   
   <!-- HERO -->
-  <header class="hero" data-aos="fade-down">
+  <header id="home" class="hero">
     <h1 class="display-4">Abdelaaziz Belkhair</h1>
     <p class="lead">Ingénieur Télécommunications | Cybersécurité | Programmation Système</p>
+    <a href="#about" class="btn btn-outline-light btn-lg mt-4" data-aos="fade-up" data-aos-delay="1000">
+      En savoir plus <i class="fas fa-arrow-down ms-2"></i>
+    </a>
   </header>
   
   <!-- CONTENU PRINCIPAL -->
@@ -134,41 +478,112 @@
     <section id="about" data-aos="fade-up">
       <div class="container">
         <h2 class="section-title"><i class="fa-solid fa-user-secret"></i>À Propos</h2>
-        <p class="lead text-center">
-          Passionné par la cybersécurité, la programmation système et le traitement du signal, j’ai développé de solides compétences en C, Python et MATLAB. Mon intérêt se porte notamment sur la sécurité des réseaux et l’analyse de vulnérabilités.
-        </p>
+        <div class="row">
+          <div class="col-md-6" data-aos="fade-right">
+            <img src="https://via.placeholder.com/600x400" alt="À propos" class="img-fluid rounded shadow-lg mb-4">
+          </div>
+          <div class="col-md-6" data-aos="fade-left">
+            <p class="lead">
+              Passionné par la cybersécurité, la programmation système et le traitement du signal, j'ai développé de solides compétences en C, Python et MATLAB.
+            </p>
+            <p>
+              Mon intérêt se porte notamment sur la sécurité des réseaux, l'analyse de vulnérabilités et le développement d'applications sécurisées. Je suis constamment à la recherche de nouveaux défis pour approfondir mes connaissances et développer mes compétences dans ces domaines.
+            </p>
+            <p>
+              Avec une formation en télécommunications et une expérience pratique en programmation, je combine expertise technique et vision stratégique pour contribuer efficacement à des projets innovants.
+            </p>
+            <div class="mt-4">
+              <a href="#skills" class="btn btn-outline-info me-2">Voir mes compétences <i class="fas fa-arrow-right ms-2"></i></a>
+              <a href="#contact" class="btn btn-info">Me contacter</a>
+            </div>
+          </div>
+        </div>
       </div>
     </section>
     
     <!-- SKILLS -->
     <section id="skills" data-aos="fade-up">
       <div class="container">
-        <h2 class="section-title"><i class="fas fa-cogs"></i>Skills</h2>
+        <h2 class="section-title"><i class="fas fa-cogs"></i>Compétences</h2>
         <div class="row g-4">
-          <div class="col-md-6">
-            <div class="card p-3">
-              <h5><i class="fa-solid fa-network-wired"></i> Programming System &amp; Networks</h5>
+          <div class="col-md-6" data-aos="zoom-in" data-aos-delay="100">
+            <div class="card p-4">
+              <h5><i class="fa-solid fa-network-wired"></i> Programmation Système & Réseaux</h5>
               <p>C (sockets, threads, IPC, shared memory, mutex), TCP/IP, SSH</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="90"></div>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card p-3">
-              <h5><i class="fa-brands fa-python"></i> Python Development</h5>
+          <div class="col-md-6" data-aos="zoom-in" data-aos-delay="200">
+            <div class="card p-4">
+              <h5><i class="fa-brands fa-python"></i> Développement Python</h5>
               <p>Data Science (Pandas, Scikit-learn, TensorFlow), Web Scraping (Flask, BeautifulSoup), Image Processing (OpenCV)</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="85"></div>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card p-3">
-              <h5><i class="fa-solid fa-shield-halved"></i> Cybersecurity</h5>
+          <div class="col-md-6" data-aos="zoom-in" data-aos-delay="300">
+            <div class="card p-4">
+              <h5><i class="fa-solid fa-shield-halved"></i> Cybersécurité</h5>
               <p>Network Traffic Analysis (Scapy), Web Security Testing (XSS, SQLi, CSRF), CVSS Reporting</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="80"></div>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card p-3">
-              <h5><i class="fa-solid fa-wave-square"></i> Signal Processing</h5>
-              <p>MATLAB, Digital Communications</p>
+          <div class="col-md-6" data-aos="zoom-in" data-aos-delay="400">
+            <div class="card p-4">
+              <h5><i class="fa-solid fa-wave-square"></i> Traitement du Signal</h5>
+              <p>MATLAB, Communications Numériques, Filtrage, Analyse spectrale</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="75"></div>
+              </div>
             </div>
           </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- PROJETS -->
+    <section id="projects" data-aos="fade-up">
+      <div class="container">
+        <h2 class="section-title"><i class="fas fa-project-diagram"></i>Projets</h2>
+        <div class="row g-4">
+          <div class="col-md-4" data-aos="flip-left" data-aos-delay="100">
+            <div class="card p-0 h-100">
+              <img src="https://via.placeholder.com/600x300" alt="Projet réseau" class="card-img-top">
+              <div class="card-body">
+                <h5 class="card-title">Analyse de Trafic Réseau</h5>
+                <p class="card-text">Outil d'analyse de trafic réseau développé en Python avec Scapy pour la détection d'anomalies et la visualisation des données.</p>
+                <a href="#" class="btn btn-outline-info mt-2">Voir le projet</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4" data-aos="flip-left" data-aos-delay="200">
+            <div class="card p-0 h-100">
+              <img src="https://via.placeholder.com/600x300" alt="Projet sécurité" class="card-img-top">
+              <div class="card-body">
+                <h5 class="card-title">Système de Communication Sécurisé</h5>
+                <p class="card-text">Implémentation d'un système de communication chiffré en C avec gestion des clés et authentification robuste.</p>
+                <a href="#" class="btn btn-outline-info mt-2">Voir le projet</a>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4" data-aos="flip-left" data-aos-delay="300">
+            <div class="card p-0 h-100">
+              <img src="https://via.placeholder.com/600x300" alt="Projet IA" class="card-img-top">
+              <div class="card-body">
+                <h5 class="card-title">Traitement d'Image par IA</h5>
+                <p class="card-text">Application de techniques d'apprentissage automatique pour l'analyse et la classification d'images avec TensorFlow et OpenCV.</p>
+                <a href="#" class="btn btn-outline-info mt-2">Voir le projet</a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="text-center mt-5">
+          <a href="projects.html" class="btn btn-info">Voir tous les projets</a>
         </div>
       </div>
     </section>
@@ -178,16 +593,77 @@
       <div class="container">
         <h2 class="section-title"><i class="fa-solid fa-user"></i>Informations Personnelles</h2>
         <div class="row g-4">
-          <div class="col-md-6">
-            <div class="card p-3">
+          <div class="col-md-6" data-aos="fade-right">
+            <div class="card p-4">
               <h5><i class="fa-solid fa-location-dot"></i> Localisation</h5>
               <p>Pessac, France</p>
+              <div class="mt-3">
+                <iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d45392.957793563984!2d-0.6528120069656408!3d44.80396412471547!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0xd54d8b989b67cd1%3A0x406651748123e30!2sPessac!5e0!3m2!1sfr!2sfr!4v1710640631913!5m2!1sfr!2sfr" 
+                  width="100%" height="200" style="border:0; border-radius:8px;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+              </div>
             </div>
           </div>
-          <div class="col-md-6">
-            <div class="card p-3">
+          <div class="col-md-6" data-aos="fade-left">
+            <div class="card p-4">
               <h5><i class="fa-solid fa-language"></i> Langues</h5>
-              <p>Français, Anglais, Arabe</p>
+              <p>Français</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="100"></div>
+              </div>
+              <p>Anglais</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="85"></div>
+              </div>
+              <p>Arabe</p>
+              <div class="skill-bar">
+                <div class="skill-progress" data-width="95"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    
+    <!-- CONTACT -->
+    <section id="contact" data-aos="fade-up">
+      <div class="container">
+        <h2 class="section-title"><i class="fas fa-envelope"></i>Contact</h2>
+        <div class="row g-4">
+          <!-- Formulaire de contact -->
+          <div class="col-md-6" data-aos="fade-right">
+            <div class="card p-4">
+              <h5><i class="fas fa-paper-plane"></i> Envoyez-moi un message</h5>
+              <form id="contact-form">
+                <div class="mb-3">
+                  <label for="name" class="form-label">Nom</label>
+                  <input type="text" class="form-control bg-dark text-white" id="name" placeholder="Votre nom" required>
+                </div>
+                <div class="mb-3">
+                  <label for="email" class="form-label">Email</label>
+                  <input type="email" class="form-control bg-dark text-white" id="email" placeholder="Votre email" required>
+                </div>
+                <div class="mb-3">
+                  <label for="message" class="form-label">Message</label>
+                  <textarea class="form-control bg-dark text-white" id="message" rows="5" placeholder="Votre message" required></textarea>
+                </div>
+                <button type="submit" class="btn btn-info">
+                  Envoyer <i class="fas fa-paper-plane ms-2"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          <!-- Coordonnées de contact -->
+          <div class="col-md-6" data-aos="fade-left">
+            <div class="card p-4">
+              <h5><i class="fas fa-info-circle"></i> Mes Coordonnées</h5>
+              <p><i class="fas fa-phone"></i> Téléphone : +33 6 12 34 56 78</p>
+              <p><i class="fas fa-envelope"></i> Email : contact@abdelaazizbelkhair.com</p>
+              <p><i class="fas fa-map-marker-alt"></i> Adresse : Pessac, France</p>
+              <div class="social-icons mt-3">
+                <a href="https://linkedin.com/in/abdelaazizbelkhair" target="_blank"><i class="fab fa-linkedin"></i></a>
+                <a href="https://github.com/abdelaazizbelkhair" target="_blank"><i class="fab fa-github"></i></a>
+                <a href="https://twitter.com/abdelaazizbelk" target="_blank"><i class="fab fa-twitter"></i></a>
+              </div>
             </div>
           </div>
         </div>
@@ -195,22 +671,51 @@
     </section>
   </main>
   
-  <!-- FOOTER -->
-  <footer data-aos="fade-up">
+  <!-- Footer -->
+  <footer>
     <div class="container">
-      <p>&copy; 2024 Abdelaaziz Belkhair</p>
+      <p>&copy; 2025 Abdelaaziz Belkhair. Tous droits réservés.</p>
       <div class="social-icons">
-        <a href="https://www.linkedin.com/in/abdelaaziz-belkhair-12502024b/" target="_blank" rel="noopener noreferrer"><i class="fab fa-linkedin-in"></i></a>
-        <a href="https://github.com/abdelaaziz0" target="_blank" rel="noopener noreferrer"><i class="fab fa-github"></i></a>
+        <a href="#"><i class="fab fa-facebook-f"></i></a>
+        <a href="#"><i class="fab fa-twitter"></i></a>
+        <a href="#"><i class="fab fa-linkedin-in"></i></a>
+        <a href="#"><i class="fab fa-github"></i></a>
       </div>
     </div>
   </footer>
   
-  <!-- SCRIPTS -->
+  <!-- Bouton vers le haut -->
+  <div class="scroll-to-top"><i class="fas fa-chevron-up"></i></div>
+  
+  <!-- Scripts -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/aos/2.3.4/aos.js"></script>
   <script>
     AOS.init();
+
+    // Masquer le loader après le chargement complet de la page
+    window.addEventListener('load', function() {
+      document.querySelector('.loader').classList.add('hidden');
+    });
+
+    // Animation des barres de compétences
+    document.querySelectorAll('.skill-progress').forEach(function(bar) {
+      const width = bar.getAttribute('data-width');
+      bar.style.width = width + '%';
+    });
+
+    // Bouton de retour en haut
+    const scrollToTopBtn = document.querySelector('.scroll-to-top');
+    window.addEventListener('scroll', function() {
+      if (window.pageYOffset > 300) {
+        scrollToTopBtn.classList.add('show');
+      } else {
+        scrollToTopBtn.classList.remove('show');
+      }
+    });
+    scrollToTopBtn.addEventListener('click', function() {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   </script>
 </body>
 </html>
