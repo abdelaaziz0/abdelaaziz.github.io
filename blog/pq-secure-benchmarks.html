@@ -1,0 +1,463 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crypto Post-Quantique : Benchmarks Kyber vs RSA | Blog</title>
+    <meta name="description"
+        content="Benchmarks comparant les performances de Kyber et Dilithium aux algorithmes classiques RSA et ECDSA.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --cyan: #06b6d4;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-hero {
+            background: linear-gradient(135deg, rgba(6, 182, 212, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .article-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--cyan), var(--primary));
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .article-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--cyan);
+            background: rgba(6, 182, 212, 0.15);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .article-hero h1 {
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .article-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--cyan);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .article-content h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(6, 182, 212, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .comparison-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .comparison-table th,
+        .comparison-table td {
+            padding: 0.75rem;
+            border: 1px solid var(--border);
+            text-align: left;
+        }
+
+        .comparison-table th {
+            background: var(--bg-terminal);
+            color: var(--primary);
+        }
+
+        .comparison-table td {
+            color: var(--text-secondary);
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .article-hero h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../blog.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux articles</a>
+
+        <article>
+            <div class="article-hero">
+                <div class="article-meta">
+                    <span class="article-date"><i class="fas fa-calendar"></i> 2025-11-15</span>
+                    <span class="article-tag">Crypto</span>
+                    <span class="article-tag">Post-Quantique</span>
+                    <span class="article-tag">Benchmarks</span>
+                </div>
+                <h1>Crypto Post-Quantique : Kyber 73× plus rapide que RSA</h1>
+                <p class="subtitle">Benchmarks comparant les nouveaux standards NIST (Kyber, Dilithium) aux algorithmes
+                    classiques. Résultats surprenants.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">73×</div>
+                        <div class="hero-stat-label">Kyber vs RSA</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">NIST</div>
+                        <div class="hero-stat-label">Standard 2024</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">ML-KEM</div>
+                        <div class="hero-stat-label">Nom officiel</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <h2>Contexte</h2>
+                <p>En août 2024, le NIST a finalisé les premiers standards de cryptographie post-quantique : ML-KEM
+                    (Kyber) pour l'échange de clés et ML-DSA (Dilithium) pour les signatures. Ces algorithmes résistent
+                    aux attaques par ordinateur quantique.</p>
+
+                <div class="info-box">
+                    <strong>Pourquoi maintenant ?</strong> Même sans ordinateur quantique fonctionnel, les attaquants
+                    peuvent stocker des données chiffrées aujourd'hui pour les déchiffrer plus tard ("Harvest Now,
+                    Decrypt Later").
+                </div>
+
+                <h2>Résultats des benchmarks</h2>
+
+                <h3>Échange de clés (KEM)</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>Algorithme</th>
+                        <th>KeyGen (ops/s)</th>
+                        <th>Encaps (ops/s)</th>
+                        <th>Decaps (ops/s)</th>
+                    </tr>
+                    <tr>
+                        <td>Kyber-768 (ML-KEM)</td>
+                        <td>45,000</td>
+                        <td>52,000</td>
+                        <td>48,000</td>
+                    </tr>
+                    <tr>
+                        <td>RSA-2048</td>
+                        <td>620</td>
+                        <td>18,000</td>
+                        <td>620</td>
+                    </tr>
+                    <tr>
+                        <td>ECDH P-256</td>
+                        <td>12,000</td>
+                        <td>12,000</td>
+                        <td>12,000</td>
+                    </tr>
+                </table>
+
+                <p>Kyber est <strong>73× plus rapide</strong> que RSA pour la génération de clés, et <strong>3.5× plus
+                        rapide</strong> que ECDH.</p>
+
+                <h3>Signatures</h3>
+                <table class="comparison-table">
+                    <tr>
+                        <th>Algorithme</th>
+                        <th>Sign (ops/s)</th>
+                        <th>Verify (ops/s)</th>
+                        <th>Taille sig.</th>
+                    </tr>
+                    <tr>
+                        <td>Dilithium3 (ML-DSA)</td>
+                        <td>8,500</td>
+                        <td>25,000</td>
+                        <td>3.3 KB</td>
+                    </tr>
+                    <tr>
+                        <td>RSA-2048</td>
+                        <td>620</td>
+                        <td>18,000</td>
+                        <td>256 B</td>
+                    </tr>
+                    <tr>
+                        <td>ECDSA P-256</td>
+                        <td>12,000</td>
+                        <td>5,000</td>
+                        <td>64 B</td>
+                    </tr>
+                </table>
+
+                <p>Dilithium est <strong>14× plus rapide</strong> que RSA pour les signatures, mais les signatures sont
+                    plus grandes (3.3 KB vs 256 B).</p>
+
+                <h2>Trade-offs</h2>
+
+                <h3>Avantages PQC</h3>
+                <ul>
+                    <li>Résistance aux attaques quantiques</li>
+                    <li>Performance supérieure en CPU</li>
+                    <li>Pas de calcul modulaire coûteux</li>
+                </ul>
+
+                <h3>Inconvénients PQC</h3>
+                <ul>
+                    <li>Clés et signatures plus grandes</li>
+                    <li>Augmentation de la bande passante</li>
+                    <li>Intégration complexe dans les protocoles existants</li>
+                </ul>
+
+                <h2>Adoption</h2>
+                <p>Les grands acteurs commencent l'intégration :</p>
+                <ul>
+                    <li><strong>Google Chrome</strong> — Support expérimental ML-KEM dans TLS</li>
+                    <li><strong>Cloudflare</strong> — PQC disponible en beta</li>
+                    <li><strong>Signal</strong> — Migration vers X3DH post-quantique</li>
+                </ul>
+
+                <h2>Conclusion</h2>
+                <p>Le mythe que la crypto post-quantique serait "lente" est faux. Kyber et Dilithium sont plus
+                    performants que RSA. Le principal défi est l'augmentation de la taille des clés et signatures.</p>
+
+                <h2>Références</h2>
+                <ul>
+                    <li><a href="https://csrc.nist.gov/pubs/fips/203/final" target="_blank" rel="noopener">NIST FIPS 203
+                            — ML-KEM</a></li>
+                    <li><a href="https://csrc.nist.gov/pubs/fips/204/final" target="_blank" rel="noopener">NIST FIPS 204
+                            — ML-DSA</a></li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

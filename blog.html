@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blog | Abdelaaziz Belkhair</title>
+    <meta name="description"
+        content="Articles et write-ups cybersécurité : pentesting, cryptographie, malware analysis, CTF.">
+    <link rel="canonical" href="https://abdelaaziz0.github.io/blog.html">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --warning: #ffaa00;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-card: #111111;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.7;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--success);
+        }
+
+        :focus-visible {
+            outline: 2px solid var(--primary);
+            outline-offset: 2px;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 0;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        .nav-links a:hover,
+        .nav-links a.active {
+            color: var(--primary);
+        }
+
+        .nav-toggle {
+            display: none;
+            background: none;
+            border: none;
+            color: var(--text);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .hero {
+            padding: 130px 0 50px;
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%);
+        }
+
+        .hero h1 {
+            font-size: 2.25rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .hero h1 span {
+            color: var(--primary);
+        }
+
+        .hero p {
+            font-family: 'JetBrains Mono', monospace;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        section {
+            padding: 50px 0 80px;
+        }
+
+        .terminal-header {
+            font-family: 'JetBrains Mono', monospace;
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px 8px 0 0;
+            padding: 0.6rem 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .dots {
+            display: flex;
+            gap: 6px;
+        }
+
+        .dots span {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dots span:nth-child(1) {
+            background: var(--accent);
+        }
+
+        .dots span:nth-child(2) {
+            background: var(--warning);
+        }
+
+        .dots span:nth-child(3) {
+            background: var(--success);
+        }
+
+        .terminal-title {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .terminal-body {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-top: none;
+            border-radius: 0 0 8px 8px;
+            padding: 1.5rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .section-cmd {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+            padding: 0.75rem 1rem;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+
+        .section-cmd .prompt {
+            color: var(--success);
+        }
+
+        .blog-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+            gap: 1.25rem;
+        }
+
+        .blog-card {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            transition: border-color 0.2s, transform 0.2s;
+        }
+
+        .blog-card:hover {
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+
+        .blog-card-header {
+            padding: 1.25rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .blog-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.1);
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+        }
+
+        .blog-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--accent);
+            background: rgba(255, 107, 107, 0.15);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .blog-card-body {
+            padding: 1.25rem;
+        }
+
+        .blog-card-body h3 {
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+            line-height: 1.4;
+        }
+
+        .blog-card-body p {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            line-height: 1.5;
+            margin-bottom: 0.75rem;
+        }
+
+        .blog-read-more {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+        }
+
+        .blog-read-more:hover {
+            color: var(--success);
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                right: 0;
+                background: var(--bg);
+                flex-direction: column;
+                padding: 1rem;
+                border-bottom: 1px solid var(--border);
+                gap: 0.5rem;
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .nav-toggle {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 1.75rem;
+            }
+
+            .blog-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <div class="container">
+            <nav role="navigation">
+                <a href="index.html" class="logo">AB_</a>
+                <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')"
+                    aria-label="Menu"><i class="fas fa-bars"></i></button>
+                <ul class="nav-links">
+                    <li><a href="index.html">Accueil</a></li>
+                    <li><a href="index.html#projects">Projets</a></li>
+                    <li><a href="#" class="active">Blog</a></li>
+                    <li><a href="index.html#contact">Contact</a></li>
+                    <li><a href="cv.pdf" download><i class="fas fa-download"></i> CV</a></li>
+                </ul>
+            </nav>
+        </div>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>~/cyber<span>_blog</span></h1>
+                <p>$ cat articles/*.md</p>
+            </div>
+        </section>
+
+        <section>
+            <div class="container">
+                <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> cd ..</a>
+
+                <div class="terminal-header">
+                    <div class="dots"><span></span><span></span><span></span></div><span
+                        class="terminal-title">articles/</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="section-cmd"><span class="prompt">$</span> ls -la ./articles/ --sort=date</div>
+                    <div class="blog-grid">
+                        <!-- Dec 2025 - React2Shell -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-12-24</span>
+                                <span class="blog-tag">CVE</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>React2Shell : RCE critique dans React Server Components</h3>
+                                <p>Analyse de CVE-2025-55182 (CVSS 10.0), désérialisation non sécurisée dans RSC.</p>
+                                <a href="blog/react2shell-cve-2025-55182.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Nov 2025 - PQ-Secure -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-11-15</span>
+                                <span class="blog-tag">Crypto</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Crypto Post-Quantique : Kyber 73× plus rapide que RSA</h3>
+                                <p>Mes benchmarks comparant Kyber+Dilithium aux algorithmes classiques.</p>
+                                <a href="blog/pq-secure-benchmarks.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Sept 2025 - ELF Analysis (swapped with Honeytokens) -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-09-08</span>
+                                <span class="blog-tag">Malware</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Analyse statique de binaires ELF</h3>
+                                <p>Techniques de reverse engineering pour analyser des malwares Linux.</p>
+                                <a href="blog/elf-analysis.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Aug 2025 - UOV Signatures -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-08-18</span>
+                                <span class="blog-tag">Crypto</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>UOV : Comprendre les signatures "Huile et Vinaigre"</h3>
+                                <p>Schéma de signature post-quantique basé sur les équations multivariées. Maths et
+                                    implémentation.</p>
+                                <a href="blog/uov-signatures.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- May 2025 - Ivanti -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-05-12</span>
+                                <span class="blog-tag">CVE</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Ivanti VPN : Buffer Overflow exploité par APT</h3>
+                                <p>Analyse de CVE-2025-22457 (CVSS 9.8), VPN ciblé par des groupes state-sponsored.</p>
+                                <a href="blog/ivanti-vpn-cve-2025-22457.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- April 2025 - Erlang -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-04-22</span>
+                                <span class="blog-tag">CVE</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Erlang/OTP SSH : RCE pré-authentification</h3>
+                                <p>Analyse de CVE-2025-32433 (CVSS 10.0), zero-day affectant RabbitMQ.</p>
+                                <a href="blog/erlang-ssh-cve-2025-32433.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Feb 2025 - Race Conditions -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-02-10</span>
+                                <span class="blog-tag">Web</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Race Conditions dans les Apps Web Modernes</h3>
+                                <p>Exploiter TOCTOU, double-spending, et bypass de limites avec Turbo Intruder.</p>
+                                <a href="blog/race-conditions-web.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Jan 2025 - Pentest AD -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-01-25</span>
+                                <span class="blog-tag">Pentest</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Pentesting Active Directory : Guide complet</h3>
+                                <p>Méthodologie : reconnaissance, Kerberoasting, Pass-the-Hash, Domain Admin.</p>
+                                <a href="blog/pentest-ad.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Jan 2025 - Side-Channel -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-01-08</span>
+                                <span class="blog-tag">Crypto</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Attaques Side-Channel sur la Crypto Navigateur</h3>
+                                <p>Timing attacks, cache attacks, et pourquoi WebCrypto n'est pas magique.</p>
+                                <a href="blog/side-channel-browser-crypto.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                        <!-- Jan 2025 - Honeytokens (swapped with ELF) -->
+                        <article class="blog-card">
+                            <div class="blog-card-header">
+                                <span class="blog-date">2025-01-02</span>
+                                <span class="blog-tag">IA</span>
+                            </div>
+                            <div class="blog-card-body">
+                                <h3>Honeytokens IA : Piéger les attaquants avec des LLMs</h3>
+                                <p>Générer des données leurres indétectables avec les modèles de langage.</p>
+                                <a href="blog/honeytokens-llm.html" class="blog-read-more">./read_more.sh <i
+                                        class="fas fa-arrow-right"></i></a>
+                            </div>
+                        </article>
+                    </div>
+                </div>
+
+                <div class="terminal-header">
+                    <div class="dots"><span></span><span></span><span></span></div><span
+                        class="terminal-title">coming_soon/</span>
+                </div>
+                <div class="terminal-body">
+                    <div class="section-cmd"><span class="prompt">$</span> echo "Plus d'articles à venir..."</div>
+                    <p
+                        style="color: var(--text-muted); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
+                        <i class="fas fa-clock"></i> Articles en cours de rédaction...<br>
+                        Sujets à venir : CTF Write-ups, SIEM & Detection, Cloud Security
+                    </p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

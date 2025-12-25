@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Attaques Side-Channel sur la Crypto Navigateur | Blog</title>
+    <meta name="description"
+        content="Timing attacks, cache attacks et vulnérabilités de WebCrypto API. Pourquoi la crypto côté client est risquée.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --pink: #ec4899;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-hero {
+            background: linear-gradient(135deg, rgba(236, 72, 153, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .article-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--pink), var(--primary));
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .article-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--pink);
+            background: rgba(236, 72, 153, 0.15);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .article-hero h1 {
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .article-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--pink);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .article-content h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(236, 72, 153, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box strong {
+            color: var(--accent);
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .article-hero h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../blog.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux articles</a>
+
+        <article>
+            <div class="article-hero">
+                <div class="article-meta">
+                    <span class="article-date"><i class="fas fa-calendar"></i> 2025-01-08</span>
+                    <span class="article-tag">Crypto</span>
+                    <span class="article-tag">Side-Channel</span>
+                    <span class="article-tag">Browser</span>
+                </div>
+                <h1>Attaques Side-Channel sur la Crypto Navigateur</h1>
+                <p class="subtitle">Timing attacks, cache attacks et pourquoi WebCrypto API n'est pas magique. Les
+                    pièges de la cryptographie côté client.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">Timing</div>
+                        <div class="hero-stat-label">Attaque #1</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">Cache</div>
+                        <div class="hero-stat-label">Attaque #2</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">JS</div>
+                        <div class="hero-stat-label">Vecteur</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <h2>Qu'est-ce qu'une attaque side-channel ?</h2>
+                <p>Une attaque par canaux auxiliaires n'attaque pas l'algorithme cryptographique lui-même, mais son
+                    implémentation. Elle exploite des fuites d'information via le temps d'exécution, la consommation
+                    électrique, ou les accès mémoire.</p>
+
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Dans un navigateur :</strong> JavaScript peut
+                    mesurer le temps avec <code>performance.now()</code>. Même avec une résolution réduite (pour contrer
+                    Spectre), des attaques statistiques restent possibles.
+                </div>
+
+                <h2>Timing attacks</h2>
+
+                <h3>Comparaison de strings vulnérable</h3>
+                <pre><code>// VULNÉRABLE : comparaison caractère par caractère
+function checkPassword(input, stored) {
+    if (input.length !== stored.length) return false;
+    for (let i = 0; i < input.length; i++) {
+        if (input[i] !== stored[i]) return false;  // Fuite!
+    }
+    return true;
+}
+
+// L'attaquant peut deviner caractère par caractère
+// en mesurant le temps de réponse</code></pre>
+
+                <h3>Comparaison constante</h3>
+                <pre><code>// SÉCURISÉ : temps constant
+function safeCompare(a, b) {
+    if (a.length !== b.length) return false;
+    let result = 0;
+    for (let i = 0; i < a.length; i++) {
+        result |= a.charCodeAt(i) ^ b.charCodeAt(i);
+    }
+    return result === 0;
+}</code></pre>
+
+                <h2>HMAC timing attack</h2>
+                <p>Même avec une comparaison sécurisée, le calcul du HMAC lui-même peut fuiter :</p>
+
+                <pre><code>// Mesure du temps de vérification HMAC
+async function timingAttack(message, partialMac) {
+    const times = [];
+    
+    for (let byte = 0; byte < 256; byte++) {
+        const testMac = partialMac + String.fromCharCode(byte);
+        const start = performance.now();
+        
+        await verifyHMAC(message, testMac);
+        
+        const elapsed = performance.now() - start;
+        times.push({ byte, elapsed });
+    }
+    
+    // Le byte correct prend plus de temps (plus de comparaisons)
+    return times.sort((a, b) => b.elapsed - a.elapsed)[0].byte;
+}</code></pre>
+
+                <h2>WebCrypto API</h2>
+                <p>WebCrypto délègue les opérations au navigateur (code natif), ce qui réduit MAIS N'ÉLIMINE PAS les
+                    risques :</p>
+
+                <ul>
+                    <li>Les implémentations natives peuvent avoir leurs propres fuites</li>
+                    <li>Le code JS autour de WebCrypto peut introduire des vulnérabilités</li>
+                    <li>La gestion des clés en JS expose la mémoire</li>
+                </ul>
+
+                <pre><code>// WebCrypto : mieux mais pas parfait
+const key = await crypto.subtle.importKey(
+    'raw',
+    keyBuffer,
+    { name: 'AES-GCM' },
+    false,  // non-extractable
+    ['encrypt', 'decrypt']
+);
+
+// La clé est en mémoire JavaScript avant l'import
+// Un attaquant avec accès mémoire peut la récupérer</code></pre>
+
+                <h2>Mitigations</h2>
+
+                <h3>Côté code</h3>
+                <ul>
+                    <li>Utiliser des implémentations constant-time</li>
+                    <li>Privilégier WebCrypto aux libraries JS pures</li>
+                    <li>Minimiser le temps de vie des clés en mémoire</li>
+                </ul>
+
+                <h3>Côté navigateur</h3>
+                <ul>
+                    <li>Réduire la précision de <code>performance.now()</code></li>
+                    <li>Isoler les contextes (Site Isolation)</li>
+                    <li>Désactiver SharedArrayBuffer si non nécessaire</li>
+                </ul>
+
+                <h2>Conclusion</h2>
+                <p>La cryptographie côté client est intrinsèquement risquée. Même avec WebCrypto, le contexte JavaScript
+                    est hostile. Pour les opérations sensibles, préférez les opérations côté serveur ou des
+                    environnements plus contrôlés.</p>
+
+                <h2>Références</h2>
+                <ul>
+                    <li><a href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Crypto_API" target="_blank"
+                            rel="noopener">MDN — Web Crypto API</a></li>
+                    <li><a href="https://timing.attacks.cr.yp.to/" target="_blank" rel="noopener">djb — Timing
+                            Attacks</a></li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

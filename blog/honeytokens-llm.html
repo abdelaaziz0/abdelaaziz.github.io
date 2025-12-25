@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Honeytokens IA : Piéger les attaquants avec des LLMs | Blog</title>
+    <meta name="description"
+        content="Utiliser les LLMs pour générer des honeytokens réalistes et détecter les intrusions.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --green: #22c55e;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-hero {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .article-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--green), var(--primary));
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .article-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--green);
+            background: rgba(34, 197, 94, 0.15);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .article-hero h1 {
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .article-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--green);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .article-content h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(34, 197, 94, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .concept-box {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(0, 212, 255, 0.05));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 8px;
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .concept-box strong {
+            color: var(--green);
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .article-hero h1 {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../blog.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux articles</a>
+
+        <article>
+            <div class="article-hero">
+                <div class="article-meta">
+                    <span class="article-date"><i class="fas fa-calendar"></i> 2025-01-02</span>
+                    <span class="article-tag">IA</span>
+                    <span class="article-tag">Déception</span>
+                    <span class="article-tag">Défense</span>
+                </div>
+                <h1>Honeytokens IA : Piéger les attaquants avec des LLMs</h1>
+                <p class="subtitle">Utiliser les modèles de langage pour générer des données leurres réalistes et
+                    indétectables, puis détecter leur exfiltration.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">LLM</div>
+                        <div class="hero-stat-label">Génération</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">0</div>
+                        <div class="hero-stat-label">Faux Positifs</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">100%</div>
+                        <div class="hero-stat-label">Détection</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <h2>Qu'est-ce qu'un honeytoken ?</h2>
+                <p>Un honeytoken est une donnée fictive placée stratégiquement dans un système. Si elle est accédée ou
+                    exfiltrée, c'est un signe certain d'intrusion car aucun utilisateur légitime n'a de raison de la
+                    toucher.</p>
+
+                <div class="concept-box">
+                    <strong><i class="fas fa-lightbulb"></i> L'avantage des honeytokens :</strong> Contrairement aux IDS
+                    classiques qui génèrent des faux positifs, un honeytoken déclenché est une preuve certaine
+                    d'activité malveillante. Pas de bruit, que du signal.
+                </div>
+
+                <h3>Exemples classiques</h3>
+                <ul>
+                    <li>Fichiers <code>passwords.txt</code> avec des credentials monitorés</li>
+                    <li>Comptes utilisateurs inactifs avec alertes sur connexion</li>
+                    <li>URLs uniques dans des documents sensibles</li>
+                    <li>Faux records dans des bases de données</li>
+                </ul>
+
+                <h2>Le problème : réalisme</h2>
+                <p>Les honeytokens traditionnels sont souvent détectables par un attaquant expérimenté. Un fichier
+                    <code>passwords.txt</code> trop propre ou des données trop régulières éveillent les soupçons.</p>
+
+                <h2>Solution : génération par LLM</h2>
+                <p>Les LLMs peuvent générer des données qui imitent parfaitement le style et le format des vraies
+                    données de l'entreprise.</p>
+
+                <h3>Génération de faux credentials</h3>
+                <pre><code>import ollama
+
+def generate_fake_creds(company_name, num_entries=10):
+    prompt = f"""Generate {num_entries} realistic fake employee credentials 
+    for {company_name}. Include:
+    - Email (firstname.lastname@company.com format)
+    - Password (mix of patterns people actually use)
+    - Department
+    - Last login date
+    
+    Make them look like real leaked data, not too clean."""
+    
+    response = ollama.generate(model='llama3.2', prompt=prompt)
+    return response['response']
+
+# Générer des honeytokens
+fake_data = generate_fake_creds("Acme Corp", 20)
+print(fake_data)</code></pre>
+
+                <h3>Documents leurres</h3>
+                <pre><code>def generate_honey_document(doc_type, company_context):
+    prompts = {
+        "financial": "Generate a realistic quarterly financial report...",
+        "hr": "Generate employee performance review notes...",
+        "technical": "Generate API documentation with fake endpoints..."
+    }
+    
+    response = ollama.generate(
+        model='llama3.2', 
+        prompt=prompts[doc_type] + f"\nCompany context: {company_context}"
+    )
+    return response['response']</code></pre>
+
+                <h2>Détection de l'exfiltration</h2>
+                <p>Une fois les honeytokens placés, il faut détecter leur utilisation :</p>
+
+                <ul>
+                    <li><strong>Canary tokens</strong> — URLs uniques qui alertent quand accédées</li>
+                    <li><strong>Monitored credentials</strong> — Comptes qui alertent sur tentative de connexion</li>
+                    <li><strong>DNS exfil detection</strong> — Domaines uniques dans les documents</li>
+                </ul>
+
+                <h3>Intégration Canarytokens</h3>
+                <pre><code># Créer un canary token (exemple avec l'API)
+import requests
+
+def create_canary_url(memo):
+    response = requests.post('https://canarytokens.org/generate', data={
+        'type': 'web',
+        'email': 'security@company.com',
+        'memo': memo
+    })
+    return response.json()['token_url']
+
+# Insérer dans un document honeytoken
+honey_url = create_canary_url("Financial Report Q4 accessed")
+document = f"Confidential data available at: {honey_url}"</code></pre>
+
+                <h2>Architecture complète</h2>
+                <ol>
+                    <li><strong>Génération</strong> — LLM crée des données réalistes</li>
+                    <li><strong>Placement</strong> — Déploiement stratégique (shares, databases, documents)</li>
+                    <li><strong>Monitoring</strong> — Canary tokens + intégration SIEM</li>
+                    <li><strong>Alerte</strong> — Notification immédiate + enrichissement contextuel</li>
+                </ol>
+
+                <h2>Conclusion</h2>
+                <p>Les LLMs ouvrent de nouvelles possibilités pour la deception technology. Des honeytokens
+                    indistinguables des vraies données rendent la détection d'intrusion plus fiable et moins sujette aux
+                    faux positifs.</p>
+
+                <h2>Ressources</h2>
+                <ul>
+                    <li><a href="https://canarytokens.org/" target="_blank" rel="noopener">Canarytokens.org</a></li>
+                    <li><a href="https://github.com/thinkst/opencanary" target="_blank" rel="noopener">OpenCanary</a>
+                    </li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

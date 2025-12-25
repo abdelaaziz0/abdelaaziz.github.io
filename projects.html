@@ -1,338 +1,721 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Abdelaaziz Belkhair – Projets</title>
-
-  <!-- Librairies -->
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;700&family=Orbitron:wght@400;500;700;900&family=Space+Grotesk:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Projets | Abdelaaziz Belkhair</title>
+  <meta name="description"
+    content="Portfolio de projets cybersécurité : malware analysis, honeypots, cryptographie post-quantique, audit AD.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/projects.html">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
   <style>
-    :root{
-      --primary:#00d4ff;
-      --secondary:#0099cc;
-      --bg-primary:#0a0a0a;
-      --bg-secondary:#1a1a1a;
-      --text-primary:#ffffff;
-      --text-secondary:#b0b0b0;
-      --border:rgba(0,212,255,.25);
-      --grad:linear-gradient(135deg,var(--primary),var(--secondary));
-    }
-    *{margin:0;padding:0;box-sizing:border-box}
-    html{scroll-behavior:smooth}
-    body{
-      font-family:'Space Grotesk',sans-serif;
-      background:var(--bg-primary);
-      color:var(--text-primary);
-      overflow-x:hidden;
+    :root {
+      --primary: #00d4ff;
+      --primary-dark: #0099cc;
+      --accent: #ff6b6b;
+      --warning: #ffaa00;
+      --success: #00ff88;
+      --bg: #0a0a0a;
+      --bg-card: #111111;
+      --bg-terminal: #0d0d0d;
+      --text: #e4e4e7;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --border: #27272a;
     }
 
-    /* Matrix rain */
-    .matrix-rain{position:fixed;inset:0;pointer-events:none;z-index:-2;opacity:.08}
-    .matrix-char{
-      position:absolute;
-      color:var(--primary);
-      font-family:'JetBrains Mono',monospace;
-      font-size:14px;
-      animation:matrixFall linear infinite;
-    }
-    @keyframes matrixFall{0%{transform:translateY(-100vh);opacity:1}100%{transform:translateY(100vh);opacity:0}}
-
-    /* Loader */
-    .loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:var(--bg-primary);z-index:9999;transition:opacity .7s,visibility .7s}
-    .loader.hidden{opacity:0;visibility:hidden}
-    .loader-logo{
-      font-family:'Orbitron',monospace;
-      font-size:3.5rem;
-      background:var(--grad);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-      animation:glitch 2s infinite;
-    }
-    @keyframes glitch{0%,100%{transform:translateX(0)}20%{transform:translateX(-4px)}40%{transform:translateX(4px)}60%{transform:translateX(-4px)}80%{transform:translateX(4px)}}
-    .loader-bar{width:0;height:4px;background:var(--grad);animation:loading 2.5s forwards}
-    @keyframes loading{100%{width:100%}}
-
-    /* Navbar */
-    .navbar{
-      background:rgba(10,10,10,.95)!important;
-      backdrop-filter:blur(20px);
-      border-bottom:1px solid var(--border);
-      padding:1rem 0;
-    }
-    .navbar-brand{
-      font-family:'Orbitron',monospace;
-      font-weight:700;
-      font-size:1.7rem;
-      background:var(--grad);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .nav-link{
-      position:relative;
-      font-weight:500;
-      margin:0 .5rem;
-      padding:.4rem 1rem!important;
-      border-radius:25px;
-      transition:all .3s;
-    }
-    .nav-link::before{
-      content:'';
-      position:absolute;inset:0;
-      border-radius:25px;
-      background:var(--grad);
-      opacity:0;transform:scale(.85);
-      z-index:-1;transition:all .3s;
-    }
-    .nav-link:hover::before,.nav-link.active::before{opacity:.25;transform:scale(1)}
-    .nav-link:hover,.nav-link.active{color:#fff!important}
-
-    /* Hero */
-    .hero{
-      min-height:60vh;
-      display:flex;align-items:center;justify-content:center;
-      flex-direction:column;
-      text-align:center;
-      background:radial-gradient(circle at 20% 50%,rgba(0,212,255,.15)0%,transparent 60%),var(--bg-primary);
-    }
-    .hero-terminal{
-      font-size:4rem;
-      margin-bottom:1rem;
-      background:var(--grad);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-    }
-    .hero h1{
-      font-family:'Orbitron',monospace;
-      font-size:clamp(2.5rem,6vw,4rem);
-      font-weight:800;
-      background:var(--grad);
-      -webkit-background-clip:text;background-clip:text;
-      -webkit-text-fill-color:transparent;
-      margin-bottom:1rem;
-    }
-    .hero p{color:var(--text-secondary);font-family:'JetBrains Mono',monospace}
-
-    /* Sections */
-    section{padding:100px 0}
-    .section-title{text-align:center;margin-bottom:3rem}
-    .section-title h2{
-      font-family:'Orbitron',monospace;
-      font-size:clamp(2rem,4vw,3rem)
+    *,
+    *::before,
+    *::after {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
     }
 
-    /* Timeline */
-    .timeline{
-      max-width:900px;
-      margin:0 auto;
-      display:flex;
-      flex-direction:column;
-      gap:2.5rem;
-    }
-    .timeline-item{transition:transform .4s}
-    .timeline-item:hover{transform:translateY(-4px)}
-    .timeline-content{
-      background:var(--bg-secondary);
-      border-left:6px solid var(--primary);
-      padding:1.8rem 2rem;
-      border-radius:12px;
-      box-shadow:0 6px 18px rgba(0,0,0,.35);
-      display:flex;
-      gap:1.3rem;
-      align-items:flex-start;
-    }
-    .timeline-icon{
-      flex:0 0 42px;
-      height:42px;width:42px;
-      display:flex;align-items:center;justify-content:center;
-      border-radius:50%;
-      background:var(--grad);
-      color:var(--bg-primary);
-      font-size:1.2rem;
-      box-shadow:0 0 8px rgba(0,212,255,.5);
-      margin-top:.2rem;
-    }
-    .timeline-title{font-size:1.25rem;font-weight:600;margin-bottom:.4rem}
-    .timeline-description{color:var(--text-secondary);line-height:1.7}
-    .timeline-link{
-      display:inline-block;margin-top:.6rem;
-      font-family:'JetBrains Mono',monospace;font-size:.9rem;
-      color:var(--primary);text-decoration:none;
-    }
-    .timeline-link:hover{text-decoration:underline}
-
-    @media(max-width:576px){
-      .timeline-content{flex-direction:column;padding:1.5rem}
-      .timeline-icon{margin-top:0}
+    html {
+      scroll-behavior: smooth;
     }
 
-    /* Footer */
-    footer{
-      background:var(--bg-secondary);
-      border-top:1px solid var(--border);
-      padding:3rem 0;text-align:center;
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      line-height: 1.7;
     }
-    footer p{margin:0;font-size:1rem;color:var(--text-secondary)}
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    a {
+      color: var(--primary);
+      text-decoration: none;
+      transition: color 0.2s;
+    }
+
+    a:hover {
+      color: var(--success);
+    }
+
+    :focus-visible {
+      outline: 2px solid var(--primary);
+      outline-offset: 2px;
+    }
+
+    header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 100;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1rem 0;
+    }
+
+    .logo {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--primary);
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 1.75rem;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.9rem;
+    }
+
+    .nav-links a:hover,
+    .nav-links a.active {
+      color: var(--primary);
+    }
+
+    .nav-toggle {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    .hero {
+      padding: 130px 0 50px;
+      text-align: center;
+      background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%);
+    }
+
+    .hero h1 {
+      font-size: 2.25rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .hero h1 span {
+      color: var(--primary);
+    }
+
+    .hero p {
+      font-family: 'JetBrains Mono', monospace;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    .back-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      color: var(--text-secondary);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .back-link:hover {
+      color: var(--primary);
+    }
+
+    section {
+      padding: 50px 0 80px;
+    }
+
+    .terminal-header {
+      font-family: 'JetBrains Mono', monospace;
+      background: var(--bg-terminal);
+      border: 1px solid var(--border);
+      border-radius: 8px 8px 0 0;
+      padding: 0.6rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .dots {
+      display: flex;
+      gap: 6px;
+    }
+
+    .dots span {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+
+    .dots span:nth-child(1) {
+      background: var(--accent);
+    }
+
+    .dots span:nth-child(2) {
+      background: var(--warning);
+    }
+
+    .dots span:nth-child(3) {
+      background: var(--success);
+    }
+
+    .terminal-title {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    .terminal-body {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-top: none;
+      border-radius: 0 0 8px 8px;
+      padding: 1.5rem;
+      margin-bottom: 2.5rem;
+    }
+
+    .section-cmd {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 4px;
+      color: var(--text-secondary);
+    }
+
+    .section-cmd .prompt {
+      color: var(--success);
+    }
+
+    .projects-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+      gap: 1.25rem;
+    }
+
+    .project-card {
+      background: var(--bg-terminal);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      overflow: hidden;
+      transition: border-color 0.2s, transform 0.2s;
+    }
+
+    .project-card:hover {
+      border-color: var(--primary);
+      transform: translateY(-3px);
+    }
+
+    .project-header {
+      padding: 1.25rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .project-icon {
+      width: 42px;
+      height: 42px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0, 212, 255, 0.15);
+      border-radius: 8px;
+      color: var(--primary);
+      font-size: 1.1rem;
+    }
+
+    .project-links a {
+      color: var(--text-muted);
+      font-size: 1.1rem;
+      transition: color 0.2s;
+    }
+
+    .project-links a:hover {
+      color: var(--primary);
+    }
+
+    .project-body {
+      padding: 1.25rem;
+    }
+
+    .project-category {
+      display: inline-block;
+      padding: 0.2rem 0.5rem;
+      background: rgba(255, 107, 107, 0.15);
+      border-radius: 3px;
+      font-size: 0.7rem;
+      color: var(--accent);
+      font-family: 'JetBrains Mono', monospace;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.6rem;
+    }
+
+    .project-body h3 {
+      font-size: 1.05rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .project-body p {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 0.75rem;
+      line-height: 1.5;
+    }
+
+    .project-details {
+      background: var(--bg);
+      border-radius: 6px;
+      padding: 0.875rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .project-details h4 {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.4rem;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .project-details ul {
+      list-style: none;
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+    }
+
+    .project-details li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.4rem;
+      margin-bottom: 0.15rem;
+    }
+
+    .project-details li::before {
+      content: '›';
+      color: var(--primary);
+      font-weight: bold;
+    }
+
+    .project-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.4rem;
+    }
+
+    .project-tag {
+      padding: 0.2rem 0.5rem;
+      background: var(--bg);
+      border-radius: 3px;
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    footer {
+      padding: 1.5rem 0;
+      border-top: 1px solid var(--border);
+      text-align: center;
+    }
+
+    footer p {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+    }
+
+    @media (max-width: 768px) {
+      .nav-links {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        right: 0;
+        background: var(--bg);
+        flex-direction: column;
+        padding: 1rem;
+        border-bottom: 1px solid var(--border);
+        gap: 0.5rem;
+      }
+
+      .nav-links.active {
+        display: flex;
+      }
+
+      .nav-toggle {
+        display: block;
+      }
+
+      .hero h1 {
+        font-size: 1.75rem;
+      }
+
+      .projects-grid {
+        grid-template-columns: 1fr;
+      }
+    }
   </style>
 </head>
+
 <body>
-  <!-- Matrix rain -->
-  <div class="matrix-rain"></div>
-
-  <!-- Loader -->
-  <div class="loader" id="pageLoader">
-    <div class="text-center">
-      <div class="loader-logo">AB</div>
-      <div class="loader-bar"></div>
-    </div>
-  </div>
-
-  <!-- Navbar -->
-  <nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <header>
     <div class="container">
-      <a class="navbar-brand" href="index.html">AB</a>
-      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navContent" aria-controls="navContent" aria-expanded="false" aria-label="Toggle navigation">
-        <span class="navbar-toggler-icon"></span>
-      </button>
-      <div class="collapse navbar-collapse" id="navContent">
-        <ul class="navbar-nav ms-auto">
-          <li class="nav-item"><a class="nav-link" href="index.html">Accueil</a></li>
-          <li class="nav-item"><a class="nav-link active" href="#">Projets</a></li>
-          <li class="nav-item"><a class="nav-link" href="cv.pdf" download><i class="fas fa-download me-1"></i>CV</a></li>
+      <nav role="navigation">
+        <a href="index.html" class="logo">AB_</a>
+        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')"
+          aria-label="Menu"><i class="fas fa-bars"></i></button>
+        <ul class="nav-links">
+          <li><a href="index.html">Accueil</a></li>
+          <li><a href="index.html#skills">Compétences</a></li>
+          <li><a href="#" class="active">Projets</a></li>
+          <li><a href="index.html#experience">Parcours</a></li>
+          <li><a href="index.html#contact">Contact</a></li>
+          <li><a href="cv.pdf" download><i class="fas fa-download"></i> CV</a></li>
         </ul>
-      </div>
+      </nav>
     </div>
-  </nav>
-
-  <!-- Hero -->
-  <header class="hero" id="top">
-    <i class="fas fa-terminal hero-terminal"></i>
-    <h1>Mes Projets</h1>
-    <p>// explore mes réalisations en mode terminal</p>
   </header>
 
-  <!-- Timeline -->
-  <section id="projects">
-    <div class="container">
-      <div class="section-title"><h2>Timeline Projets</h2></div>
+  <main>
+    <section class="hero">
+      <div class="container">
+        <h1>~/all_<span>projects</span></h1>
+        <p>$ ls -la --recursive</p>
+      </div>
+    </section>
 
-      <div class="timeline">
-        <!-- 1 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-diagram-project"></i></div>
-            <div>
-              <h3 class="timeline-title">Mémoire partagée distribuée</h3>
-              <p class="timeline-description">Implémentation en C d’une mémoire cohérente entre processus distants avec synchronisation par sockets TCP.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/MEMOIRE_DISTRIBUEE" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
+    <section>
+      <div class="container">
+        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> cd ..</a>
+
+        <div class="terminal-header">
+          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">offensive/</span>
+        </div>
+        <div class="terminal-body">
+          <div class="section-cmd"><span class="prompt">$</span> ls ./offensive/</div>
+          <div class="projects-grid">
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-bug"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/FADAM" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Malware Analysis</span>
+                <h3>FADAM - Framework Malware</h3>
+                <p>Framework modulaire pour l'analyse de binaires ELF obfusqués.</p>
+                <div class="project-details">
+                  <h4>Fonctionnalités</h4>
+                  <ul>
+                    <li>Analyse statique : parsing ELF, sections/symboles</li>
+                    <li>Déobfuscation : unpacking, décryptage XOR</li>
+                    <li>Traçage dynamique + émulation</li>
+                    <li>Extraction IoC : IPs, URLs, hashes</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">ELF</span><span class="project-tag">Reverse</span><span
+                    class="project-tag">yara</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-user-secret"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/Net-Aware-Aut-Auditor"
+                    target="_blank" rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Active Directory</span>
+                <h3>Net-Aware Auth Auditor</h3>
+                <p>Outil d'audit réseau avec reconnaissance passive/active.</p>
+                <div class="project-details">
+                  <h4>Capacités</h4>
+                  <ul>
+                    <li>Kerberos : tickets, SPN, Kerberoasting</li>
+                    <li>NTLM : hashes, relais, Pass-the-Hash</li>
+                    <li>LDAP : énumération, faiblesses</li>
+                    <li>TLS : versions, cipher suites</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">Scapy</span><span class="project-tag">Kerberos</span><span
+                    class="project-tag">NTLM</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-globe"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/CRAWLER" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Web Security</span>
+                <h3>Scanner Vulnérabilités Web</h3>
+                <p>Crawler intelligent pour audits de sécurité web.</p>
+                <div class="project-details">
+                  <h4>Détections</h4>
+                  <ul>
+                    <li>XSS (Reflected, Stored, DOM)</li>
+                    <li>SQL Injection</li>
+                    <li>CSRF, Open Redirect, IDOR</li>
+                    <li>Scoring CVSS automatique</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">Flask</span><span class="project-tag">OWASP</span><span
+                    class="project-tag">CVSS</span></div>
+              </div>
+            </article>
           </div>
         </div>
 
-        <!-- 2 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-comments"></i></div>
-            <div>
-              <h3 class="timeline-title">Chat client-serveur</h3>
-              <p class="timeline-description">Messagerie multi-utilisateurs, transfert P2P et interface CLI, entièrement en C.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/CHAT_CLIENT_SERVEUR" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
+        <div class="terminal-header">
+          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">defensive/</span>
+        </div>
+        <div class="terminal-body">
+          <div class="section-cmd"><span class="prompt">$</span> ls ./defensive/</div>
+          <div class="projects-grid">
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-spider"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/PROJECT_HONEYPOT" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Threat Detection</span>
+                <h3>Honeypot + ML Detection</h3>
+                <p>Infrastructure honeypot multi-services avec détection ML.</p>
+                <div class="project-details">
+                  <h4>Architecture</h4>
+                  <ul>
+                    <li>Services simulés : SSH, HTTP</li>
+                    <li>Logging centralisé + métriques temps réel</li>
+                    <li>Détection comportementale (Scikit-learn)</li>
+                    <li>Dashboards visualisation patterns</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">Scikit-learn</span><span class="project-tag">Docker</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-code"></i></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">DevSecOps</span>
+                <h3>SecureDevKit (AM Advisory)</h3>
+                <p>Plateforme SAST hybride développée en stage R&D.</p>
+                <div class="project-details">
+                  <h4>Innovation</h4>
+                  <ul>
+                    <li>Moteur hybride : statique + IA</li>
+                    <li>Modèles : CodeBERT, Phi fine-tuned</li>
+                    <li>Détection OWASP Top 10</li>
+                    <li>Génération correctifs par LLM</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">CodeBERT</span><span class="project-tag">LLM</span><span
+                    class="project-tag">OWASP</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-fire-flame-curved"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/FIREWALL" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Network Security</span>
+                <h3>Python Mini-Firewall</h3>
+                <p>Firewall éducatif avec interface monitoring.</p>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">Scapy</span><span class="project-tag">Flask</span></div>
+              </div>
+            </article>
           </div>
         </div>
 
-        <!-- 3 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-hat-wizard"></i></div>
-            <div>
-              <h3 class="timeline-title">Honeypot cybersécurité</h3>
-              <p class="timeline-description">Services factices SSH/HTTP et détection d’anomalies IA en temps réel.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/PROJECT_HONEYPOT" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
+        <div class="terminal-header">
+          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">crypto/</span>
+        </div>
+        <div class="terminal-body">
+          <div class="section-cmd"><span class="prompt">$</span> ls ./crypto/</div>
+          <div class="projects-grid">
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-atom"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/PQ-secure" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Post-Quantum</span>
+                <h3>PQ-Secure Sync</h3>
+                <p>Synchronisation fichiers par crypto post-quantique.</p>
+                <div class="project-details">
+                  <h4>Stack crypto</h4>
+                  <ul>
+                    <li>KEM : Kyber768 (NIST standard)</li>
+                    <li>Signatures : Dilithium3</li>
+                    <li>Dérivation : HKDF-SHA256</li>
+                    <li>Symétrique : AES-256-GCM</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">Kyber</span><span class="project-tag">Dilithium</span><span
+                    class="project-tag">liboqs</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-cloud"></i></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Cloud Security</span>
+                <h3>Architecture Azure Sécurisée</h3>
+                <p>Projet ENSEIRB : infrastructure cloud Zero Trust.</p>
+                <div class="project-details">
+                  <h4>Composants</h4>
+                  <ul>
+                    <li>Azure AD avec RBAC</li>
+                    <li>Log Analytics + dashboards</li>
+                    <li>Micro-segmentation</li>
+                    <li>Procédures réponse incident</li>
+                  </ul>
+                </div>
+                <div class="project-tags"><span class="project-tag">Azure</span><span class="project-tag">Azure
+                    AD</span><span class="project-tag">Zero Trust</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-hard-drive"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/secure-app-storage" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Distributed</span>
+                <h3>Stockage Distribué Chiffré</h3>
+                <p>Architecture distribuée avec chiffrement E2E.</p>
+                <div class="project-tags"><span class="project-tag">Docker</span><span
+                    class="project-tag">E2E</span><span class="project-tag">Replication</span></div>
+              </div>
+            </article>
           </div>
         </div>
 
-        <!-- 4 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-spider"></i></div>
-            <div>
-              <h3 class="timeline-title">Scanner vulnérabilités Web</h3>
-              <p class="timeline-description">Crawler, détection XSS/SQLi/CSRF, scoring CVSS et interface Flask.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/CRAWLER" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
-          </div>
+        <div class="terminal-header">
+          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">systems/</span>
         </div>
-
-        <!-- 5 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-shield-halved"></i></div>
-            <div>
-              <h3 class="timeline-title">Python mini-Firewall</h3>
-              <p class="timeline-description">Filtrage IP/ports, détection de scans et interface web temps réel.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/FIREWALL" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- 6 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-robot"></i></div>
-            <div>
-              <h3 class="timeline-title">Jumeau numérique PyBullet</h3>
-              <p class="timeline-description">Simulation pick-and-place KUKA IIWA, communication UDP et visualisation distante.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/JUMEAUX_NUM_PYBULLET" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
-          </div>
-        </div>
-
-        <!-- 7 -->
-        <div class="timeline-item">
-          <div class="timeline-content">
-            <div class="timeline-icon"><i class="fas fa-network-wired"></i></div>
-            <div>
-              <h3 class="timeline-title">Framework simulation botnet</h3>
-              <p class="timeline-description">Serveur C&C et bots Python (Paramiko) dans un environnement d’étude sécurisé.</p>
-              <a class="timeline-link" href="https://github.com/abdelaaziz0/BOTNET_SIMULATION" target="_blank" rel="noopener">Voir le code ↗</a>
-            </div>
+        <div class="terminal-body">
+          <div class="section-cmd"><span class="prompt">$</span> ls ./systems/</div>
+          <div class="projects-grid">
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-diagram-project"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/MEMOIRE_DISTRIBUEE" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Systems</span>
+                <h3>Mémoire Partagée Distribuée</h3>
+                <p>Espace mémoire synchronisé entre processus via TCP/IP.</p>
+                <div class="project-tags"><span class="project-tag">C</span><span class="project-tag">TCP/IP</span><span
+                    class="project-tag">IPC</span><span class="project-tag">Threads</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-comments"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/CHAT_CLIENT_SERVEUR" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Network</span>
+                <h3>Chat Client-Serveur</h3>
+                <p>Messagerie multi-utilisateurs avec transfert P2P.</p>
+                <div class="project-tags"><span class="project-tag">C</span><span
+                    class="project-tag">Sockets</span><span class="project-tag">P2P</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-robot"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/JUMEAUX_NUM_PYBULLET" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">IIoT</span>
+                <h3>Jumeau Numérique PyBullet</h3>
+                <p>Simulation robot KUKA IIWA avec UDP.</p>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">PyBullet</span><span class="project-tag">UDP</span></div>
+              </div>
+            </article>
+            <article class="project-card">
+              <div class="project-header">
+                <div class="project-icon"><i class="fas fa-network-wired"></i></div>
+                <div class="project-links"><a href="https://github.com/abdelaaziz0/BOTNET_SIMULATION" target="_blank"
+                    rel="noopener"><i class="fab fa-github"></i></a></div>
+              </div>
+              <div class="project-body">
+                <span class="project-category">Research</span>
+                <h3>Simulation Botnet (Éducatif)</h3>
+                <p>Environnement d'étude sécurisé pour comprendre C&C.</p>
+                <div class="project-tags"><span class="project-tag">Python</span><span
+                    class="project-tag">Paramiko</span><span class="project-tag">C&C</span></div>
+              </div>
+            </article>
           </div>
         </div>
       </div>
+    </section>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2025 Abdelaaziz Belkhair</p>
     </div>
-  </section>
-
-  <!-- Footer -->
-  <footer><p>&copy; 2025 Abdelaaziz Belkhair</p></footer>
-
-  <!-- Scripts -->
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    window.addEventListener('load',()=>document.getElementById('pageLoader').classList.add('hidden'));
-
-    /* Matrix rain */
-    const rain=document.querySelector('.matrix-rain');
-    const cols=Math.floor(window.innerWidth/20);
-    for(let i=0;i<cols*15;i++){
-      const c=document.createElement('span');
-      c.className='matrix-char';
-      c.textContent=String.fromCharCode(0x30A0+Math.random()*96);
-      c.style.left=Math.random()*100+'%';
-      c.style.animationDuration=3+Math.random()*4+'s';
-      c.style.animationDelay=Math.random()*4+'s';
-      rain.appendChild(c);
-    }
-
-    /* Reveal animation */
-    const obs=new IntersectionObserver(entries=>{
-      entries.forEach(e=>e.isIntersecting&&e.target.classList.add('visible'));
-    },{threshold:.2});
-    document.querySelectorAll('.timeline-item').forEach(el=>obs.observe(el));
-  </script>
+  </footer>
 </body>
+
 </html>
