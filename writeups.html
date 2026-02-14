@@ -4,10 +4,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blog | Abdelaaziz Belkhair</title>
+    <title>Writeups | Abdelaaziz Belkhair</title>
     <meta name="description"
-        content="Articles et write-ups cybersécurité : pentesting, cryptographie, malware analysis, CTF.">
-    <link rel="canonical" href="https://abdelaaziz0.github.io/blog.html">
+        content="CTF Writeups : détail des challenges web exploitation HackTheBox — SSRF, SSTI, Path Traversal, et plus.">
+    <link rel="canonical" href="https://abdelaaziz0.github.io/writeups.html">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link
         href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
@@ -28,6 +28,7 @@
             --text-secondary: #a1a1aa;
             --text-muted: #71717a;
             --border: #27272a;
+            --orange: #f97316;
         }
 
         *,
@@ -124,7 +125,7 @@
         .hero {
             padding: 130px 0 50px;
             text-align: center;
-            background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%);
+            background: radial-gradient(ellipse at 50% 50%, rgba(249, 115, 22, 0.06) 0%, transparent 50%);
         }
 
         .hero h1 {
@@ -133,7 +134,7 @@
         }
 
         .hero h1 span {
-            color: var(--primary);
+            color: var(--orange);
         }
 
         .hero p {
@@ -237,7 +238,7 @@
         }
 
         .blog-card:hover {
-            border-color: var(--primary);
+            border-color: var(--orange);
             transform: translateY(-3px);
         }
 
@@ -247,6 +248,8 @@
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
+            gap: 0.5rem;
+            flex-wrap: wrap;
         }
 
         .blog-date {
@@ -259,6 +262,16 @@
         }
 
         .blog-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.65rem;
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.15);
+            padding: 0.2rem 0.4rem;
+            border-radius: 3px;
+            text-transform: uppercase;
+        }
+
+        .blog-difficulty {
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.65rem;
             color: var(--accent);
@@ -291,7 +304,7 @@
             gap: 0.4rem;
             font-family: 'JetBrains Mono', monospace;
             font-size: 0.8rem;
-            color: var(--primary);
+            color: var(--orange);
         }
 
         .blog-read-more:hover {
@@ -352,8 +365,8 @@
                 <ul class="nav-links">
                     <li><a href="index.html">Accueil</a></li>
                     <li><a href="index.html#projects">Projets</a></li>
-                    <li><a href="#" class="active">Blog</a></li>
-                    <li><a href="writeups.html">Writeups</a></li>
+                    <li><a href="blog.html">Blog</a></li>
+                    <li><a href="#" class="active">Writeups</a></li>
                     <li><a href="index.html#contact">Contact</a></li>
                     <li><a href="cv.pdf" download><i class="fas fa-download"></i> CV</a></li>
                 </ul>
@@ -364,8 +377,8 @@
     <main>
         <section class="hero">
             <div class="container">
-                <h1>~/cyber<span>_blog</span></h1>
-                <p>$ cat articles/*.md</p>
+                <h1>~/ctf_<span>writeups</span></h1>
+                <p>$ cat writeups/*.md | grep flag</p>
             </div>
         </section>
 
@@ -375,165 +388,52 @@
 
                 <div class="terminal-header">
                     <div class="dots"><span></span><span></span><span></span></div><span
-                        class="terminal-title">articles/</span>
+                        class="terminal-title">writeups/</span>
                 </div>
                 <div class="terminal-body">
-                    <div class="section-cmd"><span class="prompt">$</span> ls -la ./articles/ --sort=date</div>
+                    <div class="section-cmd"><span class="prompt">$</span> ls -la ./writeups/ --sort=date</div>
                     <div class="blog-grid">
-                        <!-- Jan 2026 - Red Team Ops -->
+                        <!-- Interstellar -->
                         <article class="blog-card">
                             <div class="blog-card-header">
-                                <span class="blog-date">2026-01-04</span>
-                                <span class="blog-tag">Red Team</span>
+                                <span class="blog-date">2026-02-14</span>
+                                <span class="blog-tag">SSRF</span>
+                                <span class="blog-tag">SSTI</span>
+                                <span class="blog-difficulty">Medium</span>
                             </div>
                             <div class="blog-card-body">
-                                <h3>Red Team Ops : De la reconnaissance à la persistence</h3>
-                                <p>Guide complet : techniques MITRE ATT&CK, frameworks C2, évasion EDR.</p>
-                                <a href="blog/red-team-ops.html" class="blog-read-more">./read_more.sh <i
+                                <h3>Interstellar — HTB CTF</h3>
+                                <p>SSRF via subdomain abuse + Smarty SSTI → RCE sur PHP 7.0 / Apache / MariaDB.</p>
+                                <a href="writeups/interstellar.html" class="blog-read-more">./exploit.sh <i
                                         class="fas fa-arrow-right"></i></a>
                             </div>
                         </article>
-                        <!-- Dec 2025 - React2Shell -->
+                        <!-- NextPath -->
                         <article class="blog-card">
                             <div class="blog-card-header">
-                                <span class="blog-date">2025-12-24</span>
-                                <span class="blog-tag">CVE</span>
+                                <span class="blog-date">2026-02-14</span>
+                                <span class="blog-tag">Path Traversal</span>
+                                <span class="blog-difficulty">Medium–Hard</span>
                             </div>
                             <div class="blog-card-body">
-                                <h3>React2Shell : RCE critique dans React Server Components</h3>
-                                <p>Analyse de CVE-2025-55182 (CVSS 10.0), désérialisation non sécurisée dans RSC.</p>
-                                <a href="blog/react2shell-cve-2025-55182.html" class="blog-read-more">./read_more.sh <i
+                                <h3>NextPath — HTB CTF</h3>
+                                <p>Multiline regex bypass + HTTP parameter pollution + path truncation → fichier
+                                    arbitraire sur Next.js.</p>
+                                <a href="writeups/nextpath.html" class="blog-read-more">./exploit.sh <i
                                         class="fas fa-arrow-right"></i></a>
                             </div>
                         </article>
-                        <!-- Nov 2025 - PQ-Secure -->
+                        <!-- Dusty Alleys -->
                         <article class="blog-card">
                             <div class="blog-card-header">
-                                <span class="blog-date">2025-11-15</span>
-                                <span class="blog-tag">Crypto</span>
+                                <span class="blog-date">2026-02-14</span>
+                                <span class="blog-tag">SSRF</span>
+                                <span class="blog-difficulty">Medium</span>
                             </div>
                             <div class="blog-card-body">
-                                <h3>Crypto Post-Quantique : Kyber 73× plus rapide que RSA</h3>
-                                <p>Mes benchmarks comparant Kyber+Dilithium aux algorithmes classiques.</p>
-                                <a href="blog/pq-secure-benchmarks.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Sept 2025 - ELF Analysis (swapped with Honeytokens) -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-09-08</span>
-                                <span class="blog-tag">Malware</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Analyse statique de binaires ELF</h3>
-                                <p>Techniques de reverse engineering pour analyser des malwares Linux.</p>
-                                <a href="blog/elf-analysis.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Aug 2025 - UOV Signatures -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-08-18</span>
-                                <span class="blog-tag">Crypto</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>UOV : Comprendre les signatures "Huile et Vinaigre"</h3>
-                                <p>Schéma de signature post-quantique basé sur les équations multivariées. Maths et
-                                    implémentation.</p>
-                                <a href="blog/uov-signatures.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- May 2025 - Ivanti -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-05-12</span>
-                                <span class="blog-tag">CVE</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Ivanti VPN : Buffer Overflow exploité par APT</h3>
-                                <p>Analyse de CVE-2025-22457 (CVSS 9.8), VPN ciblé par des groupes state-sponsored.</p>
-                                <a href="blog/ivanti-vpn-cve-2025-22457.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- April 2025 - Erlang -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-04-22</span>
-                                <span class="blog-tag">CVE</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Erlang/OTP SSH : RCE pré-authentification</h3>
-                                <p>Analyse de CVE-2025-32433 (CVSS 10.0), zero-day affectant RabbitMQ.</p>
-                                <a href="blog/erlang-ssh-cve-2025-32433.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Feb 2025 - Race Conditions -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-02-10</span>
-                                <span class="blog-tag">Web</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Race Conditions dans les Apps Web Modernes</h3>
-                                <p>Exploiter TOCTOU, double-spending, et bypass de limites avec Turbo Intruder.</p>
-                                <a href="blog/race-conditions-web.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Jan 2025 - Pentest AD -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-01-25</span>
-                                <span class="blog-tag">Pentest</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Pentesting Active Directory : Guide complet</h3>
-                                <p>Méthodologie : reconnaissance, Kerberoasting, Pass-the-Hash, Domain Admin.</p>
-                                <a href="blog/pentest-ad.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Jan 2025 - Side-Channel -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-01-08</span>
-                                <span class="blog-tag">Crypto</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Attaques Side-Channel sur la Crypto Navigateur</h3>
-                                <p>Timing attacks, cache attacks, et pourquoi WebCrypto n'est pas magique.</p>
-                                <a href="blog/side-channel-browser-crypto.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Jan 2025 - Honeytokens (swapped with ELF) -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-01-02</span>
-                                <span class="blog-tag">IA</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Honeytokens IA : Piéger les attaquants avec des LLMs</h3>
-                                <p>Générer des données leurres indétectables avec les modèles de langage.</p>
-                                <a href="blog/honeytokens-llm.html" class="blog-read-more">./read_more.sh <i
-                                        class="fas fa-arrow-right"></i></a>
-                            </div>
-                        </article>
-                        <!-- Jan 2025 - Active Directory Attacks -->
-                        <article class="blog-card">
-                            <div class="blog-card-header">
-                                <span class="blog-date">2025-01-01</span>
-                                <span class="blog-tag">AD</span>
-                            </div>
-                            <div class="blog-card-body">
-                                <h3>Active Directory : Du foothold au Domain Admin</h3>
-                                <p>Méthodologie AD : énumération, Kerberoasting, délégation, ACL abuse.</p>
-                                <a href="blog/active-directory-attacks.html" class="blog-read-more">./read_more.sh <i
+                                <h3>Dusty Alleys — HTB CTF</h3>
+                                <p>Nginx virtual host bypass + SSRF header reflection pour capturer le flag.</p>
+                                <a href="writeups/dusty-alleys.html" class="blog-read-more">./exploit.sh <i
                                         class="fas fa-arrow-right"></i></a>
                             </div>
                         </article>
@@ -545,11 +445,10 @@
                         class="terminal-title">coming_soon/</span>
                 </div>
                 <div class="terminal-body">
-                    <div class="section-cmd"><span class="prompt">$</span> echo "Plus d'articles à venir..."</div>
+                    <div class="section-cmd"><span class="prompt">$</span> echo "Plus de writeups à venir..."</div>
                     <p
                         style="color: var(--text-muted); text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">
-                        <i class="fas fa-clock"></i> Articles en cours de rédaction...<br>
-                        Sujets à venir : CTF Write-ups, SIEM & Detection, Cloud Security
+                        <i class="fas fa-flag"></i> Nouveaux writeups HTB/CTF en cours de rédaction...
                     </p>
                 </div>
             </div>
