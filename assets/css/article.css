@@ -1,0 +1,245 @@
+.article-hero,
+.article-header {
+  position: relative;
+  margin-bottom: 3.5rem;
+  padding: 5rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.article-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 1.2rem;
+}
+
+.article-date,
+.article-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.25rem 0.7rem;
+  border: 1px solid rgba(232, 213, 163, 0.25);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.article-date {
+  color: var(--muted);
+  border-color: var(--border);
+}
+
+.article-tag.offensive,
+.article-tag.kev,
+.warning {
+  color: var(--red);
+  border-color: rgba(224, 92, 92, 0.3);
+}
+
+.article-tag.windows,
+.article-tag.mitre,
+.article-tag.modular {
+  color: var(--blue);
+  border-color: rgba(91, 143, 214, 0.3);
+}
+
+.article-tag.success,
+.success {
+  color: var(--green);
+  border-color: rgba(76, 175, 125, 0.3);
+}
+
+.article-hero h1,
+.article-header h1 {
+  max-width: 780px;
+  margin-bottom: 1.4rem;
+  color: var(--text-strong);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(2.6rem, 7vw, 4.5rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 1;
+}
+
+.subtitle {
+  max-width: 680px;
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.7;
+}
+
+.hero-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin-top: 2rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--border);
+}
+
+.hero-stat {
+  padding: 1rem 1.2rem;
+  background: var(--surface);
+  text-align: center;
+}
+
+.hero-stat-value {
+  display: block;
+  color: var(--accent);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.45rem;
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.hero-stat-label {
+  display: block;
+  margin-top: 0.25rem;
+  color: var(--muted-soft);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.tool-grid,
+.c2-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  overflow: hidden;
+  margin: 1.4rem 0;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--border);
+}
+
+.tool-card,
+.c2-card,
+.concept-box,
+.math-box,
+.orange-box,
+.purple-box,
+.terminal-box {
+  padding: 1.1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.tool-grid .tool-card,
+.c2-grid .c2-card {
+  border: 0;
+  border-radius: 0;
+}
+
+.tool-card i,
+.c2-card i {
+  color: var(--accent-2);
+  margin-bottom: 0.7rem;
+}
+
+.tool-card h4,
+.c2-card h4 {
+  margin: 0 0 0.4rem;
+  color: var(--text-strong);
+}
+
+.tool-card p,
+.c2-card p {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.attack-path {
+  margin: 1.4rem 0;
+  padding: 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+}
+
+.attack-path-flow {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.6rem;
+}
+
+.attack-path-node {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.35rem 0.7rem;
+  border: 1px solid rgba(232, 213, 163, 0.25);
+  border-radius: 2px;
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+}
+
+.attack-path-node.target {
+  color: var(--red);
+  border-color: rgba(224, 92, 92, 0.35);
+}
+
+.attack-path-arrow {
+  color: var(--accent-2);
+  font-family: "IBM Plex Mono", monospace;
+}
+
+.timeline {
+  margin: 1.4rem 0;
+  border-left: 1px solid var(--border);
+}
+
+.timeline-item {
+  position: relative;
+  padding: 0 0 1.3rem 1.2rem;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -5px;
+  top: 0.45rem;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: var(--accent-2);
+}
+
+.timeline-date,
+.step-number {
+  color: var(--accent-2);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.comparison-table,
+.mitre-table {
+  width: 100%;
+}
+
+.muted-note {
+  color: var(--muted);
+  font-size: 0.85rem;
+  margin-bottom: 1rem;
+}
+
+.comment {
+  color: var(--muted-soft);
+}
+
+@media (max-width: 700px) {
+  .hero-stats {
+    grid-template-columns: 1fr;
+  }
+}

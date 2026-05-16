@@ -1,0 +1,539 @@
+body {
+  overflow-x: hidden;
+}
+
+.home-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  min-height: 56px;
+  padding: 0 2rem;
+  background: rgba(13, 15, 20, 0.92);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(12px);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
+
+.home-nav .nav-links {
+  gap: 1.35rem;
+}
+
+.hero-home {
+  position: relative;
+  z-index: 1;
+  min-height: calc(100vh - 56px);
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--border);
+}
+
+.hero-home::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(90deg, rgba(13, 15, 20, 0.96) 0%, rgba(13, 15, 20, 0.82) 42%, rgba(13, 15, 20, 0.35) 100%),
+    url("../../assets/img/profile.webp") right center / min(44vw, 520px) auto no-repeat;
+  opacity: 0.92;
+  z-index: -1;
+}
+
+.hero-home::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0;
+  height: 34%;
+  background: linear-gradient(180deg, transparent, var(--bg));
+  pointer-events: none;
+  z-index: -1;
+}
+
+.hero-inner {
+  width: min(1100px, calc(100% - 4rem));
+  margin: 0 auto;
+  padding: 5rem 0;
+}
+
+.hero-eyebrow,
+.section-kicker {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  color: var(--accent-2);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.7rem;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+
+.hero-title {
+  max-width: 780px;
+  margin: 1.35rem 0 1.3rem;
+  color: var(--text-strong);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: clamp(3.2rem, 9vw, 6.8rem);
+  font-weight: 400;
+  letter-spacing: 0;
+  line-height: 0.95;
+}
+
+.hero-copy {
+  max-width: 640px;
+  color: var(--muted);
+  font-size: 1.08rem;
+  line-height: 1.75;
+}
+
+.hero-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 2.1rem;
+}
+
+.button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 42px;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  color: var(--text);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.72rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.button-primary {
+  border-color: rgba(232, 213, 163, 0.35);
+  background: rgba(232, 213, 163, 0.08);
+  color: var(--accent);
+}
+
+.button:hover {
+  border-color: rgba(232, 213, 163, 0.45);
+  color: var(--accent);
+}
+
+.hero-stats {
+  max-width: 620px;
+  margin-top: 3rem;
+}
+
+.hero-stats.challenge-stats {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.page-section {
+  position: relative;
+  z-index: 1;
+  width: min(1100px, calc(100% - 4rem));
+  margin: 0 auto;
+  padding: 5rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-head {
+  display: grid;
+  grid-template-columns: minmax(0, 0.85fr) minmax(260px, 0.45fr);
+  gap: 3rem;
+  align-items: end;
+  margin-bottom: 2.4rem;
+}
+
+.section-head h2 {
+  margin: 0.7rem 0 0;
+  padding: 0;
+  border: 0;
+  font-size: clamp(2rem, 5vw, 3.2rem);
+}
+
+.section-head p {
+  color: var(--muted);
+  margin: 0;
+}
+
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 0.75fr) minmax(260px, 0.45fr);
+  gap: 2.5rem;
+  align-items: start;
+}
+
+.panel {
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 1.4rem;
+}
+
+.profile-frame {
+  overflow: hidden;
+  padding: 0;
+}
+
+.profile-frame img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 5;
+  object-fit: cover;
+}
+
+.profile-caption {
+  padding: 1rem 1.2rem;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.card-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.feature-card,
+.project-card-alt,
+.article-card,
+.timeline-card,
+.contact-card {
+  background: var(--surface);
+  padding: 1.25rem;
+}
+
+.feature-card h3,
+.project-card-alt h3,
+.article-card h3,
+.timeline-card h3,
+.contact-card h3 {
+  margin-top: 0;
+  color: var(--text-strong);
+}
+
+.feature-card p,
+.project-card-alt p,
+.article-card p,
+.timeline-card p,
+.contact-card p {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.tag-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+  margin-top: 1rem;
+}
+
+.mini-tag {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.18rem 0.55rem;
+  border: 1px solid rgba(232, 213, 163, 0.2);
+  border-radius: 2px;
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-grid,
+.article-grid,
+.timeline-grid,
+.proof-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.timeline-grid .timeline-card:last-child {
+  grid-column: 1 / -1;
+}
+
+.article-card a,
+.project-card-alt a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  margin-top: 0.75rem;
+  color: var(--accent);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.project-links-alt {
+  display: flex;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.icon-link {
+  width: 40px;
+  height: 40px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--code-bg);
+  color: var(--muted);
+  font-size: 1rem;
+  transition: border-color 0.2s ease, color 0.2s ease, background 0.2s ease;
+}
+
+.project-card-alt .icon-link,
+.contact-card .icon-link {
+  margin-top: 0;
+  padding: 0;
+  letter-spacing: 0;
+  text-transform: none;
+}
+
+.icon-link:hover {
+  border-color: rgba(232, 213, 163, 0.45);
+  background: rgba(232, 213, 163, 0.08);
+  color: var(--accent);
+}
+
+.certs-grid-alt {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 1rem;
+}
+
+.cert-card-old {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+.cert-card-old:hover {
+  transform: translateY(-3px);
+  border-color: rgba(232, 213, 163, 0.35);
+}
+
+.cert-card-old img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  background: var(--code-bg);
+}
+
+.cert-info {
+  padding: 0.9rem 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.cert-info h3 {
+  margin: 0 0 0.25rem;
+  color: var(--text-strong);
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.cert-info p {
+  margin: 0;
+  color: var(--muted);
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.65rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.contact-grid-alt {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  overflow: hidden;
+  background: var(--border);
+}
+
+.proof-grid {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.proof-card {
+  background: var(--surface);
+  padding: 1.25rem;
+  min-height: 160px;
+}
+
+.proof-card strong {
+  display: block;
+  color: var(--text-strong);
+  font-family: "DM Serif Display", Georgia, serif;
+  font-size: 1.35rem;
+  font-weight: 400;
+  line-height: 1.2;
+  margin: 0.6rem 0;
+}
+
+.proof-card p {
+  color: var(--muted);
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+.contact-card {
+  min-height: 145px;
+}
+
+.contact-card > i {
+  color: var(--accent-2);
+  margin-bottom: 1rem;
+}
+
+.contact-card .icon-link i {
+  color: inherit;
+  margin-bottom: 0;
+}
+
+.contact-card a {
+  overflow-wrap: anywhere;
+}
+
+.contact-logo-card {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.contact-logo-card .icon-link {
+  width: 44px;
+  height: 44px;
+  font-size: 1.12rem;
+}
+
+.site-footer-alt {
+  width: min(1100px, calc(100% - 4rem));
+  margin: 0 auto;
+  padding: 2rem 0;
+  border: 0;
+  text-align: left;
+}
+
+.listing-hero {
+  padding-top: 6rem;
+}
+
+.listing-hero .section-head {
+  margin-bottom: 0;
+}
+
+.card-link-row {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-top: 1rem;
+}
+
+.muted-note {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.card-icon-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.card-icon {
+  width: 38px;
+  height: 38px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(232, 213, 163, 0.2);
+  border-radius: 4px;
+  color: var(--accent-2);
+  background: var(--code-bg);
+}
+
+@media (max-width: 900px) {
+  .hero-home::before {
+    background:
+      linear-gradient(90deg, rgba(13, 15, 20, 0.96), rgba(13, 15, 20, 0.82)),
+      url("../../assets/img/profile.webp") right bottom / 360px auto no-repeat;
+  }
+
+  .section-head,
+  .split {
+    grid-template-columns: 1fr;
+  }
+
+  .card-grid,
+  .project-grid,
+  .article-grid,
+  .timeline-grid,
+  .proof-grid,
+  .contact-grid-alt {
+    grid-template-columns: 1fr;
+  }
+
+  .certs-grid-alt {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 640px) {
+  .home-nav {
+    align-items: flex-start;
+    flex-wrap: wrap;
+    padding: 0.85rem 1rem;
+    gap: 0.75rem;
+  }
+
+  .home-nav .nav-links {
+    display: flex;
+    width: 100%;
+    gap: 0.7rem;
+    overflow-x: auto;
+    padding-bottom: 0.15rem;
+  }
+
+  .home-nav .nav-links a {
+    white-space: nowrap;
+    font-size: 0.68rem;
+  }
+
+  .hero-inner,
+  .page-section,
+  .site-footer-alt {
+    width: min(100% - 2rem, 1100px);
+  }
+
+  .hero-title {
+    font-size: 3rem;
+  }
+}

@@ -4,1588 +4,421 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Abdelaaziz Belkhair | Ingénieur Cybersécurité</title>
+  <title>Abdelaaziz Belkhair | Pentest Web & Active Directory</title>
   <meta name="description"
-    content="Portfolio cybersécurité d'Abdelaaziz Belkhair - Ingénieur ENSEIRB-MATMECA spécialisé en sécurité offensive et cryptographie. Stage PFE disponible dès Février 2026.">
-  <meta name="keywords"
-    content="cybersécurité, pentesting, ethical hacking, ENSEIRB-MATMECA, stage sécurité, cryptographie post-quantique">
-  <meta name="author" content="Abdelaaziz Belkhair">
-  <meta property="og:title" content="Abdelaaziz Belkhair | Ingénieur Cybersécurité">
-  <meta property="og:description"
-    content="Portfolio cybersécurité - Sécurité offensive, cryptographie, développement d'outils.">
-  <meta property="og:type" content="website">
+    content="Portfolio d'Abdelaaziz Belkhair, élève-ingénieur cybersécurité actuellement en stage chez Orange Cyberdefense et en recherche d'un CDI en pentest Web ou Active Directory.">
   <link rel="canonical" href="https://abdelaaziz0.github.io/">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/">
+  <meta property="og:title" content="Abdelaaziz Belkhair | Pentest Web & Active Directory">
+  <meta property="og:description"
+    content="Portfolio d'Abdelaaziz Belkhair, élève-ingénieur cybersécurité actuellement en stage chez Orange Cyberdefense et en recherche d'un CDI en pentest Web ou Active Directory.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Abdelaaziz Belkhair | Pentest Web & Active Directory">
+  <meta name="twitter:description"
+    content="Portfolio d'Abdelaaziz Belkhair, élève-ingénieur cybersécurité actuellement en stage chez Orange Cyberdefense et en recherche d'un CDI en pentest Web ou Active Directory.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
   <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link
-    href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-    rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
     integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
     crossorigin="anonymous" referrerpolicy="no-referrer">
-  <script
-    type="application/ld+json">{"@context":"https://schema.org","@type":"Person","name":"Abdelaaziz Belkhair","jobTitle":"Ingénieur Cybersécurité","email":"abelkhair002@bordeaux-inp.fr","alumniOf":{"@type":"CollegeOrUniversity","name":"ENSEIRB-MATMECA"}}</script>
-  <style>
-    :root {
-      --primary: #00d4ff;
-      --primary-dark: #0099cc;
-      --accent: #ff6b6b;
-      --warning: #ffaa00;
-      --success: #00ff88;
-      --bg: #0a0a0a;
-      --bg-card: #111111;
-      --bg-terminal: #0d0d0d;
-      --text: #e4e4e7;
-      --text-secondary: #a1a1aa;
-      --text-muted: #71717a;
-      --border: #27272a;
-    }
-
-    *,
-    *::before,
-    *::after {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
-
-    html {
-      scroll-behavior: smooth;
-    }
-
-    body {
-      font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.7;
-    }
-
-    ::selection {
-      background: var(--primary);
-      color: var(--bg);
-    }
-
-    :focus-visible {
-      outline: 2px solid var(--primary);
-      outline-offset: 2px;
-    }
-
-    .container {
-      max-width: 1100px;
-      margin: 0 auto;
-      padding: 0 24px;
-    }
-
-    a {
-      color: var(--primary);
-      text-decoration: none;
-      transition: color 0.2s;
-    }
-
-    a:hover {
-      color: var(--success);
-    }
-
-    header {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      z-index: 100;
-      background: rgba(10, 10, 10, 0.95);
-      backdrop-filter: blur(12px);
-      border-bottom: 1px solid var(--border);
-    }
-
-    nav {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem 0;
-    }
-
-    .logo {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 1.25rem;
-      font-weight: 700;
-      color: var(--primary);
-    }
-
-    .nav-links {
-      display: flex;
-      gap: 1.75rem;
-      list-style: none;
-    }
-
-    .nav-links a {
-      color: var(--text-secondary);
-      font-weight: 500;
-      font-size: 0.9rem;
-    }
-
-    .nav-links a:hover {
-      color: var(--primary);
-    }
-
-    .nav-toggle {
-      display: none;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-size: 1.5rem;
-      cursor: pointer;
-    }
-
-    .hero {
-      min-height: 100vh;
-      display: flex;
-      align-items: center;
-      padding-top: 80px;
-      background: radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.06) 0%, transparent 50%);
-    }
-
-    .hero-content {
-      max-width: 640px;
-    }
-
-    .availability {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.5rem 1rem;
-      background: rgba(0, 255, 136, 0.1);
-      border: 1px solid rgba(0, 255, 136, 0.3);
-      border-radius: 999px;
-      color: var(--success);
-      font-size: 0.85rem;
-      font-family: 'JetBrains Mono', monospace;
-      margin-bottom: 1.5rem;
-    }
-
-    .availability::before {
-      content: '';
-      width: 8px;
-      height: 8px;
-      background: var(--success);
-      border-radius: 50%;
-      animation: pulse 2s infinite;
-    }
-
-    @keyframes pulse {
-
-      0%,
-      100% {
-        opacity: 1;
-      }
-
-      50% {
-        opacity: 0.4;
-      }
-    }
-
-    .hero h1 {
-      font-size: clamp(2.25rem, 5vw, 3.25rem);
-      font-weight: 700;
-      line-height: 1.15;
-      margin-bottom: 1rem;
-    }
-
-    .hero h1 span {
-      color: var(--primary);
-    }
-
-    .terminal-box {
-      font-family: 'JetBrains Mono', monospace;
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1rem 1.25rem;
-      margin-bottom: 1.5rem;
-      font-size: 0.9rem;
-    }
-
-    .prompt {
-      color: var(--success);
-    }
-
-    .path {
-      color: var(--primary);
-    }
-
-    .cmd {
-      color: var(--text);
-    }
-
-    .hero p {
-      color: var(--text-secondary);
-      font-size: 1.05rem;
-      margin-bottom: 2rem;
-      max-width: 520px;
-    }
-
-    .btn-group {
-      display: flex;
-      gap: 1rem;
-      flex-wrap: wrap;
-    }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.5rem;
-      padding: 0.75rem 1.5rem;
-      border-radius: 6px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      font-family: 'JetBrains Mono', monospace;
-      transition: all 0.2s;
-      border: none;
-      cursor: pointer;
-    }
-
-    .btn-primary {
-      background: var(--primary);
-      color: var(--bg);
-    }
-
-    .btn-primary:hover {
-      background: var(--success);
-      transform: translateY(-2px);
-    }
-
-    .btn-secondary {
-      background: transparent;
-      color: var(--text);
-      border: 1px solid var(--border);
-    }
-
-    .btn-secondary:hover {
-      border-color: var(--primary);
-      color: var(--primary);
-    }
-
-    section {
-      padding: 80px 0;
-    }
-
-    .terminal-header {
-      font-family: 'JetBrains Mono', monospace;
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px 8px 0 0;
-      padding: 0.6rem 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-    }
-
-    .dots {
-      display: flex;
-      gap: 6px;
-    }
-
-    .dots span {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-    }
-
-    .dots span:nth-child(1) {
-      background: var(--accent);
-    }
-
-    .dots span:nth-child(2) {
-      background: var(--warning);
-    }
-
-    .dots span:nth-child(3) {
-      background: var(--success);
-    }
-
-    .terminal-title {
-      color: var(--text-muted);
-      font-size: 0.85rem;
-    }
-
-    .terminal-body {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-top: none;
-      border-radius: 0 0 8px 8px;
-      padding: 1.5rem;
-    }
-
-    .section-cmd {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.85rem;
-      margin-bottom: 1.5rem;
-      padding: 0.75rem 1rem;
-      background: rgba(0, 0, 0, 0.4);
-      border-radius: 4px;
-      color: var(--text-secondary);
-    }
-
-    .section-cmd .prompt {
-      color: var(--success);
-    }
-
-    .about-grid {
-      display: grid;
-      grid-template-columns: 240px 1fr;
-      gap: 3rem;
-      align-items: start;
-    }
-
-    .about-image img {
-      width: 100%;
-      border-radius: 8px;
-      border: 1px solid var(--border);
-    }
-
-    .about-content h3 {
-      font-size: 1.35rem;
-      margin-bottom: 0.75rem;
-    }
-
-    .about-content p {
-      color: var(--text-secondary);
-      margin-bottom: 1rem;
-      font-size: 0.95rem;
-    }
-
-    .stats {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 1rem;
-      margin-top: 1.5rem;
-      padding-top: 1.5rem;
-      border-top: 1px solid var(--border);
-    }
-
-    .stat {
-      text-align: center;
-    }
-
-    .stat-value {
-      font-size: 1.75rem;
-      font-weight: 700;
-      color: var(--primary);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .stat-label {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
-    .skills-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-
-    .skill-card {
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.25rem;
-      transition: border-color 0.2s;
-    }
-
-    .skill-card:hover {
-      border-color: var(--primary);
-    }
-
-    .skill-card h4 {
-      display: flex;
-      align-items: center;
-      gap: 0.6rem;
-      font-size: 0.95rem;
-      color: var(--primary);
-      margin-bottom: 0.75rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .skill-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
-
-    .skill-tag {
-      padding: 0.3rem 0.6rem;
-      background: rgba(0, 212, 255, 0.1);
-      border-radius: 4px;
-      font-size: 0.75rem;
-      color: var(--text-secondary);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .projects-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .project-card {
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .project-card:hover {
-      border-color: var(--primary);
-      transform: translateY(-3px);
-    }
-
-    .project-header {
-      padding: 1.25rem;
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .project-icon {
-      width: 42px;
-      height: 42px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: rgba(0, 212, 255, 0.15);
-      border-radius: 8px;
-      color: var(--primary);
-      font-size: 1.1rem;
-    }
-
-    .project-links a {
-      color: var(--text-muted);
-      font-size: 1.1rem;
-      transition: color 0.2s;
-    }
-
-    .project-links a:hover {
-      color: var(--primary);
-    }
-
-    .project-body {
-      padding: 1.25rem;
-    }
-
-    .project-category {
-      display: inline-block;
-      padding: 0.2rem 0.5rem;
-      background: rgba(255, 107, 107, 0.15);
-      border-radius: 3px;
-      font-size: 0.7rem;
-      color: var(--accent);
-      font-family: 'JetBrains Mono', monospace;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 0.6rem;
-    }
-
-    .project-body h5 {
-      font-size: 1.05rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .project-body p {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      margin-bottom: 0.75rem;
-      line-height: 1.5;
-    }
-
-    .project-tags {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.4rem;
-    }
-
-    .project-tag {
-      padding: 0.2rem 0.5rem;
-      background: var(--bg);
-      border-radius: 3px;
-      font-size: 0.7rem;
-      color: var(--text-muted);
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .timeline {
-      max-width: 680px;
-    }
-
-    .timeline-item {
-      position: relative;
-      padding-left: 1.75rem;
-      padding-bottom: 2rem;
-      border-left: 2px solid var(--border);
-    }
-
-    .timeline-item:last-child {
-      padding-bottom: 0;
-    }
-
-    .timeline-item::before {
-      content: '';
-      position: absolute;
-      left: -5px;
-      top: 4px;
-      width: 8px;
-      height: 8px;
-      background: var(--primary);
-      border-radius: 50%;
-    }
-
-    .timeline-date {
-      font-family: 'JetBrains Mono', monospace;
-      color: var(--primary);
-      font-size: 0.8rem;
-      margin-bottom: 0.4rem;
-    }
-
-    .timeline-item h4 {
-      font-size: 1.05rem;
-      margin-bottom: 0.2rem;
-    }
-
-    .timeline-item h5 {
-      color: var(--text-secondary);
-      font-weight: 500;
-      font-size: 0.9rem;
-      margin-bottom: 0.5rem;
-    }
-
-    .timeline-item p,
-    .timeline-item ul {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-    }
-
-    .timeline-item ul {
-      padding-left: 1.1rem;
-      margin-top: 0.4rem;
-    }
-
-    .timeline-item li {
-      margin-bottom: 0.2rem;
-    }
-
-    .certs-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-      gap: 1rem;
-    }
-
-    .cert-card {
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-      cursor: pointer;
-    }
-
-    .cert-card:hover {
-      border-color: var(--primary);
-      transform: translateY(-3px);
-    }
-
-    .cert-card img {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      object-position: top;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .cert-info {
-      padding: 0.875rem;
-    }
-
-    .cert-info h5 {
-      font-size: 0.9rem;
-      margin-bottom: 0.25rem;
-    }
-
-    .cert-info p {
-      color: var(--text-muted);
-      font-size: 0.75rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .cert-modal {
-      display: none;
-      position: fixed;
-      inset: 0;
-      background: rgba(0, 0, 0, 0.9);
-      z-index: 1000;
-      padding: 2rem;
-      cursor: pointer;
-    }
-
-    .cert-modal.active {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .cert-modal img {
-      max-width: 90%;
-      max-height: 90vh;
-      border-radius: 8px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-    }
-
-    .cert-modal-close {
-      position: absolute;
-      top: 1.5rem;
-      right: 1.5rem;
-      background: none;
-      border: none;
-      color: var(--text);
-      font-size: 2rem;
-      cursor: pointer;
-      padding: 0.5rem;
-    }
-
-    .blog-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 1.25rem;
-    }
-
-    .blog-card {
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      overflow: hidden;
-      transition: border-color 0.2s, transform 0.2s;
-    }
-
-    .blog-card:hover {
-      border-color: var(--primary);
-      transform: translateY(-3px);
-    }
-
-    .blog-card-header {
-      padding: 1.25rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: flex-start;
-    }
-
-    .blog-date {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--primary);
-      background: rgba(0, 212, 255, 0.1);
-      padding: 0.25rem 0.5rem;
-      border-radius: 4px;
-    }
-
-    .blog-tag {
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.65rem;
-      color: var(--accent);
-      background: rgba(255, 107, 107, 0.15);
-      padding: 0.2rem 0.4rem;
-      border-radius: 3px;
-      text-transform: uppercase;
-    }
-
-    .blog-card-body {
-      padding: 1.25rem;
-    }
-
-    .blog-card-body h4 {
-      font-size: 1rem;
-      margin-bottom: 0.5rem;
-      line-height: 1.4;
-    }
-
-    .blog-card-body p {
-      color: var(--text-secondary);
-      font-size: 0.85rem;
-      line-height: 1.5;
-      margin-bottom: 0.75rem;
-    }
-
-    .blog-read-more {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      font-family: 'JetBrains Mono', monospace;
-      font-size: 0.8rem;
-      color: var(--primary);
-    }
-
-    .blog-read-more:hover {
-      color: var(--success);
-    }
-
-    .contact-grid {
-      display: grid;
-      grid-template-columns: 1fr 1.1fr;
-      gap: 2.5rem;
-    }
-
-    .contact-info {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .contact-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.875rem;
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      transition: border-color 0.2s;
-    }
-
-    .contact-item:hover {
-      border-color: var(--primary);
-    }
-
-    .contact-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--primary);
-      border-radius: 6px;
-      color: var(--bg);
-      font-size: 0.95rem;
-    }
-
-    .contact-item h5 {
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-    }
-
-    .contact-item p,
-    .contact-item a {
-      font-size: 0.9rem;
-      color: var(--text);
-    }
-
-    .social-links {
-      display: flex;
-      gap: 0.6rem;
-      margin-top: 0.75rem;
-    }
-
-    .social-link {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text-secondary);
-      font-size: 1rem;
-      transition: all 0.2s;
-    }
-
-    .social-link:hover {
-      background: var(--primary);
-      color: var(--bg);
-      border-color: var(--primary);
-    }
-
-    .contact-form {
-      background: var(--bg-terminal);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 1.5rem;
-    }
-
-    .form-row {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0.75rem;
-    }
-
-    .form-group {
-      margin-bottom: 1rem;
-    }
-
-    .form-group label {
-      display: block;
-      font-size: 0.8rem;
-      color: var(--text-muted);
-      margin-bottom: 0.4rem;
-      font-family: 'JetBrains Mono', monospace;
-    }
-
-    .form-group input,
-    .form-group textarea,
-    .form-group select {
-      width: 100%;
-      padding: 0.65rem 0.875rem;
-      background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      font-family: inherit;
-      font-size: 0.9rem;
-      transition: border-color 0.2s;
-    }
-
-    .form-group input:focus,
-    .form-group textarea:focus,
-    .form-group select:focus {
-      outline: none;
-      border-color: var(--primary);
-    }
-
-    .form-group textarea {
-      resize: vertical;
-      min-height: 100px;
-    }
-
-    footer {
-      padding: 1.5rem 0;
-      border-top: 1px solid var(--border);
-      text-align: center;
-    }
-
-    footer p {
-      color: var(--text-muted);
-      font-size: 0.8rem;
-    }
-
-    .ethical {
-      margin-top: 0.75rem;
-      font-size: 0.75rem;
-      color: var(--text-muted);
-      max-width: 560px;
-      margin-left: auto;
-      margin-right: auto;
-    }
-
-    @media (max-width: 992px) {
-      .about-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .about-image {
-        max-width: 200px;
-      }
-
-      .contact-grid {
-        grid-template-columns: 1fr;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .nav-links {
-        display: none;
-        position: absolute;
-        top: 100%;
-        left: 0;
-        right: 0;
-        background: var(--bg);
-        flex-direction: column;
-        padding: 1rem;
-        border-bottom: 1px solid var(--border);
-        gap: 0.5rem;
-      }
-
-      .nav-links.active {
-        display: flex;
-      }
-
-      .nav-toggle {
-        display: block;
-      }
-
-      .hero h1 {
-        font-size: 2rem;
-      }
-
-      .stats {
-        grid-template-columns: 1fr;
-      }
-
-      .projects-grid,
-      .skills-grid {
-        grid-template-columns: 1fr;
-      }
-
-      .form-row {
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  <link rel="stylesheet" href="assets/css/writeup.css">
+  <link rel="stylesheet" href="assets/css/site.css">
 </head>
 
 <body>
-  <header>
-    <div class="container">
-      <nav role="navigation" aria-label="Navigation principale">
-        <a href="#" class="logo" aria-label="Accueil">AB_</a>
-        <button class="nav-toggle" onclick="document.querySelector('.nav-links').classList.toggle('active')"
-          aria-label="Menu"><i class="fas fa-bars"></i></button>
-        <ul class="nav-links">
-          <li><a href="#about">À propos</a></li>
-          <li><a href="#skills">Compétences</a></li>
-          <li><a href="#projects">Projets</a></li>
-          <li><a href="#blog">Blog</a></li>
-          <li><a href="#writeups">Writeups</a></li>
-          <li><a href="#experience">Parcours</a></li>
-          <li><a href="#contact">Contact</a></li>
-          <li><a href="cv.pdf" download><i class="fas fa-download"></i> CV</a></li>
-        </ul>
-      </nav>
-    </div>
-  </header>
+  <nav class="home-nav" aria-label="Navigation principale">
+    <a class="nav-logo" href="index.html">AB_</a>
+    <ul class="nav-links">
+      <li><a href="#snapshot">Profil</a></li>
+      <li><a href="#work">Travail</a></li>
+      <li><a href="#writeups">Writeups</a></li>
+      <li><a href="blog.html">Articles</a></li>
+      <li><a href="#experience">Expérience</a></li>
+      <li><a href="#contact">Contact</a></li>
+      <li><a href="cv.pdf" download>CV</a></li>
+    </ul>
+  </nav>
 
   <main>
-    <section id="home" class="hero">
-      <div class="container">
-        <div class="hero-content">
-          <div class="availability" role="status">Disponible Stage PFE - Février 2026</div>
-          <h1>Salut, je suis<br><span>Abdelaaziz Belkhair</span></h1>
-          <div class="terminal-box"><span class="prompt">root@kali</span><span class="path">:~/pentest</span><span
-              class="cmd">$ ./exploit --target=AD,Web</span></div>
-          <p>Pentester spécialisé en Active Directory et sécurité Web. J'enchaîne les CTF, je casse des environnements
-            AD, et j'audite des applications web pour en extraire chaque vulnérabilité.</p>
-          <div class="btn-group">
-            <a href="#projects" class="btn btn-primary"><i class="fas fa-terminal"></i> ./projets.sh</a>
-            <a href="#contact" class="btn btn-secondary"><i class="fas fa-envelope"></i> ./contact.sh</a>
+    <section class="hero-home" id="home">
+      <div class="hero-inner">
+        <span class="hero-eyebrow">Pentest Web / Active Directory</span>
+        <h1 class="hero-title">Abdelaaziz Belkhair</h1>
+        <p class="hero-copy">
+          Je cherche un CDI en pentest Web ou Active Directory à l'issue de mon stage PFE chez Orange
+          Cyberdefense à Marseille. Ce portfolio met en avant des analyses techniques détaillées, des outils d'audit
+          et ma manière de raisonner pendant une exploitation.
+        </p>
+        <div class="hero-actions">
+          <a class="button button-primary" href="#work"><i class="fas fa-terminal"></i> Voir le travail</a>
+          <a class="button" href="#writeups"><i class="fas fa-flag"></i> Writeups</a>
+          <a class="button" href="#contact"><i class="fas fa-envelope"></i> Me contacter</a>
+        </div>
+        <div class="challenge-stats hero-stats">
+          <div class="stat-item"><span class="stat-value">Septembre 2026</span><span class="stat-label">Disponible
+              CDI</span>
+          </div>
+          <div class="stat-item"><span class="stat-value">6</span><span class="stat-label">Outils publiés</span>
+          </div>
+          <div class="stat-item"><span class="stat-value">Web · AD</span><span class="stat-label">Spécialités</span>
           </div>
         </div>
       </div>
     </section>
 
-    <section id="about">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">about.md</span>
+    <section class="page-section" id="snapshot">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">En bref</span>
+          <h2>Profil en bref</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> cat about.md</div>
-          <div class="about-grid">
-            <div class="about-image"><img src="azaz.webp" alt="Abdelaaziz Belkhair" loading="lazy"></div>
-            <article class="about-content">
-              <h3>Pentester AD & Web</h3>
-              <p>Actuellement en dernière année à l'ENSEIRB-MATMECA (Bordeaux INP), je me spécialise dans le pentest
-                Active Directory et la sécurité des applications web. Kerberoasting, ACL abuse, SSRF, SSTI — c'est mon
-                quotidien.</p>
-              <p>Formé en CPGE (MPSI/MP), j'aborde chaque audit avec une rigueur méthodique. Je pratique intensivement
-                sur HackTheBox et TryHackMe, et je documente mes exploits dans des writeups détaillés.</p>
-              <div class="stats">
-                <div class="stat">
-                  <div class="stat-value">9+</div>
-                  <div class="stat-label">Projets</div>
-                </div>
-                <div class="stat">
-                  <a href="https://tryhackme.com/p/y0unga2ubi5" target="_blank" rel="noopener"
-                    style="text-decoration:none;color:inherit;">
-                    <div class="stat-value">Top 1%</div>
-                    <div class="stat-label">TryHackMe</div>
-                  </a>
-                </div>
-                <div class="stat">
-                  <div class="stat-value">250+</div>
-                  <div class="stat-label">Labs</div>
-                </div>
-                <div class="stat">
-                  <div class="stat-value">5</div>
-                  <div class="stat-label">Certifications</div>
-                </div>
-              </div>
-            </article>
-          </div>
-        </div>
+      </div>
+      <div class="proof-grid">
+        <article class="proof-card">
+          <span class="mini-tag">Stage actuel</span>
+          <strong>Pentest web</strong>
+          <p>Stage de 6 mois à Marseille en pentest web, avec recherche active de vulnérabilités,
+            exploitation contrôlée, validation d'impact et rédaction de constats techniques.</p>
+        </article>
+        <article class="proof-card">
+          <span class="mini-tag">Analyses détaillées</span>
+          <strong>Writeups</strong>
+          <p>Analyses HTB couvrant l'exploitation de boxes, la lecture de code,
+            les hypothèses testées et la construction de chaînes d'attaque.</p>
+        </article>
+        <article class="proof-card">
+          <span class="mini-tag">Outils publiés</span>
+          <strong>Outils d'audit</strong>
+          <p>Outillage offensif pour cartographie AD, génération de labs, préparation de chemins d'attaque
+            et validation d'impact.</p>
+        </article>
+        <article class="proof-card">
+          <span class="mini-tag">Méthode de travail</span>
+          <strong>Impact et cause racine</strong>
+          <p>Chaque constat doit relier une observation vérifiable, une primitive exploitable,
+            un impact concret et un chemin d'attaque reproductible.</p>
+        </article>
       </div>
     </section>
 
-    <section id="skills">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">skills/</span>
+    <section class="page-section" id="about">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Profil</span>
+          <h2>Pentest Web et Active Directory avec une logique d'audit</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ls -la ./skills/</div>
-          <div class="skills-grid">
-            <article class="skill-card">
-              <h4><i class="fas fa-crosshairs"></i> Sécurité Offensive</h4>
-              <div class="skill-tags"><span class="skill-tag">Metasploit</span><span class="skill-tag">Burp
-                  Suite</span><span class="skill-tag">BloodHound</span><span class="skill-tag">Mimikatz</span><span
-                  class="skill-tag">Nmap</span><span class="skill-tag">MITRE ATT&CK</span></div>
+      </div>
+      <div class="split">
+        <div>
+          <p>
+            Je travaille surtout sur des chaînes d'exploitation Web et Active Directory: comprendre le
+            comportement d'une cible, isoler une hypothèse, prouver l'impact proprement, puis documenter
+            une chaîne d'attaque reproductible.
+          </p>
+          <p>
+            J'aime documenter les chemins complets: pas seulement le bug isolé, mais le raisonnement,
+            l'énumération, les impasses, les pivots et la preuve d'impact.
+          </p>
+          <div class="card-grid">
+            <article class="feature-card">
+              <h3>Pentest Web</h3>
+              <p>Recherche de vulnérabilités, exploitation contrôlée, analyse de comportement applicatif,
+                validation d'impact et chaînage.</p>
             </article>
-            <article class="skill-card">
-              <h4><i class="fas fa-shield-halved"></i> Sécurité Défensive</h4>
-              <div class="skill-tags"><span class="skill-tag">SIEM</span><span class="skill-tag">Honeypots</span><span
-                  class="skill-tag">Threat Intel</span><span class="skill-tag">Log Analysis</span><span
-                  class="skill-tag">IDS/IPS</span></div>
+            <article class="feature-card">
+              <h3>Active Directory</h3>
+              <p>Exploitation Active Directory: énumération, chemins de privilèges, abus de configurations
+                et validation d'impact en lab ou mission d'audit.</p>
             </article>
-            <article class="skill-card">
-              <h4><i class="fas fa-key"></i> Cryptographie</h4>
-              <div class="skill-tags"><span class="skill-tag">Kyber768</span><span
-                  class="skill-tag">Dilithium3</span><span class="skill-tag">AES-GCM</span><span
-                  class="skill-tag">RSA</span><span class="skill-tag">TLS</span><span class="skill-tag">PKI</span></div>
-            </article>
-            <article class="skill-card">
-              <h4><i class="fas fa-code"></i> Langages</h4>
-              <div class="skill-tags"><span class="skill-tag">Python</span><span class="skill-tag">C</span><span
-                  class="skill-tag">Bash</span><span class="skill-tag">PowerShell</span><span
-                  class="skill-tag">SQL</span></div>
-            </article>
-            <article class="skill-card">
-              <h4><i class="fas fa-brain"></i> IA & ML</h4>
-              <div class="skill-tags"><span class="skill-tag">PyTorch</span><span
-                  class="skill-tag">Scikit-learn</span><span class="skill-tag">CodeBERT</span><span
-                  class="skill-tag">LLM Fine-tuning</span></div>
-            </article>
-            <article class="skill-card">
-              <h4><i class="fas fa-network-wired"></i> Réseaux</h4>
-              <div class="skill-tags"><span class="skill-tag">TCP/IP</span><span class="skill-tag">Kerberos</span><span
-                  class="skill-tag">NTLM</span><span class="skill-tag">LDAP</span><span
-                  class="skill-tag">Wireshark</span></div>
+            <article class="feature-card">
+              <h3>Ingénierie</h3>
+              <p>Python, PowerShell, automatisation de labs AD, exploitation contrôlée et outillage d'audit.</p>
             </article>
           </div>
         </div>
+        <aside class="panel profile-frame">
+          <img src="assets/img/profile.webp" alt="Portrait d'Abdelaaziz Belkhair" loading="lazy">
+        </aside>
       </div>
     </section>
 
-    <section id="projects">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">~/projects</span>
+    <section class="page-section" id="work">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Travail sélectionné</span>
+          <h2>Outils utiles pour une équipe pentest</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> git log --oneline --graph</div>
-          <div class="projects-grid">
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-bug"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/FADAM" target="_blank" rel="noopener"
-                    aria-label="GitHub"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body"><span class="project-category">Malware Analysis</span>
-                <h5>FADAM - Framework Malware</h5>
-                <p>Framework modulaire d'analyse de binaires ELF : parsing, déobfuscation, traçage dynamique, extraction
-                  IoC.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">ELF</span><span class="project-tag">Reverse</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-user-secret"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/Net-Aware-Aut-Auditor"
-                    target="_blank" rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body"><span class="project-category">Active Directory</span>
-                <h5>Net-Aware Auth Auditor</h5>
-                <p>Outil d'audit réseau : analyse Kerberos, NTLM, LDAP, détection Kerberoasting/Pass-the-Hash.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Scapy</span><span class="project-tag">AD</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-spider"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/PROJECT_HONEYPOT" target="_blank"
-                    rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body"><span class="project-category">Threat Detection</span>
-                <h5>Honeypot + ML Detection</h5>
-                <p>Infrastructure honeypot multi-services avec détection d'anomalies ML et dashboards temps réel.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Scikit-learn</span><span class="project-tag">Docker</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-atom"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/PQ-secure" target="_blank"
-                    rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body"><span class="project-category">Post-Quantum</span>
-                <h5>PQ-Secure Sync</h5>
-                <p>Synchronisation fichiers sécurisée par crypto post-quantique : Kyber768, Dilithium3, handshake ~1ms.
-                </p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Kyber</span><span class="project-tag">liboqs</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-globe"></i></div>
-                <div class="project-links"><a href="https://github.com/abdelaaziz0/CRAWLER" target="_blank"
-                    rel="noopener" aria-label="GitHub"><i class="fab fa-github"></i></a></div>
-              </div>
-              <div class="project-body"><span class="project-category">Web Security</span>
-                <h5>Scanner Vulnérabilités Web</h5>
-                <p>Crawler intelligent : détection XSS, SQLi, CSRF. Scoring CVSS automatique.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">Flask</span><span class="project-tag">OWASP</span></div>
-              </div>
-            </article>
-            <article class="project-card">
-              <div class="project-header">
-                <div class="project-icon"><i class="fas fa-code"></i></div>
-              </div>
-              <div class="project-body"><span class="project-category">DevSecOps</span>
-                <h5>SecureDevKit (AM Advisory)</h5>
-                <p>Plateforme SAST hybride : analyse statique + IA (CodeBERT). Détection OWASP, correctifs LLM.</p>
-                <div class="project-tags"><span class="project-tag">Python</span><span
-                    class="project-tag">CodeBERT</span><span class="project-tag">LLM</span></div>
-              </div>
-            </article>
+      </div>
+      <div class="project-grid">
+        <article class="project-card-alt">
+          <h3>ntds2bh</h3>
+          <p>Outil d'analyse offline qui transforme des exports Active Directory autorisés en JSON compatibles
+            BloodHound, afin d'étudier les chemins de privilèges.</p>
+          <div class="tag-row">
+            <span class="mini-tag">AD</span><span class="mini-tag">BloodHound</span><span class="mini-tag">Page
+              technique</span>
           </div>
-          <div style="text-align: center; margin-top: 2rem;"><a href="projects.html" class="btn btn-secondary"><i
-                class="fas fa-folder-open"></i> ./voir_tous.sh</a></div>
-        </div>
+          <a href="projects/ntds2bh.html">Présentation technique</a>
+        </article>
+        <article class="project-card-alt">
+          <h3>ADBuilder</h3>
+          <p>Générateur PowerShell d'environnements Active Directory de lab à partir d'un fichier JSON: utilisateurs,
+            groupes, machines et scénarios contrôlés.</p>
+          <div class="tag-row">
+            <span class="mini-tag">PowerShell</span><span class="mini-tag">Lab AD</span><span class="mini-tag">Page
+              technique</span>
+          </div>
+          <a href="projects/adbuilder.html">Présentation technique</a>
+        </article>
+        <article class="project-card-alt">
+          <h3>Net-Aware Auth Auditor</h3>
+          <p>Outil de reconnaissance AD orienté audit interne: collecte de signaux Kerberos/LDAP, repérage de comptes de
+            service candidats et priorisation des vérifications manuelles.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Python</span><span class="mini-tag">Scapy</span><span class="mini-tag">AD</span>
+          </div>
+          <div class="project-links-alt">
+            <a class="icon-link" href="https://github.com/abdelaaziz0/Net-Aware-Aut-Auditor" target="_blank"
+              rel="noopener" aria-label="GitHub Net-Aware Auth Auditor"><i class="fab fa-github"></i></a>
+          </div>
+        </article>
+        <article class="project-card-alt">
+          <h3>Kerbrutal</h3>
+          <p>Modernisation de Kerbrute : mutation de noms AD, mode OPSEC (shuffle + jitter), backoff adaptatif
+            anti-lockout et downgrade RC4 pour AS-REP roasting.</p>
+          <div class="tag-row">
+            <span class="mini-tag">Go</span><span class="mini-tag">Kerberos</span><span class="mini-tag">AD</span>
+          </div>
+          <div class="project-links-alt">
+            <a class="icon-link" href="https://github.com/abdelaaziz0/Kerbrutal" target="_blank" rel="noopener"
+              aria-label="GitHub Kerbrutal"><i class="fab fa-github"></i></a>
+          </div>
+        </article>
+      </div>
+      <div class="hero-actions">
+        <a class="button" href="projects.html"><i class="fas fa-folder-open"></i> Tous les projets</a>
       </div>
     </section>
 
-    <section id="experience">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span
-            class="terminal-title">experience.log</span>
+    <section class="page-section" id="writeups">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Analyses techniques sélectionnées</span>
+          <h2>Writeups</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> cat timeline.log</div>
-          <div class="timeline">
-            <article class="timeline-item">
-              <div class="timeline-date">Juin - Septembre 2025</div>
-              <h4>Stage Ingénieur R&D - AM Advisory</h4>
-              <h5>Conseil IT - Paris</h5>
-              <ul>
-                <li>Moteur SAST hybride (analyse statique + CodeBERT, Phi)</li>
-                <li>Détection automatique vulnérabilités OWASP</li>
-                <li>Fine-tuning LLMs pour génération de correctifs</li>
-                <li>Benchmarking et optimisation (quantization)</li>
-              </ul>
-            </article>
-            <article class="timeline-item">
-              <div class="timeline-date">2023 - 2026</div>
-              <h4>ENSEIRB-MATMECA, Bordeaux INP</h4>
-              <h5>Ingénieur Télécommunications - Spé Cybersécurité</h5>
-              <p>Cryptographie, sécurité réseaux, programmation système, IoT.</p>
-            </article>
-            <article class="timeline-item">
-              <div class="timeline-date">2021 - 2023</div>
-              <h4>CPGE MPSI/MP</h4>
-              <h5>Fès, Maroc</h5>
-              <p>Formation intensive mathématiques et physique.</p>
-            </article>
-          </div>
-        </div>
+      </div>
+      <div class="article-grid">
+        <article class="article-card">
+          <h3>Garfield - HTB</h3>
+          <p>Exploitation AD par abus de scriptPath, ForceChangePassword, RBCD et ticket RODC forgé.</p>
+          <div class="tag-row"><span class="mini-tag">HTB</span><span class="mini-tag">Windows AD</span></div>
+          <a href="writeups/garfield.html">Lire</a>
+        </article>
+        <article class="article-card">
+          <h3>Pirate - HTB Writeup</h3>
+          <p>LDAP anonyme → Pre-Win2000 MS01$ → extraction gMSA double (ADCS + ADFS) → PtH WinRM → relai NTLM RBCD → SYSTEM WEB01 → SPN injection + délégation contrainte Protocol Transition → DC01.</p>
+          <div class="tag-row"><span class="mini-tag">Hard</span><span class="mini-tag">Windows AD</span></div>
+          <a href="writeups/pirate.html">Lire</a>
+        </article>
+        <article class="article-card">
+          <h3>Fluffy - HTB</h3>
+          <p>Writable share, capture NetNTLMv2, Shadow Credentials et abus AD CS ESC16 jusqu'à Administrator.</p>
+          <div class="tag-row"><span class="mini-tag">HTB</span><span class="mini-tag">AD CS</span></div>
+          <a href="writeups/fluffy.html">Lire</a>
+        </article>
+        <article class="article-card">
+          <h3>Resizer - HTB CTF</h3>
+          <p>Une écriture de fichier apparemment limitée devient exploitable via import hijack Python.</p>
+          <div class="tag-row"><span class="mini-tag">Hard</span><span class="mini-tag">Flask</span></div>
+          <a href="writeups/resizer.html">Lire</a>
+        </article>
+      </div>
+      <div class="hero-actions">
+        <a class="button" href="writeups.html"><i class="fas fa-flag"></i> Toutes les analyses</a>
       </div>
     </section>
 
-    <section id="certifications">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">certs/</span>
+    <section class="page-section" id="articles">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Articles techniques</span>
+          <h2>Notes et analyses</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ls -la ./certs/ --images</div>
-          <div class="certs-grid">
-            <!-- 1. TryHackMe Red Teaming - Most advanced practical cert -->
-            <article class="cert-card" onclick="openCertModal('certifs/tryhackme-Red-Teaming.jpg')">
-              <img src="certifs/tryhackme-Red-Teaming.jpg" alt="TryHackMe Red Teaming" loading="lazy">
-              <div class="cert-info">
-                <h5>Red Teaming</h5>
-                <p>TryHackMe</p>
-              </div>
-            </article>
-            <!-- 2. TryHackMe Offensive Pentesting -->
-            <article class="cert-card" onclick="openCertModal('certifs/Tryhackme-Offensive-Pentesting.jpg')">
-              <img src="certifs/Tryhackme-Offensive-Pentesting.jpg" alt="TryHackMe Offensive Pentesting" loading="lazy">
-              <div class="cert-info">
-                <h5>Offensive Pentesting</h5>
-                <p>TryHackMe</p>
-              </div>
-            </article>
-            <!-- 2. TryHackMe Web App Pentesting -->
-            <article class="cert-card" onclick="openCertModal('certifs/tryhackme_web_application_pentesting.jpg')">
-              <img src="certifs/tryhackme_web_application_pentesting.jpg" alt="TryHackMe Web Application Pentesting"
-                loading="lazy">
-              <div class="cert-info">
-                <h5>Web App Pentesting</h5>
-                <p>TryHackMe</p>
-              </div>
-            </article>
-            <!-- 3. TryHackMe Web App Red Teaming -->
-            <article class="cert-card" onclick="openCertModal('certifs/Tryhackme_web_application_redteaming.jpg')">
-              <img src="certifs/Tryhackme_web_application_redteaming.jpg" alt="TryHackMe Web Application Red Teaming"
-                loading="lazy">
-              <div class="cert-info">
-                <h5>Web App Red Teaming</h5>
-                <p>TryHackMe</p>
-              </div>
-            </article>
-            <!-- 4. HackTheBox Web Pentester Job Role Path -->
-            <article class="cert-card" onclick="openCertModal('certifs/HTB_web_pentester_job_role_path.png')">
-              <img src="certifs/HTB_web_pentester_job_role_path.png" alt="HackTheBox Web Pentester Job Role Path"
-                loading="lazy">
-              <div class="cert-info">
-                <h5>Web Pentester Path</h5>
-                <p>HackTheBox</p>
-              </div>
-            </article>
-            <!-- 5. Pentesting Agent - EC-Council practical -->
-            <article class="cert-card" onclick="openCertModal('certifs/pentesting-agent.png')">
-              <img src="certifs/pentesting-agent.png" alt="Pentesting Agent Certificate" loading="lazy">
-              <div class="cert-info">
-                <h5>Pentesting Agent Beginner</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <!-- 3. Pentesting Agent Intermediate - EC-Council -->
-            <article class="cert-card" onclick="openCertModal('certifs/pentesting-agent-intermediate.png')">
-              <img src="certifs/pentesting-agent-intermediate.png" alt="Pentesting Agent Intermediate" loading="lazy">
-              <div class="cert-info">
-                <h5>Pentesting Agent Intermediate</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <!-- 4. Bash Scripting - EC-Council -->
-            <article class="cert-card" onclick="openCertModal('certifs/eccouncil-bash-scripting.png')">
-              <img src="certifs/eccouncil-bash-scripting.png" alt="Bash Scripting Certificate" loading="lazy">
-              <div class="cert-info">
-                <h5>Bash Scripting</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <!-- 5. Web Security for Enterprises 1 -->
-            <article class="cert-card" onclick="openCertModal('certifs/web_security_for_entreprises_1.png')">
-              <img src="certifs/web_security_for_entreprises_1.png" alt="Web Security for Enterprises" loading="lazy">
-              <div class="cert-info">
-                <h5>Web Security Enterprises</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <!-- 4. Web Security for Enterprises 2 -->
-            <article class="cert-card" onclick="openCertModal('certifs/web_security_for_entreprises_2.png')">
-              <img src="certifs/web_security_for_entreprises_2.png" alt="Web Security for Enterprises II"
-                loading="lazy">
-              <div class="cert-info">
-                <h5>Web Security II</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <!-- 5. TOEIC - Language certification -->
-            <article class="cert-card" onclick="openCertModal('certifs/toeic.png')">
-              <img src="certifs/toeic.png" alt="TOEIC Certificate" loading="lazy">
-              <div class="cert-info">
-                <h5>TOEIC 940/990</h5>
-                <p>C1 Level</p>
-              </div>
-            </article>
-            <!-- 6-10. EC-Council Essentials -->
-            <article class="cert-card" onclick="openCertModal('certifs/ec-council-1.png')">
-              <img src="certifs/ec-council-1.png" alt="EC-Council Certificate 1" loading="lazy">
-              <div class="cert-info">
-                <h5>EC-Council Essentials</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <article class="cert-card" onclick="openCertModal('certifs/ec-council-2.png')">
-              <img src="certifs/ec-council-2.png" alt="EC-Council Certificate 2" loading="lazy">
-              <div class="cert-info">
-                <h5>EC-Council Essentials</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <article class="cert-card" onclick="openCertModal('certifs/ec-council-3.png')">
-              <img src="certifs/ec-council-3.png" alt="EC-Council Certificate 3" loading="lazy">
-              <div class="cert-info">
-                <h5>EC-Council Essentials</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <article class="cert-card" onclick="openCertModal('certifs/ec-council-4.png')">
-              <img src="certifs/ec-council-4.png" alt="EC-Council Certificate 4" loading="lazy">
-              <div class="cert-info">
-                <h5>EC-Council Essentials</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-            <article class="cert-card" onclick="openCertModal('certifs/ec-council-5.png')">
-              <img src="certifs/ec-council-5.png" alt="EC-Council Certificate 5" loading="lazy">
-              <div class="cert-info">
-                <h5>EC-Council Essentials</h5>
-                <p>EC-Council</p>
-              </div>
-            </article>
-          </div>
-        </div>
+      </div>
+      <div class="article-grid">
+        <article class="article-card">
+          <span class="mini-tag">Red Team</span>
+          <h3>Red Team Ops : De la reconnaissance à la persistance</h3>
+          <p>C2 (Sliver, Havoc, Brute Ratel), AMSI bypass, ETW patching, syscalls directs et OPSEC opérationnel.</p>
+          <a href="blog/red-team-ops.html">Lire</a>
+        </article>
+        <article class="article-card">
+          <span class="mini-tag">Active Directory</span>
+          <h3>Active Directory : Du foothold au Domain Admin</h3>
+          <p>Kerberoasting, délégation, Shadow Credentials, gMSA, AD CS ESC — avec BloodHound, Certipy, Rubeus et Event IDs.</p>
+          <a href="blog/active-directory-attacks.html">Lire</a>
+        </article>
+        <article class="article-card">
+          <span class="mini-tag">ADCS</span>
+          <h3>AD Certificate Services : Exploiter la PKI d'entreprise</h3>
+          <p>Certipy, ESC1 à ESC16 — chaînes complètes de l'énumération au NT hash Administrator.</p>
+          <a href="blog/adcs-attacks.html">Lire</a>
+        </article>
+        <article class="article-card">
+          <span class="mini-tag">Crypto</span>
+          <h3>UOV : comprendre les signatures "Huile et Vinaigre"</h3>
+          <p>Fondements MQ, génération de clés, algorithme de signature, attaque Kipnis-Shamir et comparatif NIST (Dilithium, Falcon, SPHINCS+).</p>
+          <a href="blog/uov-signatures.html">Lire</a>
+        </article>
+      </div>
+      <div class="hero-actions">
+        <a class="button" href="blog.html"><i class="fas fa-book-open"></i> Tous les articles</a>
       </div>
     </section>
 
-    <div class="cert-modal" id="certModal" onclick="closeCertModal()">
-      <button class="cert-modal-close" aria-label="Fermer"><i class="fas fa-times"></i></button>
-      <img id="certModalImg" src="" alt="Certificate">
-    </div>
-
-    <section id="blog">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">~/blog</span>
+    <section class="page-section" id="experience">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Parcours</span>
+          <h2>Formation et expérience</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> cat articles/*.md | head -n 3</div>
-          <div class="blog-grid">
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-01-04</span>
-                <span class="blog-tag">Red Team</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Red Team Ops : De la reconnaissance à la persistence</h4>
-                <p>Guide complet : MITRE ATT&CK, frameworks C2, évasion EDR.</p>
-                <a href="blog/red-team-ops.html" class="blog-read-more">./read_more.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-01-01</span>
-                <span class="blog-tag">AD</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Active Directory : Du foothold au Domain Admin</h4>
-                <p>Kerberoasting, délégation, ACL abuse, DCSync, Golden Ticket.</p>
-                <a href="blog/active-directory-attacks.html" class="blog-read-more">./read_more.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2025-01-25</span>
-                <span class="blog-tag">Pentest</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Pentesting Active Directory : Guide complet</h4>
-                <p>Méthodologie : reconnaissance, Pass-the-Hash, lateral movement.</p>
-                <a href="blog/pentest-ad.html" class="blog-read-more">./read_more.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-          </div>
-          <div style="text-align: center; margin-top: 2rem;">
-            <a href="blog.html" class="btn btn-secondary"><i class="fas fa-newspaper"></i> ./all_articles.sh</a>
-          </div>
-        </div>
+      </div>
+      <div class="timeline-grid">
+        <article class="timeline-card">
+          <span class="mini-tag">Stage PFE 6 mois</span>
+          <h3>Orange Cyberdefense - Marseille</h3>
+          <p>Contribution directe à des missions de pentest web: recherche de vulnérabilités, identification
+            de RCE et d'IDOR, exploitation contrôlée, validation d'impact et rédaction de constats techniques.
+            Développement de
+            <code>ntds2bh</code>, un outil qui transforme des exports Active Directory autorisés en JSON compatibles
+            BloodHound.
+          </p>
+        </article>
+        <article class="timeline-card">
+          <span class="mini-tag">Juin - Septembre 2025</span>
+          <h3>Stage Ingénieur R&D - AM Advisory</h3>
+          <p>Moteur SAST hybride, analyse statique, CodeBERT, Phi, détection OWASP et triage de vulnérabilités.</p>
+        </article>
+        <article class="timeline-card">
+          <span class="mini-tag">2023 - 2026</span>
+          <h3>ENSEIRB-MATMECA, Bordeaux INP</h3>
+          <p>Ingénieur télécommunications, spécialisation cybersécurité, crypto, réseaux et système.</p>
+        </article>
+        <article class="timeline-card">
+          <span class="mini-tag">2021 - 2023</span>
+          <h3>CPGE MPSI/MP</h3>
+          <p>Formation intensive en mathématiques et physique, base de rigueur utile en sécurité.</p>
+        </article>
+        <article class="timeline-card">
+          <span class="mini-tag">Labs continus</span>
+          <h3>HackTheBox / TryHackMe</h3>
+          <p>Pratique régulière sur AD, web exploitation, red team et chaînes multi-étapes.
+            Profils: <a href="https://app.hackthebox.com/users/3026245" target="_blank" rel="noopener">HackTheBox</a> et
+            <a href="https://tryhackme.com/p/y0unga2ubi5" target="_blank" rel="noopener">TryHackMe</a>.
+          </p>
+        </article>
       </div>
     </section>
 
-    <section id="writeups">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">~/writeups</span>
+    <section class="page-section" id="certifications">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Formations</span>
+          <h2>Formations et certifications principales</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> cat writeups/*.md | grep flag</div>
-          <div class="blog-grid">
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-04-20</span>
-                <span class="blog-tag">File Write / Import Hijack</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Resizer — HTB CTF</h4>
-                <p>Unsafe upload filename → arbitrary file write → Pillow-triggered Python import hijack → flag disclosure.</p>
-                <a href="writeups/resizer.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-02-19</span>
-                <span class="blog-tag">HTTP Smuggling / RCE</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>DeSynth Recruit — HTB CTF</h4>
-                <p>Client-Side Desync in Werkzeug 2.1.0 → XSS → Path Traversal → Debug PIN → RCE.</p>
-                <a href="writeups/desynth-recruit.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-02-18</span>
-                <span class="blog-tag">XSS / Polyglot</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>TwoDots Horror — HTB CTF</h4>
-                <p>JPEG/JS polyglot → CSP bypass → cookie exfiltration via stored XSS.</p>
-                <a href="writeups/twodots-horror.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-02-16</span>
-                <span class="blog-tag">Proto Pollution / SSTI</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Intergalactic Bounty — HTB CTF</h4>
-                <p>5-stage kill chain: mass assignment → parser diff → proto pollution → needle gadget → SSTI to RCE.
-                </p>
-                <a href="writeups/intergalactic-bounty.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-02-14</span>
-                <span class="blog-tag">SSRF / SSTI</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Interstellar — HTB CTF</h4>
-                <p>SSRF via subdomain abuse + Smarty SSTI → RCE sur PHP/Apache.</p>
-                <a href="writeups/interstellar.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-02-14</span>
-                <span class="blog-tag">Path Traversal</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>NextPath — HTB CTF</h4>
-                <p>Regex bypass + HPP + path truncation → lecture de fichier arbitraire sur Next.js.</p>
-                <a href="writeups/nextpath.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
-            <article class="blog-card">
-              <div class="blog-card-header">
-                <span class="blog-date">2026-02-14</span>
-                <span class="blog-tag">SSRF</span>
-              </div>
-              <div class="blog-card-body">
-                <h4>Dusty Alleys — HTB CTF</h4>
-                <p>Nginx vhost bypass + SSRF header reflection → flag capturé.</p>
-                <a href="writeups/dusty-alleys.html" class="blog-read-more">./exploit.sh <i
-                    class="fas fa-arrow-right"></i></a>
-              </div>
-            </article>
+      </div>
+      <div class="certs-grid-alt">
+        <article class="cert-card-old">
+          <img src="assets/img/certifs/tryhackme-red-teaming.webp" alt="TryHackMe Red Teaming" loading="lazy">
+          <div class="cert-info">
+            <h3>Red Teaming</h3>
+            <p>TryHackMe</p>
           </div>
-          <div style="text-align: center; margin-top: 2rem;">
-            <a href="writeups.html" class="btn btn-secondary"><i class="fas fa-flag"></i> ./all_writeups.sh</a>
+        </article>
+        <article class="cert-card-old">
+          <img src="assets/img/certifs/tryhackme-offensive-pentesting.webp" alt="TryHackMe Offensive Pentesting" loading="lazy">
+          <div class="cert-info">
+            <h3>Offensive Pentesting</h3>
+            <p>TryHackMe</p>
           </div>
-        </div>
+        </article>
+        <article class="cert-card-old">
+          <img src="assets/img/certifs/tryhackme-web-application-pentesting.webp" alt="TryHackMe Web Application Pentesting"
+            loading="lazy">
+          <div class="cert-info">
+            <h3>Web App Pentesting</h3>
+            <p>TryHackMe</p>
+          </div>
+        </article>
+        <article class="cert-card-old">
+          <img src="assets/img/certifs/htb-web-pentester-job-role-path.webp" alt="HackTheBox Web Pentester Job Role Path"
+            loading="lazy">
+          <div class="cert-info">
+            <h3>Web Pentester Path</h3>
+            <p>HackTheBox</p>
+          </div>
+        </article>
+        <article class="cert-card-old">
+          <img src="assets/img/certifs/toeic.webp" alt="TOEIC Certificate" loading="lazy">
+          <div class="cert-info">
+            <h3>TOEIC 945/990</h3>
+            <p>Niveau C1</p>
+          </div>
+        </article>
       </div>
     </section>
 
-    <section id="contact">
-      <div class="container">
-        <div class="terminal-header">
-          <div class="dots"><span></span><span></span><span></span></div><span class="terminal-title">contact.sh</span>
+    <section class="page-section" id="contact">
+      <div class="section-head">
+        <div>
+          <span class="section-kicker">Contact</span>
+          <h2>Me contacter</h2>
         </div>
-        <div class="terminal-body">
-          <div class="section-cmd"><span class="prompt">$</span> ./send_message.sh</div>
-          <div class="contact-grid">
-            <div class="contact-info">
-              <article class="contact-item">
-                <div class="contact-icon"><i class="fas fa-envelope"></i></div>
-                <div>
-                  <h5>Email</h5>
-                  <p><a href="mailto:abelkhair002@bordeaux-inp.fr">abelkhair002@bordeaux-inp.fr</a></p>
-                </div>
-              </article>
-              <article class="contact-item">
-                <div class="contact-icon"><i class="fas fa-phone"></i></div>
-                <div>
-                  <h5>Téléphone</h5>
-                  <p><a href="tel:+33615243325">+33 6 15 24 33 25</a></p>
-                </div>
-              </article>
-              <article class="contact-item">
-                <div class="contact-icon"><i class="fas fa-location-dot"></i></div>
-                <div>
-                  <h5>Localisation</h5>
-                  <p>Pessac, France</p>
-                </div>
-              </article>
-              <article class="contact-item">
-                <div class="contact-icon"><i class="fas fa-calendar"></i></div>
-                <div>
-                  <h5>Disponibilité</h5>
-                  <p>Stage PFE 6 mois - Février 2026</p>
-                </div>
-              </article>
-              <div class="social-links">
-                <a href="https://www.linkedin.com/in/abdelaaziz-belkhair-12502024b/" class="social-link" target="_blank"
-                  rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
-                <a href="https://github.com/abdelaaziz0" class="social-link" target="_blank" rel="noopener"
-                  aria-label="GitHub"><i class="fab fa-github"></i></a>
-                <a href="https://tryhackme.com/p/y0unga2ubi5" class="social-link" target="_blank" rel="noopener"
-                  aria-label="TryHackMe"><i class="fas fa-flag"></i></a>
-              </div>
-            </div>
-            <form class="contact-form" action="https://formspree.io/f/xrbppgpj" method="post">
-              <div class="form-row">
-                <div class="form-group"><label for="name">$ echo $NAME</label><input type="text" id="name" name="name"
-                    required autocomplete="name"></div>
-                <div class="form-group"><label for="email">$ echo $EMAIL</label><input type="email" id="email"
-                    name="email" required autocomplete="email"></div>
-              </div>
-              <div class="form-group"><label for="subject">$ cat subject.txt</label><select id="subject" name="subject"
-                  required>
-                  <option value="">Sélectionnez...</option>
-                  <option value="stage">Offre de stage</option>
-                  <option value="emploi">Opportunité emploi</option>
-                  <option value="collab">Collaboration</option>
-                  <option value="autre">Autre</option>
-                </select></div>
-              <div class="form-group"><label for="message">$ vim message.txt</label><textarea id="message"
-                  name="message" required></textarea></div>
-              <input type="text" name="_gotcha" style="display:none" tabindex="-1" autocomplete="off">
-              <button type="submit" class="btn btn-primary" style="width: 100%;"><i class="fas fa-paper-plane"></i>
-                ./send.sh</button>
-            </form>
-          </div>
-        </div>
+        <p>Email pour le premier contact, LinkedIn pour le contexte, GitHub pour les projets publics,
+          HackTheBox et TryHackMe pour les labs.</p>
+      </div>
+      <div class="contact-grid-alt">
+        <article class="contact-card">
+          <i class="fas fa-envelope"></i>
+          <h3>Email</h3>
+          <p><a href="mailto:abelkhair002@bordeaux-inp.fr">abelkhair002@bordeaux-inp.fr</a></p>
+        </article>
+        <article class="contact-card contact-logo-card">
+          <a class="icon-link" href="https://www.linkedin.com/in/abdelaaziz-belkhair-12502024b/" target="_blank"
+            rel="noopener" aria-label="LinkedIn"><i class="fab fa-linkedin-in"></i></a>
+          <h3>LinkedIn</h3>
+          <p><a href="https://www.linkedin.com/in/abdelaaziz-belkhair-12502024b/" target="_blank"
+              rel="noopener">abdelaaziz-belkhair</a></p>
+        </article>
+        <article class="contact-card contact-logo-card">
+          <a class="icon-link" href="https://github.com/abdelaaziz0" target="_blank" rel="noopener"
+            aria-label="GitHub"><i class="fab fa-github"></i></a>
+          <h3>GitHub</h3>
+          <p><a href="https://github.com/abdelaaziz0" target="_blank" rel="noopener">github.com/abdelaaziz0</a></p>
+        </article>
+        <article class="contact-card contact-logo-card">
+          <a class="icon-link" href="https://app.hackthebox.com/users/3026245" target="_blank" rel="noopener"
+            aria-label="HackTheBox"><i class="fas fa-cube"></i></a>
+          <h3>HackTheBox</h3>
+          <p><a href="https://app.hackthebox.com/users/3026245" target="_blank" rel="noopener">HTB profile</a></p>
+        </article>
+        <article class="contact-card contact-logo-card">
+          <a class="icon-link" href="https://tryhackme.com/p/y0unga2ubi5" target="_blank" rel="noopener"
+            aria-label="TryHackMe"><i class="fas fa-terminal"></i></a>
+          <h3>TryHackMe</h3>
+          <p><a href="https://tryhackme.com/p/y0unga2ubi5" target="_blank" rel="noopener">y0unga2ubi5</a></p>
+        </article>
       </div>
     </section>
   </main>
 
-  <footer>
-    <div class="container">
-      <p>&copy; 2025 Abdelaaziz Belkhair</p>
-      <p class="ethical">Tous mes tests de sécurité sont effectués dans des environnements légaux et éthiques.</p>
-    </div>
+  <footer class="site-footer-alt">
+    &copy; 2026 Abdelaaziz Belkhair
   </footer>
-
-  <script>
-    function openCertModal(src) {
-      document.getElementById('certModalImg').src = src;
-      document.getElementById('certModal').classList.add('active');
-      document.body.style.overflow = 'hidden';
-    }
-    function closeCertModal() {
-      document.getElementById('certModal').classList.remove('active');
-      document.body.style.overflow = '';
-    }
-    document.addEventListener('keydown', function (e) {
-      if (e.key === 'Escape') closeCertModal();
-    });
-  </script>
 </body>
 
 </html>

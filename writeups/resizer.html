@@ -7,540 +7,23 @@
     <title>Resizer - HTB CTF Writeup</title>
     <meta name="description"
         content="HTB CTF writeup for Resizer: arbitrary file write through Flask upload filename, Python import hijacking, and Pillow lazy imports to leak the flag.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/writeups/resizer.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/writeups/resizer.html">
+  <meta property="og:title" content="Resizer - HTB CTF Writeup">
+  <meta property="og:description" content="HTB CTF writeup for Resizer: arbitrary file write through Flask upload filename, Python import hijacking, and Pillow lazy imports to leak the flag.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Resizer - HTB CTF Writeup">
+  <meta name="twitter:description" content="HTB CTF writeup for Resizer: arbitrary file write through Flask upload filename, Python import hijacking, and Pillow lazy imports to leak the flag.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link
-        href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap"
-        rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
-        crossorigin="anonymous" referrerpolicy="no-referrer">
-    <style>
-        :root {
-            --primary: #00d4ff;
-            --accent: #ff6b6b;
-            --success: #00ff88;
-            --warning: #ffaa00;
-            --bg: #0a0a0a;
-            --bg-card: #111111;
-            --bg-terminal: #0d0d0d;
-            --text: #e4e4e7;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --border: #27272a;
-            --orange: #f97316;
-            --purple: #a78bfa;
-        }
-
-        *,
-        *::before,
-        *::after {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-        }
-
-        html {
-            scroll-behavior: smooth;
-        }
-
-        body {
-            min-height: 100vh;
-            background: var(--bg);
-            color: var(--text);
-            font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
-            line-height: 1.8;
-        }
-
-        a {
-            color: var(--primary);
-            text-decoration: none;
-            transition: color 0.2s ease;
-        }
-
-        a:hover {
-            color: var(--success);
-        }
-
-        .container {
-            width: min(900px, calc(100% - 48px));
-            margin: 0 auto;
-        }
-
-        header {
-            position: fixed;
-            inset: 0 0 auto;
-            z-index: 50;
-            background: rgba(10, 10, 10, 0.95);
-            border-bottom: 1px solid var(--border);
-            backdrop-filter: blur(12px);
-        }
-
-        nav {
-            width: min(1100px, calc(100% - 48px));
-            margin: 0 auto;
-            padding: 1rem 0;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            gap: 1rem;
-        }
-
-        .logo {
-            font-family: "JetBrains Mono", monospace;
-            color: var(--primary);
-            font-size: 1.25rem;
-            font-weight: 700;
-        }
-
-        .nav-links {
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-            list-style: none;
-        }
-
-        .nav-links a {
-            color: var(--text-secondary);
-            font-size: 0.92rem;
-            font-weight: 500;
-        }
-
-        .nav-links a:hover,
-        .nav-links a.active {
-            color: var(--primary);
-        }
-
-        main {
-            padding: 100px 0 60px;
-        }
-
-        .back-link {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1.5rem;
-            color: var(--text-secondary);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.85rem;
-        }
-
-        .challenge-card {
-            position: relative;
-            overflow: hidden;
-            margin-bottom: 2rem;
-            padding: 2rem 2.5rem;
-            border: 1px solid var(--border);
-            border-radius: 16px;
-            background:
-                radial-gradient(circle at 92% 8%, rgba(249, 115, 22, 0.14), transparent 24%),
-                linear-gradient(135deg, rgba(249, 115, 22, 0.08), rgba(0, 212, 255, 0.04));
-        }
-
-        .challenge-card::before {
-            content: "";
-            position: absolute;
-            inset: 0 0 auto;
-            height: 3px;
-            background: linear-gradient(90deg, var(--orange), var(--primary), var(--purple));
-        }
-
-        .challenge-platform {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 1rem;
-            padding: 0.3rem 0.75rem;
-            border-radius: 20px;
-            background: rgba(0, 255, 136, 0.1);
-            color: var(--success);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.75rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .challenge-title {
-            margin-bottom: 0.6rem;
-            color: var(--text);
-            font-size: 2.2rem;
-            font-weight: 700;
-            line-height: 1.15;
-        }
-
-        .challenge-subtitle {
-            max-width: 680px;
-            margin-bottom: 1.5rem;
-            color: var(--text-secondary);
-            font-size: 1.05rem;
-        }
-
-        .challenge-meta {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 0.6rem;
-            margin-bottom: 1.5rem;
-        }
-
-        .meta-badge {
-            padding: 0.3rem 0.7rem;
-            border-radius: 6px;
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.7rem;
-            font-weight: 600;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-        }
-
-        .meta-badge.date {
-            color: var(--primary);
-            background: rgba(0, 212, 255, 0.12);
-        }
-
-        .meta-badge.category {
-            color: var(--purple);
-            background: rgba(167, 139, 250, 0.12);
-        }
-
-        .meta-badge.tag {
-            color: var(--orange);
-            background: rgba(249, 115, 22, 0.12);
-        }
-
-        .challenge-stats {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 1px;
-            overflow: hidden;
-            border-radius: 12px;
-            background: var(--border);
-        }
-
-        .stat-item {
-            min-width: 0;
-            padding: 1rem;
-            background: var(--bg-card);
-            text-align: center;
-        }
-
-        .stat-value {
-            display: block;
-            color: var(--primary);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 1.15rem;
-            font-weight: 700;
-            white-space: nowrap;
-        }
-
-        .stat-value.easy {
-            color: var(--success);
-        }
-
-        .stat-value.medium {
-            color: var(--orange);
-        }
-
-        .stat-value.impact {
-            color: var(--accent);
-        }
-
-        .stat-label {
-            display: block;
-            margin-top: 0.25rem;
-            color: var(--text-muted);
-            font-size: 0.7rem;
-            letter-spacing: 0.5px;
-            text-transform: uppercase;
-        }
-
-        .toc {
-            margin-bottom: 2rem;
-            padding: 1.25rem 1.5rem;
-            border: 1px solid var(--border);
-            border-radius: 12px;
-            background: var(--bg-card);
-        }
-
-        .toc-title {
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-            margin-bottom: 0.75rem;
-            color: var(--text-muted);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-
-        .toc-title::before {
-            content: "";
-            width: 12px;
-            height: 2px;
-            background: var(--orange);
-        }
-
-        .toc ol {
-            list-style: none;
-            counter-reset: toc;
-        }
-
-        .toc li {
-            counter-increment: toc;
-        }
-
-        .toc a {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            padding: 0.35rem 0.5rem;
-            border-radius: 6px;
-            color: var(--text-secondary);
-            font-size: 0.86rem;
-        }
-
-        .toc a::before {
-            content: counter(toc, decimal-leading-zero);
-            min-width: 20px;
-            color: var(--text-muted);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.7rem;
-        }
-
-        .toc a:hover {
-            background: rgba(249, 115, 22, 0.06);
-            color: var(--orange);
-        }
-
-        .article-content h2 {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-            margin: 2.5rem 0 1rem;
-            padding-bottom: 0.6rem;
-            border-bottom: 1px solid var(--border);
-            color: var(--text);
-            font-size: 1.35rem;
-        }
-
-        .article-content h2::before {
-            content: "";
-            flex: 0 0 auto;
-            width: 4px;
-            height: 22px;
-            border-radius: 2px;
-            background: var(--orange);
-        }
-
-        .article-content h3 {
-            margin: 1.5rem 0 0.75rem;
-            color: var(--text);
-            font-size: 1.08rem;
-        }
-
-        .article-content p,
-        .article-content li {
-            color: var(--text-secondary);
-        }
-
-        .article-content p {
-            margin-bottom: 1rem;
-        }
-
-        .article-content ul,
-        .article-content ol {
-            margin: 1rem 0;
-            padding-left: 1.5rem;
-        }
-
-        .article-content li {
-            margin-bottom: 0.5rem;
-        }
-
-        .article-content code {
-            padding: 0.15rem 0.45rem;
-            border-radius: 4px;
-            background: rgba(249, 115, 22, 0.1);
-            color: var(--orange);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.84em;
-        }
-
-        .article-content pre {
-            position: relative;
-            overflow-x: auto;
-            margin: 1.5rem 0;
-            padding: 1.25rem;
-            border: 1px solid var(--border);
-            border-radius: 10px;
-            background: var(--bg-terminal);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.8rem;
-            line-height: 1.6;
-        }
-
-        .article-content pre::before {
-            content: "";
-            position: absolute;
-            inset: 0 0 auto;
-            height: 2px;
-            border-radius: 10px 10px 0 0;
-            background: linear-gradient(90deg, var(--orange), transparent);
-        }
-
-        .article-content pre code {
-            padding: 0;
-            background: transparent;
-            color: var(--text-secondary);
-            font-size: inherit;
-        }
-
-        .info-box,
-        .warning-box {
-            margin: 1.5rem 0;
-            padding: 1.25rem 1.5rem;
-            border-radius: 0 10px 10px 0;
-            color: var(--text-secondary);
-            font-size: 0.92rem;
-        }
-
-        .info-box {
-            border: 1px solid rgba(0, 212, 255, 0.15);
-            border-left: 3px solid var(--primary);
-            background: rgba(0, 212, 255, 0.06);
-        }
-
-        .warning-box {
-            border: 1px solid rgba(255, 107, 107, 0.15);
-            border-left: 3px solid var(--accent);
-            background: rgba(255, 107, 107, 0.06);
-        }
-
-        table {
-            width: 100%;
-            margin: 1.5rem 0;
-            overflow: hidden;
-            border: 1px solid var(--border);
-            border-collapse: separate;
-            border-radius: 10px;
-            border-spacing: 0;
-            font-size: 0.86rem;
-        }
-
-        th,
-        td {
-            padding: 0.72rem 1rem;
-            border-bottom: 1px solid rgba(39, 39, 42, 0.55);
-            text-align: left;
-        }
-
-        th {
-            background: var(--bg-terminal);
-            color: var(--primary);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 0.78rem;
-            letter-spacing: 0.3px;
-            text-transform: uppercase;
-        }
-
-        td {
-            color: var(--text-secondary);
-        }
-
-        tr:last-child td {
-            border-bottom: 0;
-        }
-
-        tr:hover td {
-            background: rgba(249, 115, 22, 0.03);
-        }
-
-        .pwned-banner {
-            position: relative;
-            overflow: hidden;
-            margin: 3rem 0 1rem;
-            padding: 2.5rem 2rem;
-            border: 1px solid rgba(0, 255, 136, 0.2);
-            border-radius: 16px;
-            background: linear-gradient(135deg, rgba(0, 255, 136, 0.06), rgba(0, 212, 255, 0.04));
-            text-align: center;
-        }
-
-        .pwned-banner::before {
-            content: "";
-            position: absolute;
-            inset: 0 0 auto;
-            height: 3px;
-            background: linear-gradient(90deg, var(--success), var(--primary));
-        }
-
-        .pwned-icon {
-            display: block;
-            margin-bottom: 0.75rem;
-            color: var(--success);
-            font-size: 2.3rem;
-        }
-
-        .pwned-text {
-            color: var(--success);
-            font-family: "JetBrains Mono", monospace;
-            font-size: 1.5rem;
-            font-weight: 700;
-            letter-spacing: 3px;
-            text-transform: uppercase;
-        }
-
-        .pwned-sub {
-            margin-top: 0.5rem;
-            color: var(--text-muted);
-            font-size: 0.85rem;
-        }
-
-        footer {
-            padding: 1.5rem 0;
-            border-top: 1px solid var(--border);
-            text-align: center;
-        }
-
-        footer p {
-            color: var(--text-muted);
-            font-size: 0.8rem;
-        }
-
-        @media (max-width: 768px) {
-            .container,
-            nav {
-                width: min(100% - 32px, 900px);
-            }
-
-            .nav-links {
-                display: none;
-            }
-
-            .challenge-card {
-                padding: 1.5rem;
-            }
-
-            .challenge-title {
-                font-size: 1.65rem;
-            }
-
-            .challenge-stats {
-                grid-template-columns: repeat(2, 1fr);
-            }
-
-            .toc {
-                display: none;
-            }
-
-            table {
-                font-size: 0.76rem;
-            }
-
-            th,
-            td {
-                padding: 0.5rem 0.6rem;
-            }
-        }
-    </style>
+        integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+    <link rel="stylesheet" href="../assets/css/writeup.css">
 </head>
 
 <body>
@@ -548,16 +31,18 @@
         <nav>
             <a href="../index.html" class="logo">AB_</a>
             <ul class="nav-links">
-                <li><a href="../index.html">Accueil</a></li>
-                <li><a href="../blog.html">Blog</a></li>
+                <li><a href="../index.html#snapshot">Profil</a></li>
+                <li><a href="../projects.html">Travail</a></li>
                 <li><a href="../writeups.html" class="active">Writeups</a></li>
+                <li><a href="../blog.html">Articles</a></li>
                 <li><a href="../index.html#contact">Contact</a></li>
-            </ul>
+              <li><a href="../cv.pdf" download>CV</a></li>
+  </ul>
         </nav>
     </header>
 
     <main class="container">
-        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux writeups</a>
+        <a href="../writeups.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux analyses</a>
 
         <article>
             <section class="challenge-card">
@@ -577,7 +62,7 @@
                 </div>
                 <div class="challenge-stats">
                     <div class="stat-item">
-                        <span class="stat-value easy">Easy</span>
+                        <span class="stat-value hard">Hard</span>
                         <span class="stat-label">Difficulty</span>
                     </div>
                     <div class="stat-item">
@@ -613,7 +98,7 @@
                 <div class="info-box">
                     <strong>Challenge</strong>: Resizer<br>
                     <strong>Category</strong>: Web Exploitation<br>
-                    <strong>Target</strong>: <code>http://154.57.164.81:30255</code><br>
+                    <strong>Target</strong>: <code>http://TARGET:PORT</code><br>
                     <strong>Flag</strong>: <code>HTB{REDACTED}</code><br>
                     <strong>Stack</strong>: Flask, Gunicorn, Pillow, Python 3.12
                 </div>
@@ -827,7 +312,7 @@ PyMODINIT_FUNC PyInit_fractions(void) {
 
                 <pre><code>curl -sS -i \
   -F 'file=@fractions.abi3.so;filename=/app/fractions.abi3.so;type=image/png' \
-  http://154.57.164.81:30255/resize</code></pre>
+  http://TARGET:PORT/resize</code></pre>
 
                 <p>The server response was:</p>
 

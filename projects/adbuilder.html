@@ -1,0 +1,499 @@
+<!DOCTYPE html>
+<html lang="fr">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ADBuilder - Présentation technique</title>
+  <meta name="description"
+    content="Présentation technique d'ADBuilder, générateur PowerShell d'environnements Active Directory de lab pilotés par JSON.">
+  <link rel="canonical" href="https://abdelaaziz0.github.io/projects/adbuilder.html">
+  <link rel="icon" href="/favicon.ico" sizes="any">
+  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <meta property="og:type" content="website">
+  <meta property="og:url" content="https://abdelaaziz0.github.io/projects/adbuilder.html">
+  <meta property="og:title" content="ADBuilder - Présentation technique">
+  <meta property="og:description" content="Présentation technique d'ADBuilder, générateur PowerShell d'environnements Active Directory de lab pilotés par JSON.">
+  <meta property="og:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="ADBuilder - Présentation technique">
+  <meta name="twitter:description" content="Présentation technique d'ADBuilder, générateur PowerShell d'environnements Active Directory de lab pilotés par JSON.">
+  <meta name="twitter:image" content="https://abdelaaziz0.github.io/assets/img/profile.webp">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css"
+    integrity="sha512-Evv84Mr4kqVGRNSgIGL/F/aIDqQb7xQ2vcrdIwxfjThSH8CSR7PBEakCr51Ck+w+/U6swU2Im1vVX0SVk9ABhg=="
+    crossorigin="anonymous" referrerpolicy="no-referrer">
+  <link rel="stylesheet" href="../assets/css/writeup.css">
+</head>
+
+<body>
+  <header>
+    <nav>
+      <a href="../index.html" class="logo">AB_</a>
+      <ul class="nav-links">
+        <li><a href="../index.html#snapshot">Profil</a></li>
+        <li><a href="../projects.html" class="active">Travail</a></li>
+        <li><a href="../writeups.html">Writeups</a></li>
+        <li><a href="../blog.html">Articles</a></li>
+        <li><a href="../index.html#contact">Contact</a></li>
+        <li><a href="../cv.pdf" download>CV</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main class="container">
+    <a href="../projects.html" class="back-link"><i class="fas fa-arrow-left"></i> Retour aux projets</a>
+
+    <article>
+      <section class="challenge-card">
+        <span class="challenge-platform"><i class="fas fa-terminal"></i> Projet lab Active Directory</span>
+        <h1 class="challenge-title">ADBuilder</h1>
+        <p class="challenge-subtitle">
+          Moteur PowerShell complet permettant de construire automatiquement un environnement Active Directory de lab
+          à partir d'un fichier JSON : promotion du contrôleur de domaine, création des objets AD, configuration des
+          groupes, utilisateurs, ordinateurs, politiques de mots de passe, GPO, Kerberos, DNS, AD CS et vérifications
+          finales.
+        </p>
+        <div class="challenge-meta">
+          <span class="meta-badge category">PowerShell</span>
+          <span class="meta-badge tag">Active Directory</span>
+          <span class="meta-badge tag">Windows Server Core</span>
+          <span class="meta-badge tag">JSON</span>
+          <span class="meta-badge tag">AD CS</span>
+          <span class="meta-badge tag">Lab</span>
+        </div>
+        <div class="challenge-stats">
+          <div class="stat-item">
+            <span class="stat-value">JSON</span>
+            <span class="stat-label">Source de vérité</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">PS 5.1</span>
+            <span class="stat-label">Moteur d'exécution</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">2 phases</span>
+            <span class="stat-label">Promotion + reprise</span>
+          </div>
+          <div class="stat-item">
+            <span class="stat-value">DAG</span>
+            <span class="stat-label">Ordonnancement</span>
+          </div>
+        </div>
+      </section>
+
+      <nav class="toc" aria-label="Table des matières">
+        <div class="toc-title">Sommaire</div>
+        <ol>
+          <li><a href="#objectif">Objectif</a></li>
+          <li><a href="#schema">Schéma JSON</a></li>
+          <li><a href="#workflow">Workflow</a></li>
+          <li><a href="#securite">Garde-fous</a></li>
+          <li><a href="#limites">Limites</a></li>
+          <li><a href="#apports">Ce que cela démontre</a></li>
+        </ol>
+      </nav>
+
+      <div class="article-content">
+        <div class="info-box">
+          <strong>Note publique</strong> : ce projet est conçu pour créer des environnements Active Directory de lab
+          reproductibles. Il automatise la construction du domaine et des composants associés dans une VM isolée, avec
+          une logique de validation, de reprise après reboot et de vérification finale.
+        </div>
+
+        <h2 id="objectif">1. Objectif</h2>
+        <p>
+          ADBuilder permet de générer un lab Active Directory complet à partir d'un fichier JSON. L'objectif est de
+          remplacer les manipulations manuelles longues et fragiles par une configuration déclarative, claire et
+          rejouable. Le fichier JSON devient la source de vérité du lab : il décrit le domaine, les unités
+          d'organisation, les groupes, les utilisateurs, les ordinateurs, les memberships, les politiques de mots de
+          passe fines, les GPO, les paramètres Kerberos, les entrées DNS, les éléments AD CS et les assertions
+          attendues.
+        </p>
+
+        <p>
+          Le projet fonctionne sur Windows Server Core avec PowerShell 5.1. Il prend en charge la promotion du serveur
+          en contrôleur de domaine, le reboot obligatoire après promotion, puis la reprise automatique pour appliquer le
+          reste de la configuration. Cette séparation en deux phases permet d'avoir un déploiement propre, contrôlé et
+          adapté au fonctionnement réel d'Active Directory.
+        </p>
+
+        <p>
+          Le résultat est un environnement AD prêt à l'emploi pour des scénarios de formation, de démonstration, de CTF
+          ou de recherche interne. Le lab peut être reconstruit depuis une VM fraîche, partagé avec un autre opérateur
+          et
+          vérifié automatiquement à la fin du déploiement.
+        </p>
+
+        <h2 id="schema">2. Schéma JSON</h2>
+        <p>
+          Le JSON décrit l'état attendu du lab. Il contient les paramètres du domaine, les providers à activer et les
+          objets à créer. Le moteur lit cette configuration, la valide, résout les dépendances entre composants, puis
+          applique les changements dans le bon ordre.
+        </p>
+
+        <p>
+          Exemple réduit :
+        </p>
+
+        <pre><code>{
+  "mode": "newForest",
+  "forest": {
+    "domainName": "adbuilder.lab",
+    "netbiosName": "ADBUILDER",
+    "installDns": true
+  },
+  "providers": {
+    "directory": {
+      "enabled": true,
+      "ous": ["Lab", "Users", "Groups", "Computers"],
+      "users": ["alice"],
+      "groups": ["Lab-Users"],
+      "computers": ["WEB01"]
+    },
+    "adcs": {
+      "enabled": true,
+      "caName": "ADBUILDER-CA"
+    }
+  }
+}</code></pre>
+
+        <details>
+          <summary>Voir un exemple JSON plus complet</summary>
+          <pre><code>{
+  "metadata": {
+    "configVersion": "1.0",
+    "description": "Lab Active Directory complet pour formation et tests"
+  },
+  "mode": "newForest",
+  "execution": {
+    "labMode": true,
+    "reconcile": {
+      "global": {
+        "default": "additive"
+      },
+      "perType": {
+        "ous": {
+          "mode": "additive",
+          "allowDelete": false,
+          "allowMove": false
+        },
+        "users": {
+          "mode": "additive",
+          "allowDelete": false,
+          "allowMove": true,
+          "allowPasswordReset": false
+        },
+        "groups": {
+          "mode": "additive",
+          "allowDelete": false
+        },
+        "memberships": {
+          "mode": "additive",
+          "allowDelete": false
+        }
+      }
+    }
+  },
+  "forest": {
+    "domainName": "adbuilder.lab",
+    "netbiosName": "ADBUILDER",
+    "forestMode": "WinThreshold",
+    "domainMode": "WinThreshold",
+    "installDns": true,
+    "databasePath": "C:\\Windows\\NTDS",
+    "logPath": "C:\\Windows\\NTDS",
+    "sysvolPath": "C:\\Windows\\SYSVOL",
+    "dsrmPassword": {
+      "source": "env",
+      "name": "ADBUILDER_DSRM_PASSWORD"
+    }
+  },
+  "providers": {
+    "directory": {
+      "enabled": true,
+      "ous": [
+        {
+          "name": "Lab",
+          "path": "/",
+          "children": [
+            { "name": "Users" },
+            { "name": "Groups" },
+            { "name": "Computers" },
+            { "name": "Service Accounts" },
+            { "name": "Servers" }
+          ]
+        }
+      ],
+      "groups": [
+        {
+          "name": "Lab-Users",
+          "ou": "OU=Groups,OU=Lab",
+          "scope": "Global",
+          "category": "Security",
+          "members": ["alice"]
+        },
+        {
+          "name": "Lab-Computers",
+          "ou": "OU=Groups,OU=Lab",
+          "scope": "Global",
+          "category": "Security",
+          "members": ["WEB01"]
+        }
+      ],
+      "users": [
+        {
+          "samAccountName": "alice",
+          "displayName": "Alice Martin",
+          "userPrincipalName": "alice@adbuilder.lab",
+          "ou": "OU=Users,OU=Lab",
+          "password": {
+            "source": "env",
+            "name": "ADBUILDER_DEFAULT_USER_PASSWORD"
+          },
+          "enabled": true,
+          "passwordNeverExpires": true
+        }
+      ],
+      "computers": [
+        {
+          "name": "WEB01",
+          "ou": "OU=Computers,OU=Lab",
+          "enabled": true
+        }
+      ],
+      "fineGrainedPasswordPolicies": [
+        {
+          "name": "Lab-FGPP-Users",
+          "precedence": 10,
+          "minPasswordLength": 10,
+          "passwordHistoryCount": 5,
+          "complexityEnabled": true,
+          "reversibleEncryptionEnabled": false,
+          "lockoutThreshold": 0,
+          "lockoutDuration": "00:30:00",
+          "lockoutObservationWindow": "00:30:00",
+          "maxPasswordAge": "42.00:00:00",
+          "minPasswordAge": "1.00:00:00",
+          "appliesTo": ["Lab-Users"]
+        }
+      ]
+    },
+    "dns": {
+      "enabled": true,
+      "records": [
+        {
+          "phase": "infrastructure",
+          "type": "A",
+          "name": "pki",
+          "value": "6.150.5.50"
+        },
+        {
+          "phase": "application",
+          "type": "A",
+          "name": "web01",
+          "value": "6.150.5.51"
+        }
+      ]
+    },
+    "kerberos": {
+      "enabled": true,
+      "serviceAccounts": [
+        {
+          "samAccountName": "svc-web",
+          "ou": "OU=Service Accounts,OU=Lab",
+          "spns": ["HTTP/web01.adbuilder.lab"]
+        }
+      ],
+      "gmsa": [
+        {
+          "name": "gmsa-web",
+          "dnsHostName": "gmsa-web.adbuilder.lab",
+          "principalsAllowedToRetrieveManagedPassword": ["WEB01$"]
+        }
+      ]
+    },
+    "gpo": {
+      "enabled": true,
+      "gpos": [
+        {
+          "name": "Lab Workstation Baseline",
+          "source": { "type": "new" },
+          "links": [
+            {
+              "target": "OU=Computers,OU=Lab",
+              "enabled": true,
+              "enforced": false,
+              "order": 1
+            }
+          ]
+        }
+      ]
+    },
+    "adcs": {
+      "enabled": true,
+      "allowInstallOnDomainController": true,
+      "topology": "singleNodeEnterpriseRoot",
+      "nodes": [
+        {
+          "name": "DC01",
+          "roleServices": ["CertificationAuthority"],
+          "ca": {
+            "type": "EnterpriseRootCA",
+            "commonName": "ADBUILDER-CA",
+            "keyLength": 2048,
+            "hashAlgorithm": "SHA256",
+            "validityPeriod": {
+              "unit": "Years",
+              "value": 5
+            }
+          },
+          "templates": {
+            "publish": ["User", "WebServer"]
+          },
+          "autoEnrollment": {
+            "enabled": true,
+            "targetOu": "OU=Users,OU=Lab"
+          }
+        }
+      ]
+    }
+  },
+  "assertions": [
+    { "type": "userExists", "identity": "alice" },
+    { "type": "groupExists", "identity": "Lab-Users" },
+    { "type": "memberOf", "principal": "alice", "group": "Lab-Users" },
+    { "type": "memberOf", "principal": "WEB01", "group": "Lab-Computers" },
+    { "type": "caInstalled", "name": "ADBUILDER-CA" }
+  ]
+}</code></pre>
+        </details>
+
+        <h2 id="workflow">3. Workflow</h2>
+        <p>
+          Le workflow suit le comportement réel d'un contrôleur de domaine Windows. Le déploiement est séparé en deux
+          phases : une première phase prépare la machine et lance la promotion AD DS, puis une seconde phase reprend
+          après reboot pour appliquer la configuration complète du lab.
+        </p>
+
+        <pre><code>VM Windows Server Core fraîche
+    -&gt; préparation réseau et hostname
+    -&gt; génération ou chargement des secrets de lab
+    -&gt; validation du JSON
+    -&gt; dry-run
+    -&gt; Stage A : installation AD DS + promotion du domaine
+    -&gt; reboot
+    -&gt; Stage B : attente ADWS / SYSVOL / NETLOGON / DNS
+    -&gt; exécution des providers dans l'ordre du DAG
+    -&gt; assertions finales
+    -&gt; résumé du déploiement</code></pre>
+
+        <p>
+          Le script principal peut être lancé depuis une VM fraîche. Il configure la machine, applique les paramètres
+          réseau, prépare les secrets, lance la promotion du domaine, puis reprend automatiquement après reboot.
+        </p>
+
+        <pre><code>.\RUN-ME.ps1 -StaticIP 6.150.5.50 -Gateway 6.150.5.1 -ComputerName DC01</code></pre>
+
+        <p>
+          L'ordonnancement des composants est piloté par un DAG. Chaque provider déclare les capacités dont il dépend et
+          celles qu'il produit. Cette approche évite un ordre d'exécution fragile et permet de construire le lab de
+          manière cohérente.
+        </p>
+
+        <pre><code>domain.ready
+    -&gt; directory
+        -&gt; directory.ousReady
+        -&gt; directory.principalsReady
+    -&gt; dns
+    -&gt; kerberos
+    -&gt; gpo
+    -&gt; adcs
+    -&gt; assertions</code></pre>
+
+        <p>
+          À la fin du run, ADBuilder vérifie l'état du lab : existence des utilisateurs, groupes, ordinateurs,
+          memberships, politiques FGPP, objets AD CS et relations attendues. Le lab est donc non seulement créé, mais
+          aussi validé.
+        </p>
+
+        <h2 id="securite">4. Garde-fous</h2>
+        <ul>
+          <li>
+            <strong>Lab isolé</strong> : l'outil est prévu pour des VM dédiées, snapshots et environnements contrôlés.
+          </li>
+          <li>
+            <strong>Secrets séparés du JSON</strong> : les mots de passe sont fournis par variables d'environnement ou
+            générés par le script de préparation.
+          </li>
+          <li>
+            <strong>Validation avant exécution</strong> : le fichier JSON est vérifié avant toute modification du
+            domaine.
+          </li>
+          <li>
+            <strong>Dry-run</strong> : le plan peut être simulé avant application réelle.
+          </li>
+          <li>
+            <strong>État de run</strong> : un fichier d'état permet de reprendre proprement après reboot.
+          </li>
+          <li>
+            <strong>Assertions finales</strong> : les objets et relations attendus sont contrôlés automatiquement.
+          </li>
+          <li>
+            <strong>Reconciliation additive</strong> : le comportement par défaut crée et complète le lab sans
+            suppression
+            destructive non demandée.
+          </li>
+        </ul>
+
+        <h2 id="limites">5. Limites</h2>
+        <ul>
+          <li>
+            L'outil est destiné aux environnements de lab et ne doit pas être lancé sur un domaine de production.
+          </li>
+          <li>
+            Il ne crée pas les machines virtuelles ni l'infrastructure hyperviseur : il configure Windows Server et le
+            domaine depuis l'intérieur de la VM.
+          </li>
+          <li>
+            Les opérations destructives sont volontairement limitées pour éviter de supprimer des objets AD par erreur.
+          </li>
+          <li>
+            Les secrets générés doivent être protégés puis supprimés après utilisation du lab.
+          </li>
+          <li>
+            La qualité du lab dépend de la précision du JSON : le fichier de configuration reste la source de vérité.
+          </li>
+        </ul>
+
+        <h2 id="apports">6. Ce que cela démontre</h2>
+        <p>
+          Ce projet démontre une compétence complémentaire au pentest Active Directory : la capacité à construire un
+          environnement maîtrisé, reproductible et vérifiable. ADBuilder ne se limite pas à créer quelques objets
+          AD ; il automatise un cycle complet de lab, depuis la préparation de Windows Server Core jusqu'aux assertions
+          finales.
+        </p>
+
+        <p>
+          Techniquement, le projet couvre PowerShell avancé, Active Directory Domain Services, promotion de domaine,
+          gestion d'état après reboot, Server Core, validation JSON, ordonnancement par DAG, gestion des secrets,
+          politiques de mot de passe fines, memberships d'ordinateurs, GPO, Kerberos, DNS et AD CS.
+        </p>
+
+        <p>
+          L'intérêt principal est la reproductibilité : un même scénario peut être reconstruit depuis une VM fraîche,
+          partagé, versionné et amélioré. C'est une base solide pour créer des labs de formation AD, des scénarios de
+          démonstration ou des environnements CTF centrés sur Active Directory.
+        </p>
+      </div>
+    </article>
+  </main>
+
+  <footer>
+    <div class="container">
+      <p>&copy; 2026 Abdelaaziz Belkhair</p>
+    </div>
+  </footer>
+</body>
+
+</html>
